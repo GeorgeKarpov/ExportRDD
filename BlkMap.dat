@@ -1,0 +1,254 @@
+AS_Counter_Section_new	AxleCounterSection	tdt	
+AXlecounter_Section	AxleCounterSection	tdt	
+AXlecounter_Section	AxleCounterSection	tdt	
+AXlecounter_Section_EOT	TrackSection	tdt	
+Afl_UP_L	Point	afl	derailer
+Afl_UP_R	Point	afl	derailer
+Afl_down_L	Point	afl	derailer
+Afl_down_R	Point	afl	derailer
+Afl_left_UP_L	Point	afl	derailer
+Afl_left_UP_R	Point	afl	derailer
+Afl_left_down_L	Point	afl	derailer
+Afl_left_down_R	Point	afl	derailer
+Afl_right_UP_L	Point	afl	derailer
+Afl_right_UP_R	Point	afl	derailer
+Afl_UP_L_non_trailable	Point	afl	derailer
+Afl_UP_R_non_trailable	Point	afl	derailer
+Afl_left_UP_R_non_trailable	Point	afl	derailer
+Afl_left_UP_L_non_trailable	Point	afl	derailer
+Afl_right_down_R_non_trailable1_Brønderslev	Point	afl	derailer
+Afl_right_down_L	Point	afl	derailer
+Afl_right_down_R	Point	afl	derailer
+Afl_right_down_R_non_trailable	Point	afl	derailer
+Afl_right_down_R_non_trailable	Point	afl	derailer
+Akseltæller1	DetectionPoint	at	
+BAlise_BIDirection	BaliseGroup	bg	
+BAlise_BIDirection	BaliseGroup	bg	
+BAlise_Duplicated	BaliseGroup	bg	
+BAlise_ONE_Direction	BaliseGroup	bg	
+BAlise_ONE_Direction	BaliseGroup	bg	
+BAlise_SINgle	BaliseGroup	bg	
+BAlise_SINgle	BaliseGroup	bg	
+BAlise_SINgle_-45	BaliseGroup	bg	
+BAlise_SINgle_135	BaliseGroup	bg	
+BAlise_SINgle_225	BaliseGroup	bg	
+BAlise_SINgle_45	BaliseGroup	bg	
+BAlise_SINgle_without white fill	BaliseGroup	bg	
+BAlise_Single_new	BaliseGroup	bg	
+BAlise_TRUsted_Area	BaliseGroup	bg	
+Balise_Attributes	BaliseGroup	bg	
+Block_Inetrface_Dynamic	BlockInterface	bi	
+COnnector	Connector	conn	
+Connector	Connector	conn	
+DP_AX_DOwn	DetectionPoint	at	
+DP_AX_END	DetectionPoint	at	
+DP_AX_END	DetectionPoint	at	
+DP_AX_UP	DetectionPoint	at	
+DP_AX_UP	DetectionPoint	at	
+DP_AX_UP_135	DetectionPoint	at	
+DP_AX_UP_45	DetectionPoint	at	
+DP_TS	DetectionPoint	at	
+EOT_DBS_Left	EndOfTrack	spst	dynamicBufferStop
+EOT_DBS_Right	EndOfTrack	spst	dynamicBufferStop
+EOT_ETS_Left	EndOfTrack	spst	endOfTrack
+EOT_ETS_Right	EndOfTrack	spst	endOfTrack
+EOT_NDY_Left	EndOfTrack	spst	nonDynamicBufferStop
+EOT_NDY_Right	EndOfTrack	spst	nonDynamicBufferStop
+Fouling-Point	FoulingPoint		
+I-sign med hastighedstavle			
+LC_FB-SingleTrack_Left	LevelCrossing	ovk	
+LC_FB	LevelCrossing	ovk	
+LC_HB_SingleTrack	LevelCrossing	ovk	
+LC_FB-SingleTrack	LevelCrossing	ovk	
+LC_FB-SingleTrack_Right	LevelCrossing	ovk	
+LC_FB_DoubleTrack-Long_Left	LevelCrossing	ovk	
+LC_FB-SingleTrack	LevelCrossing	ovk	
+LC_FB_DoubleTrack-Long	LevelCrossing	ovk	
+LC_FB_DoubleTrack-Long_Right	LevelCrossing	ovk	
+LC_FB_DoubleTrack-Short	LevelCrossing	ovk	
+LC_FB_DoubleTrack-Short	LevelCrossing	ovk	
+LC_HB-SingleTrack	LevelCrossing	ovk	
+LC_HB-SingleTrack	LevelCrossing	ovk	
+LC_HB_DoubleTrack-Long	LevelCrossing	ovk	
+LC_HB_DoubleTrack-Long	LevelCrossing	ovk	
+LC_HB_DoubleTrack-Short	LevelCrossing	ovk	
+LC_NB-SingleTrack	LevelCrossing	ovk	
+LC_NB-SingleTrack	LevelCrossing	ovk	
+LC_NB_DoubleTrack-Long	LevelCrossing	ovk	
+LC_NB_DoubleTrack-Short	LevelCrossing	ovk	
+MB_DL	Signal	mrk	mb
+MB_DL	Signal	mrk	mb
+MB_DL_SE	Signal	mrk	mb
+MB_DR	Signal	mrk	mb
+MB_DR	Signal	mrk	mb
+MB_DR_SE	Signal	mrk	mb
+MB_ENTRY	Signal	mrk	L2EntrySignal
+MB_EXIT	Signal	mrk	L2ExitSignal
+MB_EXIT_ATC	Signal	mrk	L2ExitSignal
+ETCS_EXIT	Signal	mrk	L2ExitSignal
+MB_EXIT_ATC-togstop	Signal	mrk	L2ExitSignal
+MB_Entry_DL	Signal	mrk	L2EntrySignal
+MB_Entry_DR	Signal	mrk	L2EntrySignal
+MB_Entry_UL	Signal	mrk	L2EntrySignal
+MB_Entry_UR	Signal	mrk	L2EntrySignal
+MB_Exit_DL	Signal	mrk	L2ExitSignal
+MB_Exit_DR	Signal	mrk	L2ExitSignal
+MB_Exit_UL	Signal	mrk	L2ExitSignal
+MB_Exit_UR	Signal	mrk	L2ExitSignal
+Foreign_Signal_dyn	Signal	mrk	foreignSignal
+MB_UC	Signal	mrk	mb
+MB_UL	Signal	mrk	mb
+MB_UL	Signal	mrk	mb
+MB_UL_SE	Signal	mrk	mb
+MB_UL_SE	Signal	mrk	mb
+MB_UR	Signal	mrk	mb
+MB_UR	Signal	mrk	mb
+MB_UR_MID_DOWN	Signal	mrk	mb
+MB_UR_MID_DOWN-LEFT	Signal	mrk	mb
+MB_UR_MID_UP	Signal	mrk	mb
+MB_UR_MID_UP	Signal	mrk	mb
+MB_UR_SE	Signal	mrk	mb
+MB_Up_Left_new	Signal	mrk	mb
+MB_ned	Signal	mrk	mb
+MB_op	Signal	mrk	mb
+Passive_MB_UL	Passive Signal	mrk	mb
+MarkerBoard_Attributes	Signal	mrk	mb
+Passive_MB_UL	Signal	mrk	mb
+PM_1N__LDL	Point	spsk	point
+PM_1T__LDR_PI	Point	spsk	point
+PM_1N__LDL	Point	spsk	point
+PM_1N__LDR	Point	spsk	point
+PM_1N__LDR	Point	spsk	point
+PM_1N__LUL	Point	spsk	point
+PM_1N__LUL	Point	spsk	point
+PM_1N__LUR	Point	spsk	point
+PM_1N__LUR	Point	spsk	point
+PM_1N__RDL	Point	spsk	point
+PM_1N__RDL	Point	spsk	point
+PM_1N__RDR	Point	spsk	point
+PM_1N__RDR	Point	spsk	point
+PM_1N__RUL	Point	spsk	point
+PM_1N__RUL	Point	spsk	point
+PM_1N__RUR	Point	spsk	point
+PM_1N__RUR	Point	spsk	point
+PM_1T__LDL	Point	spsk	point
+PM_1T__LDL	Point	spsk	point
+PM_1T__LDL	Point	spsk	point
+PM_1T__LDL_Trap	Point	spsk	trapPoint
+PM_1T__LDL_Trap	Point	spsk	trapPoint
+PM_1T__LDR	Point	spsk	point
+PM_1T__LDR	Point	spsk	point
+PM_1T__LDR_Trap	Point	spsk	trapPoint
+PM_1T__LDR_Trap	Point	spsk	trapPoint
+PM_1T__LUL	Point	spsk	point
+PM_1T__LUL	Point	spsk	point
+PM_1T__LUL_Trap	Point	spsk	trapPoint
+PM_1T__LUL_Trap	Point	spsk	trapPoint
+PM_1T__LUR	Point	spsk	point
+PM_1T__LUR	Point	spsk	point
+PM_1T__LUR_Trap	Point	spsk	trapPoint
+PM_1T__LUR_Trap	Point	spsk	trapPoint
+PM_1T__RDL	Point	spsk	point
+PM_1T__RDL	Point	spsk	point
+PM_1T__RDL_Trap	Point	spsk	trapPoint
+PM_1T__RDL_Trap	Point	spsk	trapPoint
+PM_1T__RDR	Point	spsk	point
+PM_1T__RDR	Point	spsk	point
+PM_1T__RDR_Trap	Point	spsk	trapPoint
+PM_1T__RDR_Trap	Point	spsk	trapPoint
+PM_1T__RDR_english_mirror	Point	spsk	singleSlipPoint
+PM_1T__RUL	Point	spsk	point
+PM_1T__RUL	Point	spsk	point
+PM_1T__RUL_Route	Point	spsk	
+PM_1T__RUL_Route	Point	spsk	
+PM_1T__RUL_Trap	Point	spsk	trapPoint
+PM_1T__RUL_Trap	Point	spsk	trapPoint
+PM_1T__RUR	Point	spsk	point
+PM_1T__RUR	Point	spsk	point
+PM_1T__RUR_Trap	Point	spsk	trapPoint
+PM_1T__RUR_Trap	Point	spsk	trapPoint
+PM_1T__english	Point	spsk	singleSlipPoint
+PM_1T__english	Point	spsk	singleSlipPoint
+PM_1T__english_2	Point	spsk	doubleSlipPoint
+PM_2NT_LDL	Point	spsk	
+PM_2NT_LDR	Point	spsk	
+PM_2NT_LUL	Point	spsk	
+PM_2NT_LUR	Point	spsk	
+PM_2NT_RDL	Point	spsk	
+PM_2NT_RDR	Point	spsk	
+PM_2NT_RUL	Point	spsk	
+PM_2NT_RUR	Point	spsk	
+PM_2TT_LDL	Point	spsk	point
+PM_2TT_LDR	Point	spsk	point
+PM_2TT_LDR	Point	spsk	point
+PM_2TT_LUL	Point	spsk	point
+PM_2TT_LUR	Point	spsk	point
+PM_2TT_RDL	Point	spsk	point
+PM_2TT_RDR	Point	spsk	point
+PM_2TT_RDR	Point	spsk	point
+PM_2TT_RUL	Point	spsk	point
+PM_2TT_RUR	Point	spsk	point
+PM_3TN_LDL	Point	spsk	
+PM_3TN_LDL	Point	spsk	
+PM_3TN_LDR	Point	spsk	
+PM_3TN_LDR	Point	spsk	
+PM_3TN_LUL	Point	spsk	
+PM_3TN_LUL	Point	spsk	
+PM_3TN_LUR	Point	spsk	
+PM_3TN_LUR	Point	spsk	
+PM_3TN_RDL	Point	spsk	
+PM_3TN_RDL	Point	spsk	
+PM_3TN_RDR	Point	spsk	
+PM_3TN_RDR	Point	spsk	
+PM_3TN_RUL	Point	spsk	
+PM_3TN_RUL	Point	spsk	
+PM_3TN_RUR	Point	spsk	
+PM_3TN_RUR	Point	spsk	
+PM_3TT_LDL	Point	spsk	
+PM_3TT_LDL	Point	spsk	
+PM_3TT_LDR	Point	spsk	
+PM_3TT_LDR	Point	spsk	
+PM_3TT_LUL	Point	spsk	
+PM_3TT_LUL	Point	spsk	
+PM_3TT_LUR	Point	spsk	
+PM_3TT_LUR	Point	spsk	
+PM_3TT_RDL	Point	spsk	
+PM_3TT_RDL	Point	spsk	
+PM_3TT_RDR	Point	spsk	
+PM_3TT_RDR	Point	spsk	
+PM_3TT_RUL	Point	spsk	
+PM_3TT_RUL	Point	spsk	
+PM_3TT_RUR	Point	spsk	
+PM_3TT_RUR	Point	spsk	
+PM_notEng	Point	spsk	
+PM_notEng	Point	spsk	
+HHT_contact	Hht	hht	
+PWS	StaffPassengerCrossing	va	
+PWS 2 spor	StaffPassengerCrossing	va	
+PWS-DW-1-Track	StaffPassengerCrossing	va	
+PWS-DW-2-Track	StaffPassengerCrossing	va	
+PWS-DW-3-Track	StaffPassengerCrossing	va	
+PWS-DW-4-Track	StaffPassengerCrossing	va	
+PWS-UP-1-Track	StaffPassengerCrossing	va	
+PWS-UP-2-Track	StaffPassengerCrossing	va	
+PWS-UP-3-Track	StaffPassengerCrossing	va	
+PWS-UP-4-Track	StaffPassengerCrossing	va	
+Platform_Dynamic	PlatformDyn	pr	
+Platform	Platform	pr	
+Point_Left_Down_Double_RS	Point	spsk	
+Point_Left_Down_Single_RS	Point	spsk	
+Point_Right_Down_Double_RS	Point	spsk	
+SX_Dynamic	StaffCrossing	trk	
+#SX_Light			
+SX_Symbol			
+TSG_Element	TrackSegment		
+Tegnhoved_Autocad	SignallingLayout		
+Thales_DocID			
+Titleblock_Autocad_17.08.2016	SignallingLayout		
+Track_Section	TrackSection	tdt	
+Track_Section	TrackSection	tdt	
+Track_Section_EOT	TrackSection	tdt	
+Next_Station	NextStation		
+Next_Station_Dynamic	NextStation		
+CR_Start	CrStart		
+CR_Dest	CrDestination		

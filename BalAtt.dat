@@ -1,0 +1,18 @@
+BG-BIGMETAL	Big metal mass announcement balise group
+BG-CLTO_TO_L2	Conditional Level Transition ordrer CLTO to L2
+BG-DEFGRADIENT	Default gradient balise group
+BG-ENTBORDER	Entry border balise group
+BG-EXTBORDER	Exit border balise group
+BG-LEVTRANANNENT	Level transition announcement balise group entry
+BG-LEVTRANANNEX	Level transition announcement balise group exit
+BG-NATIONALVAL	National values
+BG-NRBCBORDER	NRBC border balise group
+BG-NRBCTRAN	NRBC transition announcement balise group
+BG-OPERATIONALVER	Operational version order
+BG-POSITION	Positioning balise group
+BG-RADIONET	Radio network registration balise group
+BG-SESSION	Session balise group
+BG-SESSIONTERMIN	Session termination balise group
+BG-SHUNTYARD	Shunting yard indicator
+BG-STOPSHUNT	Stop if in shunting balise group
+BG-STOPSTAFF	Stop if in staff responsible balise group

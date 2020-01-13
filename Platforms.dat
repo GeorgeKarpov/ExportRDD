@@ -1,0 +1,160 @@
+#TIB  nummer	Stationsnavn 	Perron- nummer 	Spor- nummer	Perron- laengde i	Perronhøjde  cm over  skinneoverkant "
+30	Ribe Nørremark T 	1	1	99	26
+30	Ribe 	1	1	171	26
+30	Ribe 	2	2	117	26
+30	Hviding T 	1	1	100	26
+30	Rejsby T 	1	1	98	35
+30	Brøns T 	1	1	104	26
+30	Skaerbaek 	1	1	110	26
+30	Skaerbaek 	2	1	113	26
+30	Skaerbaek 	2	2	113	26
+30	Døstrup Sønderjylland T 	1	1	112	26
+30	Bredebro 	1	1	103	35
+30	Bredebro 	2	1	92	26
+30	Bredebro 	2	2	92	26
+30	Visby T 	1	1	110	26
+30	Tønder Nord T 	1	1	99	55
+30	Tønder 	1	1	103	26
+30	Tønder 	2	1	103	26
+30	Tønder 	2	2	103	26
+31	Esbjerg Nord T 	1	1	100	55
+31	Guldager 	1	1	153	26
+31	Guldager 	2	2	147	26
+31	Varde 	1	0	181	26
+31	Varde 	1	1	181	26
+31	Varde 	2	2	193	26
+31	Varde 	2	3	193	26
+31	Varde Nord T 	1	1	101	26
+31	Sig T 	1	1	129	26
+31	Tistrup 	1	1	159	26
+31	Tistrup 	2	2	150	26
+31	Gårde T 	1	1	98	35
+31	Ølgod 	1	1	126	26
+31	Ølgod 	2	2	150	35
+31	Tarm T 	1	1	133	26
+31	Skjern 	1	1	70	26
+31	Skjern 	2	1	204	26
+31	Skjern 	2	2	204	26
+31	Skjern 	3	3	204	26
+31	Lem 	1	1	150	26
+31	Lem 	2	1	104	26
+31	Lem 	2	2	104	26
+31	Ringkøbing 	1	1	261	26
+31	Ringkøbing 	2	2	238	26
+31	Ringkøbing 	2	3	238	26
+31	Hee T 	1	1	102	26
+31	Tim T 	1	1	168	26
+31	Ulfborg 	1	1	106	26
+31	Ulfborg 	2	1	77	26
+31	Ulfborg 	2	2	77	26
+31	Vemb 	1	0	238	26
+31	Vemb 	1	1	238	26
+31	Vemb 	2	2	138	26
+31	Bur T 	1	1	100	35
+31	Holstebro 	1	1	190	26
+31	Holstebro 	2	2	205	26
+31	Holstebro 	3	3	154	26
+31	Hjerm 	1	1	104	35
+31	Hjerm 	2	2	130	35
+31	Struer 	0	0	197	26
+31	Struer 	1	1	197	26
+31	Struer 	2	2	278	26
+31	Struer 	3	3	278	26
+31	Struer 	4	4	223	26
+31	Struer 	5	5	223	26
+32	Ulstrup 	2	2	135	26
+32	Ulstrup 	1	1	125	26
+32	Bjerringbro 	1	1	133	26
+32	Bjerringbro 	2	2	150	55
+32	Rødkærsbro 	1	1	150	55
+32	Rødkærsbro 	2	2	150	55
+32	Viborg	1	1	112	55
+32	Viborg	2	2	112	55
+32	Stoholm 	1	1	150	26
+32	Stoholm 	2	2	100	35
+32	Højslev 	1	1	114	26
+32	Højslev 	2	2	112	26
+32	Skive 	1	44	134	50
+32	Skive 	1	1	203	50
+32	Skive 	2	2	203	35
+32	Vinderup 	1	1	193	35
+32	Vinderup 	2	2	100	35
+31	Holstebro 	1	1	190	26
+31	Holstebro 	2	2	205	26
+31	Holstebro 	3	3	154	26
+33	Aulum 	1	1	134	26
+33	Aulum 	2	2	165	26
+33	Vildbjerg 	1	1	120	26
+33	Vildbjerg 	2	2	156	26
+33	Herning 	1	1	451	55
+33	Herning 	2	2	451	55
+33	Herning 	3	3	280	55
+33	Herning 	4	4	280	55
+33	Brande 	1	1	260	26
+33	Brande 	2	2	212	26
+33	Thyregod 	1	1	120	55
+33	Thyregod 	2	2	167	26
+33	Give 	1	1	108	26
+33	Give 	2	2	180	26
+33	Jelling 	1	1	110	26
+33	Jelling 	2	2	160	26
+33	Vejle Sygehus 	1	1	100	55
+34	Humlum	1	1	114	26
+34	Oddesund Nord	1	1	100	26
+34	Uglev	1	1	86	26
+34	Hvidbjerg 	1	1	132	26
+34	Hvidbjerg 	2	1	96	26
+34	Hvidbjerg 	2	2	96	26
+34	Lyngs	1	1	103	35
+34	Ydby	1	1	99	35
+34	Hurup Thy 	1	1	171	26
+34	Hurup Thy 	2	1	121	26
+34	Hurup Thy 	2	2	121	26
+34	Bedsted Thy	1	1	131	26
+34	Bedsted Thy	2	1	95	26
+34	Bedsted Thy	2	2	95	26
+34	Hørdum	1	1	98	35
+34	Snedsted	1	1	131	26
+34	Snedsted	2	1	94	26
+34	Snedsted	2	2	94	26
+34	Sjørring	1	1	100	35
+34	Thisted	1	1	182	26
+34	Thisted	2	1	167	26
+34	Thisted	2	2	167	26
+35	Alken	1	1	150	26
+35	Ry 	1	1	249	26
+35	Ry 	2	2	154	26
+35	Laven 	1	1	111	26
+35	Laven 	2	2	161	26
+35	Svejbæk 	1	1	102	26
+35	Svejbæk 	2	2	118	26
+35	Silkeborg 	1	1	150	50
+35	Silkeborg 	2	2	175	55
+35	Silkeborg 	3	3	175	55
+35	Engesvang 	1	1	152	26
+35	Engesvang 	2	2	107	26
+35	Bording 	1	1	133	26
+35	Bording 	2	2	102	26
+35	Ikast 	1	1	165	26
+35	Ikast 	2	2	143	26
+35	Hammerum 	1	1	98	26
+35	Hammerum 	2	2	86	26
+35	Birk Centerpark	1	1	90	55
+35	Studsgård 	1	1	123	26
+35	Kibæk 	1	1	106	26
+35	Kibæk 	2	2	82	26
+35	Troldhede	1	1	104	26
+35	Borris 	1	1	107	26
+35	Borris 	2	2	97	26
+36	Europaplads T 	1	1	60	26
+36	Hjortsh綁 T 	1	1	60	26
+36	L經ten T 	1	1	60	26
+36	M羨ke T 	1	1	106	26
+36	Hjortsh綁 T 	2	1	62	26
+36	L經ten T 	2	1	63	26
+36	Skolebakken T 	1	1	60	26
+36	究tbanetorvet 	1	1	123	26
+36	究tbanetorvet 	2	1	84	55
+36	究tbanetorvet 	2	2	84	55
+36	Den Permanente T 	1	1	48	26
+36	Vestre Strandalle T 	1	1	64
