@@ -95,7 +95,6 @@ MB_Exit_DL	Signal	mrk	L2ExitSignal
 MB_Exit_DR	Signal	mrk	L2ExitSignal
 MB_Exit_UL	Signal	mrk	L2ExitSignal
 MB_Exit_UR	Signal	mrk	L2ExitSignal
-Foreign_Signal_dyn	Signal	mrk	foreignSignal
 MB_UC	Signal	mrk	mb
 MB_UL	Signal	mrk	mb
 MB_UL	Signal	mrk	mb
@@ -111,6 +110,7 @@ MB_UR_SE	Signal	mrk	mb
 MB_Up_Left_new	Signal	mrk	mb
 MB_ned	Signal	mrk	mb
 MB_op	Signal	mrk	mb
+Foreign_Signal_dyn	Signal	mrk	foreignSignal
 Passive_MB_UL	Passive Signal	mrk	mb
 MarkerBoard_Attributes	Signal	mrk	mb
 Passive_MB_UL	Signal	mrk	mb

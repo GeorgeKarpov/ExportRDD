@@ -2321,8 +2321,15 @@ namespace ExpPt1
                     }
                     if (cesLoc == null)
                     {
-                        if (!(signal.KindOfSignal == TKindOfSignal.L2EntrySignal ||
-                              signal.KindOfSignal == TKindOfSignal.L2ExitSignal))
+                        if (signal.KindOfSignal == TKindOfSignal.L2EntrySignal ||
+                              signal.KindOfSignal == TKindOfSignal.L2ExitSignal ||
+                              signal.KindOfSignal == TKindOfSignal.foreignSignal)
+                        {
+                            cesLoc = new ReadExcel.Signal { Ac = "N/A" };
+                        }
+                        //if (!(signal.KindOfSignal == TKindOfSignal.L2EntrySignal ||
+                        //      signal.KindOfSignal == TKindOfSignal.L2ExitSignal))
+                        else
                         {
                             ErrLogger.Log("Signal '" + signal.Designation + "' not found in Signals Closure Table.");
                             error = true;
@@ -5554,7 +5561,8 @@ namespace ExpPt1
             DBObjectCollection entset = new DBObjectCollection();
             block.BlkRef.Explode(entset);
             List<Line> tmpCross = new List<Line>();
-            Point2d cross = new Point2d(0, 0);
+            // if cross not found take insertion point of block
+            Point2d cross = new Point2d(block.BlkRef.Position.X, block.BlkRef.Position.Y);
             foreach (DBObject obj in entset)
             {
                 if (obj.GetType() == typeof(Line))
