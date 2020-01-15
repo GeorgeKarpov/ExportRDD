@@ -5,7 +5,7 @@ using System.Linq;
 using System.IO.Packaging;
 using System.IO;
 
-namespace ExportV2
+namespace ExpPt1
 {
     public static class WordOpenXML
     {
