@@ -6,7 +6,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 
 //[assembly: CommandClass(typeof(ExpPt1.Register))]
 
-namespace ExportV2
+namespace ExpPt1
 {
     /// <summary>
     /// Register .Net app in Win registry.

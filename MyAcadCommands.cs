@@ -1,9 +1,9 @@
 ﻿using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
 
-[assembly: CommandClass(typeof(ExportV2.MyAcadCommands))]
+[assembly: CommandClass(typeof(ExpPt1.MyAcadCommands))]
 
-namespace ExportV2
+namespace ExpPt1
 {
     public static class MyAcadCommands 
     {
@@ -34,68 +34,12 @@ namespace ExportV2
             export.Dispose();
         }
 
-        [CommandMethod("TestDK")]
-        public static void OtherTest()
-        {
-            ExpPt1.Export export = new ExpPt1.Export(DwgPath);
-            export.Test();
-            export.Dispose();
-        }
-
         [CommandMethod("DynPlatforms")]
         public static void DynPlat()
         {
             ExpPt1.Export export = new ExpPt1.Export(DwgPath);
             export.ReplacePlatforms();
         }
-        [CommandMethod("Test")]
-        public static void Test()
-        {
-            using (AcadSL acadSL = new AcadSL(DwgPath))
-            {
-                acadSL.Test();
-            }
-        }
-
-        [CommandMethod("AdjustSIGCr")]
-        public static void AjustSignals()
-        {
-            ExpPt1.Export export = new ExpPt1.Export(DwgPath);
-            export.AdjustSigForCr();
-        }
-
-        //[CommandMethod("InitCompRoutes")]
-        //public static void InitCr()
-        //{           
-        //    exportTmp = new ExpPt1.Export(DwgPath);
-        //    var ed = exportTmp.acDoc.Editor;
-
-        //    var promptResult = ed.GetString("\nEnter station Id: ");
-        //    if (promptResult.Status != PromptStatus.OK)
-        //    {
-        //        return;
-        //    }
-        //    exportTmp.stationID = promptResult.StringResult;
-        //    exportTmp.ResetCompoundRoutes();
-        //}
-
-        //[CommandMethod("SaveCompRoutes")]
-        //public static void SaveCr()
-        //{
-        //    exportTmp.SaveCompoundRoutes();
-        //}
-
-        //[CommandMethod("CreateCompRoutes", CommandFlags.UsePickSet)]
-        //public static void CreateCr()
-        //{
-        //    exportTmp.CreateCompoundRoutes();
-        //}
-
-        //[CommandMethod("ResetCompRoutes")]
-        //public static void ResetCr()
-        //{
-        //    exportTmp.ResetCompoundRoutes();
-        //}
 
         [CommandMethod("RegExpPt1")]
         public static void RegApp()
@@ -110,29 +54,5 @@ namespace ExportV2
             Register register = new Register();
             register.UnregisterMyApp();
         }
-
-        //[CommandMethod("CheckCrRtIds")]
-        //public static void CheckCr()
-        //{
-        //    exportTmp = new ExpPt1.Export(DwgPath);
-        //    exportTmp.CheckCr();
-        //}
-
-        //[CommandMethod("TestCrs")]
-        //public static void TestCrs()
-        //{
-        //    exportTmp = new ExpPt1.Export(DwgPath);
-        //    exportTmp.TestCr();
-        //}
-
-
-
-        //[CommandMethod("ExportBlocks")]
-        //public static void ExportBlocks()
-        //{
-        //    exportTmp = new ExpPt1.Export(DwgPath);
-        //    exportTmp.ExportBlocks();
-        //    exportTmp = null;
-        //}
     }
 }

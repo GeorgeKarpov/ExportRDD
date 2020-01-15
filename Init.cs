@@ -6,8 +6,8 @@ using System.Reflection;
 using System.Threading;
 using AcadApp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
-[assembly: ExtensionApplication(typeof(ExportV2.Init))]
-namespace ExportV2
+[assembly: ExtensionApplication(typeof(ExpPt1.Init))]
+namespace ExpPt1
 {
     class Init : IExtensionApplication
     {
