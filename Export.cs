@@ -107,58 +107,6 @@ namespace ExpPt1
             ErrLogger.Log("Program terminated");
         }
 
-
-        //[CommandMethod("Test")]
-        public void Test()
-        {
-            AcadApp.ShowAlertDialog("Third PC test");
-            //foreach (string dwg in Directory.GetFiles(@"C:\3.TRDD\ROL5", "*.dwg", SearchOption.AllDirectories))
-            //{
-            //    using (db = new Database(false, true))
-            //    {
-            //        db.ReadDwgFile(dwg, FileOpenMode.OpenForReadAndAllShare, false, null);
-            //        db.CloseInput(true);
-            //        ExportRdd();
-            //    }
-            //}
-            //ReadBlocksDefinitions();
-            //using (Transaction acTrans = db.TransactionManager.StartTransaction())
-            //{
-            //    PromptSelectionResult acSSPrompt = acDoc.Editor.GetSelection();
-            //    if (acSSPrompt.Status == PromptStatus.OK)
-            //    {
-            //        SelectionSet acSSet = acSSPrompt.Value;
-            //        if (acSSet.Count != 1)
-            //        {
-            //            //AcadApp.ShowAlertDialog("Two objects must be selected.");
-            //            return;
-            //        }
-            //        BlockReference blkRef = acTrans.GetObject(acSSet[0].ObjectId,
-            //                                                    OpenMode.ForRead) as BlockReference;
-            //        Dictionary<string, Attribute> Attributes = GetAttributes(blkRef);
-            //        Block block = new Block
-            //        {
-            //            BlkRef = blkRef,
-            //            BlockName = blkRef.Name,
-            //            ElType = BlocksToGet[blkRef.Name].Split('\t')[2],
-            //            XsdName = BlocksToGet[blkRef.Name].Split('\t')[1],
-            //            X = Math.Round(blkRef.Position.X, 0, MidpointRounding.AwayFromZero),
-            //            Y = Math.Round(blkRef.Position.Y, 0, MidpointRounding.AwayFromZero),
-            //            Rotation = (int)(blkRef.Rotation * (180 / Math.PI)),
-            //            KindOf = BlocksToGet[blkRef.Name].Split('\t')[3],
-            //            Attributes = Attributes,
-            //            IsOnCurrentArea = false,
-            //            Visible = !(Attributes.Any(x => x.Value.Name == "NAME" &&
-            //                                           x.Value.Visible == false))
-            //        };
-            //        var test = GetPointOrient(block);
-            //        //GetPointBranch(block);
-            //        //GetPointMachines(block, out int count);
-            //        acTrans.Commit();
-            //    }
-            //}
-        }
-
         /// <summary>
         /// Replace static platform blocks with dynamics
         /// </summary>
@@ -442,22 +390,6 @@ namespace ExpPt1
         }
 
         
-        public void AdjustSigForCr()
-        {
-            bool blocksErr = false;
-            ReadBlocksDefinitions();
-            List<Block> Blocks = GetBlocks(ref blocksErr);
-            List<Block> signals = Blocks
-                                  .Where(x => x.XsdName == "Signal" )
-                                  .ToList();
-            string stationID = GetStationId(Blocks);
-            BlockProperties blockProperties = new BlockProperties(stationID);
-            foreach(var sig in signals)
-            {
-                EditAtributte(sig.BlkRef, "NAME", blockProperties.GetElemDesignation(sig));
-            }
-        }
-
         [CommandMethod("SaveCompRoutes")]
         public void SaveCompoundRoutes()
         {
