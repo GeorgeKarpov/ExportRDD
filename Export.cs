@@ -1987,7 +1987,7 @@ namespace ExpPt1
             if (tmpCreator.Split(null).Length > 0)
             {
                 siglayout.creator = tmpCreator
-                    .Split(new Char[] { ' ', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries)[1].Trim();
+                    .Split(new char[] { ' ', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries)[1].Trim();
             }
             siglayout.date =
                     Convert.ToDateTime(
