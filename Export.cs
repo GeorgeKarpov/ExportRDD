@@ -923,12 +923,14 @@ namespace ExpPt1
                 RddR5.RailwayDesignData rddR5 = rddXmlIO.ReadXmlFromMemoryR5(stream);
                 //RddR5.RailwayDesignData rddR5 = rddXmlIO.GetRddR5(saveTo);
                 rddXmlIO.WriteRddXml(rddR5, saveTo,
-                    new List<string> { "Created with ExpPt1 tool by Georgijs Karpovs (Thales Latvia) - " + DateTime.Now });
+                    new List<string> { "Created with ExpPt1 v" + Assembly.GetExecutingAssembly().GetName().Version.ToString(3) 
+                                        + " (Thales Latvia) - " + DateTime.Now });
             }
             else
             {
                 rddXmlIO.WriteRddXml(RDD, saveTo, 
-                    new List<string> { "Created with ExpPt1 tool by Georgijs Karpovs (Thales Latvia) - " + DateTime.Now });
+                    new List<string> { "Created with ExpPt1 v" + Assembly.GetExecutingAssembly().GetName().Version.ToString(3)
+                                        + " (Thales Latvia) - " + DateTime.Now });
             }
             try
             {
@@ -3371,7 +3373,7 @@ namespace ExpPt1
                     BaliseGroupExcel = baliseGroupsExcel
                                        .Where(x => x.Designation == blckProp.GetElemDesignation(BlkBalisGrp))
                                        .FirstOrDefault();
-                    if (BaliseGroupExcel != null && BaliseGroupExcel.BaliseGroupTypes.KindOfBG.Count() > 1)
+                    if (BaliseGroupExcel != null /*&& BaliseGroupExcel.BaliseGroupTypes.KindOfBG.Count() > 1*/)
                     {
                         KindOfBGs = BaliseGroupExcel.BaliseGroupTypes.KindOfBG;
                         orient = BaliseGroupExcel.Orientation;
