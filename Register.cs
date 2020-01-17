@@ -1,7 +1,5 @@
 ﻿using Win = Microsoft.Win32;
 using System.Reflection;
-
-using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.DatabaseServices;
 
 //[assembly: CommandClass(typeof(ExpPt1.Register))]
@@ -18,7 +16,8 @@ namespace ExportV2
         {
             // Get the AutoCAD Applications key
             string sProdKey = HostApplicationServices.Current.MachineRegistryProductRootKey;
-            string sAppName = "ExpPt1";
+            //string sAppName = "ExpPt1";
+            string sAppName = Assembly.GetExecutingAssembly().GetName().Name.ToString();
 
             Win.RegistryKey regAcadProdKey = Win.Registry.CurrentUser.OpenSubKey(sProdKey);
             Win.RegistryKey regAcadAppKey = regAcadProdKey.OpenSubKey("Applications", true);
@@ -53,7 +52,8 @@ namespace ExportV2
         {
             // Get the AutoCAD Applications key
             string sProdKey = HostApplicationServices.Current.MachineRegistryProductRootKey;
-            string sAppName = "ExpPt1";
+            //string sAppName = "ExpPt1";
+            string sAppName = Assembly.GetExecutingAssembly().GetName().Name.ToString();
 
             Win.RegistryKey regAcadProdKey = Win.Registry.CurrentUser.OpenSubKey(sProdKey);
             Win.RegistryKey regAcadAppKey = regAcadProdKey.OpenSubKey("Applications", true);
