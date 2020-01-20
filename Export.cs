@@ -4888,7 +4888,7 @@ namespace ExpPt1
                         groupPoints = new List<RoutesRoutePointGroupPoint>();
                     }
                     List<ReadExcel.XlsPoint> grpPoints = route.PointsGrps
-                                .Where(p => !route.PointsGrps.Any(p2 => p2.Designation == p.Designation))
+                                .Where(p => !route.Points.Any(p2 => p2.Designation == p.Designation))
                                 .ToList();
                     foreach (ReadExcel.XlsPoint point in grpPoints)
                     {
