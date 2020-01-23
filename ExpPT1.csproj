@@ -90,6 +90,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Register.cs" />
     <Compile Include="SspSimp.cs" />
+    <Compile Include="Verify.cs" />
     <Compile Include="WirteData.cs" />
     <Compile Include="Word.cs" />
   </ItemGroup>

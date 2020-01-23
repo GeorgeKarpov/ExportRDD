@@ -22,7 +22,7 @@ namespace ExpPt1
         //public static string TemplatesPath { get; set; }
         //public static string DwgPath { get; set; }
 
-        public static void WriteDistToExcel(RailwayDesignDataMetaData metaData, string fileName)
+        public static void ReportExcel(RailwayDesignDataMetaData metaData, string fileName)
         {
             using (var spreadsheet = SpreadsheetDocument.Create(fileName, SpreadsheetDocumentType.Workbook))
             {
@@ -139,6 +139,7 @@ namespace ExpPt1
                 row.AppendChild(new Cell() { CellValue = new CellValue("Doc Name"), DataType = CellValues.String, StyleIndex = 1, CellReference = "A1" });
                 row.AppendChild(new Cell() { CellValue = new CellValue("Doc Number"), DataType = CellValues.String, StyleIndex = 1, CellReference = "B1" });
                 row.AppendChild(new Cell() { CellValue = new CellValue("Version"), DataType = CellValues.String, StyleIndex = 1, CellReference = "C1" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("Date"), DataType = CellValues.String, StyleIndex = 1, CellReference = "D1" });
 
                 uint index = 2;
                 uint style = 2;
@@ -146,11 +147,13 @@ namespace ExpPt1
                 row.AppendChild(new Cell() { CellValue = new CellValue(metaData.FileDescription.title), DataType = CellValues.String, StyleIndex = style, CellReference = "A" + index });
                 row.AppendChild(new Cell() { CellValue = new CellValue(metaData.FileDescription.docID), DataType = CellValues.String, StyleIndex = style, CellReference = "B" + index });
                 row.AppendChild(new Cell() { CellValue = new CellValue(metaData.FileDescription.version), DataType = CellValues.String, StyleIndex = style, CellReference = "C" + index });
+                row.AppendChild(new Cell() { CellValue = new CellValue(metaData.FileDescription.date.ToString("d")), DataType = CellValues.String, StyleIndex = style, CellReference = "D" + index });
                 index++;
                 row = sheetData.AppendChild(new Row { RowIndex = index, ThickBot = true });
                 row.AppendChild(new Cell() { CellValue = new CellValue(metaData.SignallingLayout.title), DataType = CellValues.String, StyleIndex = style, CellReference = "A" + index });
                 row.AppendChild(new Cell() { CellValue = new CellValue(metaData.SignallingLayout.docID), DataType = CellValues.String, StyleIndex = style, CellReference = "B" + index });
                 row.AppendChild(new Cell() { CellValue = new CellValue(metaData.SignallingLayout.version), DataType = CellValues.String, StyleIndex = style, CellReference = "C" + index });
+                row.AppendChild(new Cell() { CellValue = new CellValue(metaData.SignallingLayout.date.ToString("d")), DataType = CellValues.String, StyleIndex = style, CellReference = "D" + index });
                 index++;
                 foreach (var doc in metaData.Documents.Document)
                 {
@@ -158,6 +161,7 @@ namespace ExpPt1
                     row.AppendChild(new Cell() { CellValue = new CellValue(doc.title), DataType = CellValues.String, StyleIndex = style, CellReference = "A" + index });
                     row.AppendChild(new Cell() { CellValue = new CellValue(doc.docID), DataType = CellValues.String, StyleIndex = style, CellReference = "B" + index });
                     row.AppendChild(new Cell() { CellValue = new CellValue(doc.version), DataType = CellValues.String, StyleIndex = style, CellReference = "C" + index });
+                    row.AppendChild(new Cell() { CellValue = new CellValue(doc.date.ToString("d")), DataType = CellValues.String, StyleIndex = style, CellReference = "D" + index });
                     index++;
                 }
                 

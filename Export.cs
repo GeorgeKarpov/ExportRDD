@@ -934,14 +934,16 @@ namespace ExpPt1
             }
             try
             {
-                WriteData.WriteDistToExcel(RDD.MetaData, Path.GetDirectoryName(saveTo) + "//" +
+                WriteData.ReportExcel(RDD.MetaData, Path.GetDirectoryName(saveTo) + "//" +
                               Path.GetFileNameWithoutExtension(saveTo) + "_Report.xlsx");
             }
             catch (System.Exception e)
             {
                 AcadApp.ShowAlertDialog(e.Message);
             }
-           
+
+            Verify verify = new Verify();
+            verify.CheckSSPsSegments(RDD);
 
             File.WriteAllLines(Path.GetDirectoryName(saveTo) + "//" +
                                Path.GetFileNameWithoutExtension(saveTo) + "_Signals.txt", ExportCigClosure);
@@ -9876,6 +9878,13 @@ namespace ExpPt1
             AppDomain.CurrentDomain.FirstChanceException -= CurrentDomain_FirstChanceException;
             Logger.Stop();
             ErrLogger.Stop();
+        }
+
+        class AcSection
+        {
+            Block section;
+            List<Block> BlkDPs;
+            List<Block> AcElements;
         }
     }
 }
