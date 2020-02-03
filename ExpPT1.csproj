@@ -71,6 +71,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AcSection.cs" />
     <Compile Include="Blocks.cs" />
     <Compile Include="Calc.cs" />
     <Compile Include="Constants.cs" />

@@ -844,6 +844,7 @@
             this.checkBoxAc.Size = new System.Drawing.Size(15, 14);
             this.checkBoxAc.TabIndex = 50;
             this.checkBoxAc.UseVisualStyleBackColor = true;
+            this.checkBoxAc.CheckedChanged += new System.EventHandler(this.CheckBoxAc_CheckedChanged);
             // 
             // groupBox5
             // 

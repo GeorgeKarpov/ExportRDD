@@ -161,6 +161,8 @@ namespace ReadExcel
                                                        Distance = p.Field<string>(DistanceColumn),
                                                        OCes = Convert.ToDecimal(p.Field<string>(OCesColumn))
                                                    }).ToList();
+                        //document.title += "SL " + dt.Rows[0][5].ToString() + " " + dt.Rows[0][6].ToString();
+                        //document.title += ")";
                         return query;
                     }
                 }
@@ -493,6 +495,10 @@ namespace ReadExcel
                     {
                         for (int i = 0; i < dt.Columns.Count - 1; i++)
                         {
+                            if (dt.Columns[i].DataType != typeof(string))
+                            {
+                                continue;
+                            }
                             if (dt.Rows[r][i] != DBNull.Value && dt.Rows[r][i].ToString().Contains("Designation"))
                             {
                                 DesignationCloumn = dt.Columns[i].ColumnName;
@@ -547,6 +553,8 @@ namespace ReadExcel
                             EmergSg = (string)dt.Rows[EmRow][EmCol + 1]
 
                         });
+                        //document.title += "SL " + dt.Rows[0][5].ToString() + " " + dt.Rows[0][6].ToString();
+                        //document.title += ")";
                         return query;
                     }
                 }
@@ -1515,6 +1523,47 @@ namespace ReadExcel
                 {
                     Connection = conn
                 };
+
+                var dtExcelsheetname = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, new object[] { null, null, null, "TABLE" });
+                //string InputDocSheet = "";
+                //foreach (DataRow row in dtExcelsheetname.Rows)
+                //{
+                //    if (row["TABLE_NAME"].ToString().Contains("mrk-"))
+                //    {
+                //        InputDocSheet = row["TABLE_NAME"].ToString();
+                //        break;
+                //    }
+                //}
+                //cmd.CommandText = "SELECT * FROM [" + InputDocSheet + "]";
+                //DataTable dtInput = new DataTable();
+                //OleDbDataAdapter daInput = new OleDbDataAdapter(cmd);
+                //daInput.Fill(dtInput);
+                //var sl = dtInput.Rows[0][1].ToString()
+                //            .Split(new string[]{ "Signalling_layout_",
+                //                                 "Signalling layout ",
+                //                                 "signalling_layout_",
+                //                                 "signalling layout ",
+                //                                 "Signalling_Layout_",
+                //                                 "Signalling Layout ",
+                //                                 " ", "_", "Ed", "ED", "ed" }, StringSplitOptions.RemoveEmptyEntries);
+                //if (sl.Length >= 4)
+                //{
+                //    document.title += "SL v/" + sl[3] + ", " + sl[1] + "";
+                //}
+                //var ssp = dtInput.Rows[1][1].ToString()
+                //            .Split(new string[] { "Speed_profile_",
+                //                                  "Speed profile ",
+                //                                  "speed_profile_",
+                //                                  "speed profile ",
+                //                                  "Speed_Profile_",
+                //                                  "Speed Profile ",
+                //                                  " ", "_", "Ed", "ED", "ed" }, StringSplitOptions.RemoveEmptyEntries);
+                //if (ssp.Length >= 4)
+                //{
+                //    document.title += "; SSP v/" + ssp[3] + ", " + ssp[1] + "";
+                //}
+                //document.title += ")";
+
                 cmd.CommandText = "SELECT * FROM [FrontPage$]";
                 //DataTable dt = new DataTable();
                 //dt.TableName = sheetName;
@@ -1602,12 +1651,12 @@ namespace ReadExcel
                                  new List<PwsActDl>();
                     string actName = (string)dt.Rows[a - 2][ColumnNumber + 1];
                     
-                    activation.SpeedIfUnprotectedUp = (dt.Rows[a][ColumnNumber + 7] as string) ?? "";
-                    activation.SpeedIfUnprotectedDown = (dt.Rows[a + 1][ColumnNumber + 7] as string) ?? "";
-                    activation.TSRStartInRearOfAreaUp = (dt.Rows[a + 2][ColumnNumber + 7] as string) ?? "";
-                    activation.TSRStartInRearOfAreaDown = (dt.Rows[a + 3][ColumnNumber + 7] as string) ?? "";
-                    activation.TSRExtensionBeyondAreaUp = (dt.Rows[a + 4][ColumnNumber + 7] as string) ?? "";
-                    activation.TSRExtensionBeyondAreaDown = (dt.Rows[a + 5][ColumnNumber + 7] as string) ?? "";
+                    activation.SpeedIfUnprotectedUp = (dt.Rows[a][ColumnNumber + 6] as string) ?? "";
+                    activation.SpeedIfUnprotectedDown = (dt.Rows[a + 1][ColumnNumber + 6] as string) ?? "";
+                    activation.TSRStartInRearOfAreaUp = (dt.Rows[a + 2][ColumnNumber + 6] as string) ?? "";
+                    activation.TSRStartInRearOfAreaDown = (dt.Rows[a + 3][ColumnNumber + 6] as string) ?? "";
+                    activation.TSRExtensionBeyondAreaUp = (dt.Rows[a + 4][ColumnNumber + 6] as string) ?? "";
+                    activation.TSRExtensionBeyondAreaDown = (dt.Rows[a + 5][ColumnNumber + 6] as string) ?? "";
 
                     while ((a <= (dt.Rows.Count - 1)) &&
                            (dt.Rows[a][ColumnNumber] == DBNull.Value || delays.IsMatch((string)dt.Rows[a][ColumnNumber])))
@@ -1743,7 +1792,44 @@ namespace ReadExcel
                     Connection = conn
                 };
                 var dtExcelsheetname = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, new object[] { null, null, null, "TABLE" });
-
+                //string InputDocSheet = "";
+                //foreach (DataRow row in dtExcelsheetname.Rows)
+                //{
+                //    if (row["TABLE_NAME"].ToString().Contains("mrk-"))
+                //    {
+                //        InputDocSheet = row["TABLE_NAME"].ToString();
+                //        break;
+                //    }
+                //}
+                //cmd.CommandText = "SELECT * FROM [" + InputDocSheet + "]";
+                //DataTable dtInput = new DataTable();
+                //OleDbDataAdapter daInput = new OleDbDataAdapter(cmd);
+                //daInput.Fill(dtInput);
+                //var sl = dtInput.Rows[0][1].ToString()
+                //            .Split(new string[]{ "Signalling_layout_",
+                //                                 "Signalling layout ",
+                //                                 "signalling_layout_",
+                //                                 "signalling layout ",
+                //                                 "Signalling_Layout_",
+                //                                 "Signalling Layout ",
+                //                                 " ", "_", "Ed", "ED", "ed" }, StringSplitOptions.RemoveEmptyEntries);
+                //if (sl.Length >= 4)
+                //{
+                //    document.title += "SL v/" + sl[3] + ", " + sl[1] + "";
+                //}
+                //var ssp = dtInput.Rows[1][1].ToString()
+                //            .Split(new string[] { "Speed_profile_", 
+                //                                  "Speed profile ",
+                //                                  "speed_profile_",
+                //                                  "speed profile ",
+                //                                  "Speed_Profile_",
+                //                                  "Speed Profile ",
+                //                                  " ", "_", "Ed", "ED", "ed" }, StringSplitOptions.RemoveEmptyEntries);
+                //if (ssp.Length >= 4)
+                //{
+                //    document.title += "; SSP v/" + ssp[3] + ", " + ssp[1] + "";
+                //}
+                //document.title += ")";
                 string TableName = "";
                 Regex name = new Regex("^.*Front.*[P-p]{1}age.*[$][']{0,1}$");
                 foreach (DataRow row in dtExcelsheetname.Rows)

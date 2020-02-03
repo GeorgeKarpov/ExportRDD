@@ -22,6 +22,7 @@ namespace ExpPt1
         private Dictionary<string, string> loadFiles;
         AcadWindows.OpenFileDialog OpenFile;
         public bool CopyLevel { set; get; }
+        public bool AutoAC { set; get; }
 
         public string StationId {
             get
@@ -532,6 +533,11 @@ namespace ExpPt1
         private void CheckBoxLevel_CheckedChanged(object sender, EventArgs e)
         {
             CopyLevel = checkBoxLevel.Checked;
+        }
+
+        private void CheckBoxAc_CheckedChanged(object sender, EventArgs e)
+        {
+            AutoAC = checkBoxAc.Checked;
         }
     }
 }
