@@ -2959,19 +2959,19 @@ namespace ExpPt1
                 List<AxleCounterSectionsAxleCounterSectionElementsElement> elements =
                     new List<AxleCounterSectionsAxleCounterSectionElementsElement>();
                 List<Block> tmpDps = null;
-                if (checkData.ContainsKey("checkBoxAc") && checkData["checkBoxAc"])
-                {
-                    tmpDps = GetDpsOfAC(BlkAcSection, trackLines, blocks);
-                }
-                else
-                {
+                //if (checkData.ContainsKey("checkBoxAc") && checkData["checkBoxAc"])
+                //{
+                //    tmpDps = GetDpsOfAC(BlkAcSection, trackLines, blocks);
+                //}
+                //else
+                //{
                     tmpDps = BlkDPs
                                             .Where(x => DPs.ToList()
                                             .Contains(blckProp.GetElemDesignation(x)))
                                             .OrderBy(x => x.Attributes["NAME"].Value)
                                             .Distinct()
                                             .ToList();
-                }
+                //}
 
                 List<Block> AcElements = TrackSegmentsTmp
                     .Where(x => x.BlocksOnSegments
@@ -3132,13 +3132,26 @@ namespace ExpPt1
                         DetectionPoints = new AxleCounterSectionsAxleCounterSectionDetectionPoints
                         {
                             DetectionPoint = section.Dps
+                                             .Where(x => x.XsdName != "EndOfTrack")
                                              .Select(x => new AxleCounterSectionsAxleCounterSectionDetectionPointsDetectionPoint
                                              {
                                                  Value = x.Designation
                                              })
                                              .ToArray()
                         },
-                        Elements = new AxleCounterSectionsAxleCounterSectionElements
+                        //Elements = new AxleCounterSectionsAxleCounterSectionElements
+                        //{
+                        //    Element = section.Elements
+                        //              .Select(x => new AxleCounterSectionsAxleCounterSectionElementsElement
+                        //              {
+                        //                  Value = x
+                        //              })
+                        //              .ToArray()
+                        //}
+                    };
+                    if (section.Elements != null && section.Elements.Count > 0)
+                    {
+                        acSection.Elements = new AxleCounterSectionsAxleCounterSectionElements
                         {
                             Element = section.Elements
                                       .Select(x => new AxleCounterSectionsAxleCounterSectionElementsElement
@@ -3146,8 +3159,14 @@ namespace ExpPt1
                                           Value = x
                                       })
                                       .ToArray()
-                        }
-                    };
+                        };
+                    }
+                    else
+                    {
+                        ErrLogger.Log("AC Section " + acSection.Designation +
+                            ".No Elements found for Ac section");
+                        error = true;
+                    }
                     if (!DPs.OrderBy(x => x).SequenceEqual(section.Dps.Select(x => x.Designation).OrderBy(x => x)))
                     {
                         ErrLogger.Log("AC Section " + blckProp.GetElemDesignation(BlkAcSection) +
@@ -9922,6 +9941,7 @@ namespace ExpPt1
                 {
                     firstDp
                 };
+                Block eot = null;
                 skipFirstDps.Add(firstDp);
                 List<TrackSegmentTmp> segNodes = this.TrackSegmentsTmp
                                   .Where(x => x.Designation == firstDp.TrackSegId)
@@ -9939,6 +9959,7 @@ namespace ExpPt1
                 bool exists = false;
                 List<TrackSegmentTmp> skipNodes = new List<TrackSegmentTmp>();
                 skipNodes.AddRange(segNodes);
+                List<Block> elements = new List<Block>();
                 while (stackNodes.Count > 0)
                 {
                     Block nextDp = this.blocks
@@ -9957,7 +9978,26 @@ namespace ExpPt1
                             break;
                         }
                         sectionDps.Add(nextDp);
+                        if (stackNodes.Peek().Peek().Vertex2.XsdName == "EndOfTrack")
+                        {
+                            eot = stackNodes.Peek().Peek().Vertex2;
+                        }
                         //skipDps.Add(nextDp);
+                        do
+                        {
+                            if (stackNodes.Peek().Count == 2)
+                            {
+                                stackNodes.Peek().Pop();
+                                break;
+                            }
+                            stackNodes.Pop();
+                            iterCount--;
+                        }
+                        while (stackNodes.Count > 0);
+                    }
+                    else if (stackNodes.Peek().Peek().Vertex2.XsdName == "EndOfTrack")
+                    {
+                        eot = stackNodes.Peek().Peek().Vertex2;
                         do
                         {
                             if (stackNodes.Peek().Count == 2)
@@ -9972,6 +10012,10 @@ namespace ExpPt1
                     }
                     else
                     {
+                        if (stackNodes.Peek().Peek().Vertex2.XsdName == "Point")
+                        {
+                            elements.Add(stackNodes.Peek().Peek().Vertex2);
+                        }
                         segNodes = this.TrackSegmentsTmp
                                    .Where(x => (x.Vertex1 == stackNodes.Peek().Peek().Vertex2||
                                                x.Vertex2 == stackNodes.Peek().Peek().Vertex2 /*||
@@ -10018,11 +10062,19 @@ namespace ExpPt1
                     continue;
                 }
                 skipTrackings.Add(sectionDps);
-                this.acSections.Add(CreateAcSection(sectionDps, skipNodes));
+                if (sectionDps.Count == 1 && eot !=null)
+                {
+                    sectionDps.Add(eot);
+                }
+                AcSection acSectionTmp = CreateAcSection(sectionDps, skipNodes, elements);
+                if (acSectionTmp != null)
+                {
+                    this.acSections.Add(acSectionTmp);
+                }               
             }
         }
 
-        private AcSection CreateAcSection(List<Block> dps, List<TrackSegmentTmp> segNodes)
+        private AcSection CreateAcSection(List<Block> dps, List<TrackSegmentTmp> segNodes, List<Block> elements)
         {
             AcSection acSection = new AcSection
             {
@@ -10036,23 +10088,29 @@ namespace ExpPt1
                                                     x.XsdName == "TrackSection") &&
                                                     Calc.Between(x.X, dps[0].X, dps[1].X, true) &&
                                                     segLines.Any(l => (l.GetClosestPointTo(x.BlkRef.Position, false) - x.BlkRef.Position).Length <= 5));
+            if (blockSection == null)
+            {
+                ErrLogger.Log("Block for AC section not found. Related Dps: " + string.Join(",", dps.Select(x => x.Designation).ToArray()));
+                ErrLogger.error = true;
+                return null;
+            }
             acSection.Designation = this.blckProp.GetElemDesignation(blockSection); //.Split('P').Last();
             if (blockSection.XsdName == "AxleCounterSection")
             {
-                List<Block> points = this.blocks
-                                 .Where(x => x.XsdName == "Point" &&
-                                             Calc.Between(x.Location, min, max, true) &&
-                                             segNodes.Select(s => s.Designation).Contains(x.TrackSegId))
-                                  .OrderBy(x => Convert.ToDouble(x.Location))
-                                 .ToList();
-                if (points == null || points.Count == 0)
+                //List<Block> points = this.blocks
+                //                 .Where(x => x.XsdName == "Point" &&
+                //                             Calc.Between(x.Location, min, max, true) &&
+                //                             segNodes.Select(s => s.Designation).Contains(x.TrackSegId))
+                //                  .OrderBy(x => Convert.ToDouble(x.Location))
+                //                 .ToList();
+                if (elements == null || elements.Count == 0)
                 {
-                    ErrLogger.Log("Points for AC section found " + dps[0].Designation);
+                    ErrLogger.Log("No points for AC section found " + dps[0].Designation);
                     ErrLogger.error = true;
                     return acSection;
                 }
-                Line pointTip = GetPointTipLine(points[0]);
-                Line pointBase = GetPointBaseLine(points[0]);
+                Line pointTip = GetPointTipLine(elements[0]);
+                Line pointBase = GetPointBaseLine(elements[0]);
                 Point2d Tip = GetMiddlPoint2d(pointTip.GeometricExtents);
                 Point2d Base = GetMiddlPoint2d(pointBase.GeometricExtents);
                 Vector2d pointStraight = Tip.GetVectorTo(Base);
@@ -10077,7 +10135,7 @@ namespace ExpPt1
                     }
                 }
                 acSection.Dps = acSection.Dps.OrderBy(x => x.Ac_angle).ToList();
-                acSection.Elements = points.Select(x => x.Designation).ToList();
+                acSection.Elements = elements.Select(x => x.Designation).ToList();
             }
             else
             {
