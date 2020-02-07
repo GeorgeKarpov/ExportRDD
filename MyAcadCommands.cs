@@ -1,5 +1,4 @@
-﻿using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.Runtime;
+﻿using Autodesk.AutoCAD.Runtime;
 
 [assembly: CommandClass(typeof(ExpPt1.MyAcadCommands))]
 
@@ -13,15 +12,23 @@ namespace ExpPt1
         [CommandMethod("ExportRDD")]
         public static void ExportRdd()
         {
-            ExpPt1.Export export = new ExpPt1.Export(DwgPath);
+            Export export = new Export(DwgPath);
             export.ExportRdd();
+            export.Dispose();
+        }
+
+        [CommandMethod("ExportBlocks")]
+        public static void ExportBlocks()
+        {
+            Export export = new Export(DwgPath);
+            export.ExportBlocks();
             export.Dispose();
         }
 
         [CommandMethod("CopyAttributes")]
         public static void CopyAtt()
         {
-            ExpPt1.Export export = new ExpPt1.Export(DwgPath);
+            Export export = new Export(DwgPath);
             export.CopyAtributtesOnDrw();
             export.Dispose();
         }
@@ -29,7 +36,7 @@ namespace ExpPt1
         [CommandMethod("CheckIntersSections")]
         public static void TestInterSection()
         {
-            ExpPt1.Export export = new ExpPt1.Export(DwgPath);
+            Export export = new Export(DwgPath);
             export.TestIntersection();
             export.Dispose();
         }
@@ -37,7 +44,7 @@ namespace ExpPt1
         [CommandMethod("DynPlatforms")]
         public static void DynPlat()
         {
-            ExpPt1.Export export = new ExpPt1.Export(DwgPath);
+            Export export = new Export(DwgPath);
             export.ReplacePlatforms();
         }
 

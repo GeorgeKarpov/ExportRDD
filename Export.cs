@@ -56,14 +56,13 @@ namespace ExpPt1
         List<TrackSegmentsTrackSegment> trcksegments;
         List<TrustedArea> TrustedAreas;
         List<TrackLine> TracksLines;
-        //List<string> logs;
-        //private static List<string> errorslogs;
-        List<string> ExportList = new List<string>
-            {
-                "<Track Segment ID>\t"+
-                "<Km start>\t"+
-                "<Km end>"
-            };
+
+        //List<string> ExportList = new List<string>
+        //    {
+        //        "<Track Segment ID>\t"+
+        //        "<Km start>\t"+
+        //        "<Km end>"
+        //    };
         List<string> ExportCigClosure;
         List<string> ExportPoints;
 
@@ -95,7 +94,7 @@ namespace ExpPt1
             RailwayLines = new List<RailwayLine>();
             BlocksToGet = new Dictionary<string, string>();
             Status = new TStatus { };
-            //errorslogs = new List<string>();
+
             File.Delete(dwgDir + @"\Error.log");
             File.Delete(dwgDir + @"\Report.log");
             ErrLogger.filePath = dwgDir + @"\Error.log";
@@ -219,145 +218,6 @@ namespace ExpPt1
             File.WriteAllLines(saveFile.Filename, attributes);
         }
 
-        //[CommandMethod("VerifyKmps")]
-        //public void CheckKmps()
-        //{
-        //    List<Line> KmpLines = new List<Line>();
-        //    List<MText> KmpTexts = new List<MText>();
-        //    bool error = false;
-        //    List<Block> Blocks = GetBlocks(ref error);
-        //    //logs = new List<string>();
-        //    Block BlkSigLayout = Blocks.Where(x => x.XsdName == "SignallingLayout").Select(x => x).First();
-
-        //    if (BlkSigLayout.Attributes["1-ST.NAVN"].Value.Split('(').Length > 1)
-        //    {
-        //        stationID = BlkSigLayout.Attributes["1-ST.NAVN"].Value.Split('(')[1].TrimEnd(')').ToLower();
-        //    }
-
-        //    using (Transaction trans = db.TransactionManager.StartTransaction())
-        //    {
-        //        var Linesids = GetObjectsOfType(db, RXObject.GetClass(typeof(Line)));
-        //        foreach (ObjectId ObjId in Linesids)
-        //        {
-        //            Line line = (Line)trans.GetObject(ObjId, OpenMode.ForRead);
-        //            if (line.Layer.Contains("_Kilometrering_tekst"))
-        //            {
-        //                KmpLines.Add(line);
-        //            }
-        //        }
-        //        var MTxtids = GetObjectsOfType(db, RXObject.GetClass(typeof(MText)));
-        //        foreach (ObjectId ObjId in MTxtids)
-        //        {
-        //            MText mtext = (MText)trans.GetObject(ObjId, OpenMode.ForRead);
-        //            if (mtext.Layer.Contains("_Kilometrering_tekst"))
-        //            {
-        //                KmpTexts.Add(mtext);
-        //            }
-        //        }
-        //        trans.Commit();
-        //    }
-        //    List<Block> BlkElements = Blocks
-        //                                .Where(x => (x.XsdName == "Signal" ||
-        //                                            x.XsdName == "Point" ||
-        //                                            x.XsdName == "DetectionPoint" ||
-        //                                            x.XsdName == "BaliseGroup" ||
-        //                                            x.XsdName == "Fouling Point" ||
-        //                                            x.XsdName == "LevelCrossing") &&
-        //                                            x.Attributes["KMP"].Visible == false)
-        //                                .OrderBy(x => x.X)
-        //                                .ToList();
-        //    foreach (Block element in BlkElements)
-        //    {
-
-        //        List<MText> texts = KmpTexts
-        //                     .Where(x => (Calc.RndXY(x.Location.X) <= element.X + 10 &&
-        //                                  Calc.RndXY(x.Location.X) >= element.X - 10))
-        //                     .ToList();
-        //        if (texts != null && texts.Count > 0)
-        //        {
-        //            bool textMatch = false;
-        //            foreach (MText looptext in texts)
-        //            {
-        //                if (looptext.Text.Trim(new Char[] { '(', ')' }) == element.Attributes["KMP"].Value)
-        //                {
-        //                    textMatch = true;
-        //                    break;
-        //                }
-        //            }
-        //            if (!textMatch)
-        //            {
-        //                MText Nexttext = KmpTexts
-        //                     .Where(x => (Calc.RndXY(x.Location.X) <= element.X + 10 &&
-        //                                  Calc.RndXY(x.Location.X) >= element.X - 10) &&
-        //                                 (Calc.RndXY(x.Location.Y) <= element.Y + 15 &&
-        //                                  Calc.RndXY(x.Location.Y) >= element.Y - 15)
-        //                            )
-        //                     .FirstOrDefault();
-        //                if (Nexttext != null)
-        //                {
-        //                    if (Nexttext.Text.Trim(new Char[] { '(', ')' }) != element.Attributes["KMP"].Value)
-        //                    {
-        //                        Logger.Log("Displayed " + Nexttext.Text.Trim(new Char[] { '(', ')' }) +
-        //                            ", Attribute " + element.Attributes["KMP"].Value + " " +  blckProp.GetElemDesignation(element));
-        //                    }
-        //                }
-        //                else
-        //                {
-        //                    NumberFormatInfo fmt = new NumberFormatInfo
-        //                    {
-        //                        NegativeSign = "-"
-        //                    };
-        //                    MText closest1 = texts.Aggregate((x, y) => Math.Abs(x.Location.X - element.X) < Math.Abs(y.Location.X - element.X) ? x : y);
-        //                    double number =
-        //                        Double.Parse(Regex.Replace(element.Attributes["KMP"].Value, @"\s+", ""), fmt);
-        //                    MText closest2 =
-        //                        texts.Aggregate((x, y) => Math.Abs(Convert.ToDouble(x.Text.Trim(new Char[] { '(', ')' })) - number)
-        //                        < Math.Abs(Convert.ToDouble(y.Text.Trim(new Char[] { '(', ')' })) - number) ? x : y);
-        //                    string log = "";
-        //                    if (closest1.Text.Trim(new Char[] { '(', ')' }) !=
-        //                        closest2.Text.Trim(new Char[] { '(', ')' }))
-        //                    {
-        //                        log = closest1.Text.Trim(new Char[] { '(', ')' }) + " or " +
-        //                            closest2.Text.Trim(new Char[] { '(', ')' });
-        //                    }
-        //                    else
-        //                    {
-        //                        log = closest1.Text.Trim(new Char[] { '(', ')' });
-        //                    }
-        //                    //Logger.Log("Displayed " + log +
-        //                    //", Attribute " + element.Attributes["KMP"].Value,
-        //                    //blckProp.GetElemDesignation(element));
-        //                }
-        //            }
-        //        }
-        //        else
-        //        {
-        //            MText text = KmpTexts
-        //                     .Where(x => (Calc.RndXY(x.Location.X) <= element.X + 10 &&
-        //                                  Calc.RndXY(x.Location.X) >= element.X - 10) &&
-        //                                 (Calc.RndXY(x.Location.Y) <= element.Y + 15 &&
-        //                                  Calc.RndXY(x.Location.Y) >= element.Y - 15)
-        //                            )
-        //                     .FirstOrDefault();
-        //            if (text != null)
-        //            {
-        //                if (text.Text.Trim(new Char[] { '(', ')' }) != element.Attributes["KMP"].Value)
-        //                {
-        //                    Logger.Log("Displayed " + text.Text.Trim(new Char[] { '(', ')' }) +
-        //                        ", Attribute " + element.Attributes["KMP"].Value,
-        //                        blckProp.GetElemDesignation(element));
-        //                }
-        //            }
-        //            else
-        //            {
-        //                Logger.Log("Displayed text not found", blckProp.GetElemDesignation(element));
-        //            }
-        //        }
-        //    }
-        //    //File.WriteAllLines(Path.GetDirectoryName(db.Filename) + "//" +
-        //    //                  Path.GetFileNameWithoutExtension(db.Filename) + "_" +
-        //    //                  DateTime.Now.ToShortDateString() + ".log", logs);
-        //}
 
         [CommandMethod("CheckIntersSections")]
         public void TestIntersection()
@@ -387,128 +247,6 @@ namespace ExpPt1
                     }
                     acTrans.Commit();
                 }
-            }
-        }
-
-        [CommandMethod("ResetCompRoutes")]
-        public void ResetCompoundRoutes()
-        {
-            cmproutes.Clear();
-        }
-
-        
-        [CommandMethod("SaveCompRoutes")]
-        public void SaveCompoundRoutes()
-        {
-            CompoundRoutes compoundrts = new CompoundRoutes { CompoundRoute = cmproutes.ToArray() };
-            //bool blocksErr = false;
-            //List<Block> Blocks = GetBlocks(ref blocksErr);
-            //string stationID = GetStationId(Blocks);
-            string saveTo = Path.GetDirectoryName(dwgPath) + "//" +
-                          stationID.ToUpper() + "_CR.xml";
-
-            XmlSerializer serializer = new XmlSerializer(typeof(CompoundRoutes));
-            using (StreamWriter stream = new StreamWriter(saveTo))
-            {
-                XmlWriter writer = XmlWriter.Create(stream, settings);
-                serializer.Serialize(writer, compoundrts);
-                writer.WriteEndDocument();
-                writer.Flush();
-            }
-        }
-
-        [CommandMethod("CreateCompRoutes", CommandFlags.UsePickSet)]
-        public void CreateCompoundRoutes()
-        {
-            BlockReference block;
-            List<string> sigNames = new List<string>();
-            ReadBlocksDefinitions();
-            bool blocksErr = false;
-            List<Block> Blocks = GetBlocks(ref blocksErr);
-            //SelectionSet alreadySel = acDoc.Editor.GetSelection().Value;
-            using (Transaction acTrans = db.TransactionManager.StartTransaction())
-            {
-                PromptSelectionResult acSSPrompt = acDoc.Editor.GetSelection();
-                if (acSSPrompt.Status == PromptStatus.OK)
-                {
-                    SelectionSet acSSet = acSSPrompt.Value;
-                    if (acSSet.Count > 9)
-                    {
-                        AcadApp.ShowAlertDialog("Routes count more then 8 not supported.\n" + (acSSet.Count - 1) + " selected");
-                        return;
-                    }
-                    for (int j =0; j < acSSet.Count; j++)
-                    {
-                        block = (BlockReference)acTrans.GetObject(acSSet[j].ObjectId,
-                                                                OpenMode.ForRead);
-                        sigNames.Add(GetAttributes(block)["NAME"].Value);
-                    }                 
-                }
-                else
-                {
-                    acTrans.Commit();
-                    return;
-                }
-                acTrans.Commit();
-            }
-            List<Block> signals = Blocks
-                                  .Where(x => x.XsdName == "Signal" && 
-                                              sigNames.Contains(x.Attributes["NAME"].Value))
-                                  .OrderBy(x => x.Location)
-                                  .ToList();
-            if (signals[0].Attributes["DIRECTION"].Value.ToLower() == "down")
-            {
-                signals = signals.OrderByDescending(x => x.Location).ToList();
-                if (signals.Any(x => x.Attributes["DIRECTION"].Value.ToLower() == "up"))
-                {
-                    AcadApp.ShowAlertDialog("All signals must be in the same direction.");
-                    return;
-                }
-            }
-            else if (signals[0].Attributes["DIRECTION"].Value.ToLower() == "up")
-            {
-                if (signals.Any(x => x.Attributes["DIRECTION"].Value.ToLower() == "down"))
-                {
-                    AcadApp.ShowAlertDialog("All signals must be in the same direction.");
-                    return;
-                }
-            }
-            string stationID = GetStationId(Blocks);
-            BlockProperties blockProperties = new BlockProperties(stationID);
-            for (int j = 2; j < signals.Count; j++)
-            {
-                string crDesign = blockProperties.GetElemDesignation(signals[0]) + "_" +
-                                blockProperties.GetElemDesignation(signals[j]);
-                if (cmproutes.Any(x => x.Designation == crDesign))
-                {
-                    continue;
-                }
-                List<CompoundRoutesCompoundRouteRouteIDsRouteID> routeIDs = new List<CompoundRoutesCompoundRouteRouteIDsRouteID>();
-                for (int r = 0; r <j; r++)
-                {
-                    routeIDs.Add(new CompoundRoutesCompoundRouteRouteIDsRouteID {
-                                Value = blockProperties.GetElemDesignation(signals[r])  +"_" +
-                                blockProperties.GetElemDesignation(signals[r + 1])
-                    });
-                }
-
-                CompoundRoutesCompoundRoute compoundRoute = new CompoundRoutesCompoundRoute
-                {
-                    Designation = crDesign,
-                    Status = Status,
-                    Start = blockProperties.GetElemDesignation(signals[0]),
-                    Destination = blockProperties.GetElemDesignation(signals[j]),
-                    RouteIDs = new CompoundRoutesCompoundRouteRouteIDs { RouteID = routeIDs.ToArray() }
-                };
-                if (cmproutes.Any(x => x.Start == compoundRoute.Start && x.Destination == compoundRoute.Destination))
-                {
-                    compoundRoute.Default = YesNoType.no;
-                }
-                else
-                {
-                    compoundRoute.Default = YesNoType.yes;
-                }
-                cmproutes.Add(compoundRoute);
             }
         }
 
@@ -547,25 +285,6 @@ namespace ExpPt1
 
             }
         }
-
-        private void EditAtributte(BlockReference toBlkRef, string tag, string value)
-        {
-            AttributeCollection attsNew = toBlkRef.AttributeCollection;
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                foreach (ObjectId arId in attsNew)
-                {
-                    AttributeReference attRef =
-                        (AttributeReference)tr.GetObject(arId, OpenMode.ForWrite);
-                    if (attRef.Tag == tag)
-                    {
-                        attRef.TextString = value;
-                    }
-                }
-                tr.Commit();
-            }
-        }
-
        
         public void CopyAtributtesOnDrw()
         {
@@ -640,14 +359,12 @@ namespace ExpPt1
                 new List<EmergencyStopGroupsEmergencyStopGroup>();
             List<SpeedProfilesSpeedProfile> speedprofiles = new List<SpeedProfilesSpeedProfile>();
             List<RoutesRoute> routes = new List<RoutesRoute>();
-            //List<CompoundRoutesCompoundRoute> cmproutes = new List<CompoundRoutesCompoundRoute>();
             List<TrustedAreasTrustedArea> trustedareas = new List<TrustedAreasTrustedArea>();
             List<PlatformsPlatform> platforms = new List<PlatformsPlatform>();
             List<BlockInterfacesBlockInterface> blockInterfaces = new List<BlockInterfacesBlockInterface>();
             List<PermanentShuntingAreasPermanentShuntingArea> permanentshuntareas =
                 new List<PermanentShuntingAreasPermanentShuntingArea>();
             List<Track> Tracks;
-            //List<Stop> Stops;
 
             TracksLines = new List<TrackLine>();
             List<Line> TrustedAreaLines = new List<Line>();
@@ -659,8 +376,7 @@ namespace ExpPt1
             Documents = new List<TFileDescr>();
 
             Segments = new Dictionary<string, string>();
-            //logs = new List<string>();
-            //errorslogs = new List<string>();
+
             ExportCigClosure = new List<string>
             {
                 "<Signal ID>\t"+
@@ -697,8 +413,6 @@ namespace ExpPt1
                             .Where(arg => !string.IsNullOrWhiteSpace(arg))
                             .ToDictionary(x => x.Split('\t')[0], x => x.Split('\t')[1]);
             }
-
-
             
             List<bool> err = new List<bool>
             {
@@ -711,8 +425,7 @@ namespace ExpPt1
             excel = new ReadExcel.Excel(stationID);
             TrustedAreaLines = GetTrustedAreasLines();
             Tracks = GetTracksNames().ToList();
-            //Stops = GetStops(Blocks).ToList();
-            //Lines
+
             ReadLines(blocks, ref lines);
 
             // Signaling Layout
@@ -6832,7 +6545,7 @@ namespace ExpPt1
                             {
                                 Okm2 = Vertex2.Location.ToString();
                             }
-                            ExportList.Add(trcksegement.Designation + "\t" + Okm1 + "\t" + Okm2);
+                            //ExportList.Add(trcksegement.Designation + "\t" + Okm1 + "\t" + Okm2);
                         }
 
                         if (Vertex2.XsdName == "EndOfTrack")
@@ -9378,228 +9091,6 @@ namespace ExpPt1
             return false;
         }
         
-
-        private ActivationsSet ActivationLoop(LevelCrossingsLevelCrossingLevelCrossingTracksLevelCrossingTrack Tseg, List<Block> blocks,
-                                    List<SpeedProfilesSpeedProfile> speedProfiles, DirectionType trainDirection,
-                                    bool point, string segDevId)
-        {
-            decimal maxDistance = 3.000m;
-            decimal minDistance = 1.000m;
-            decimal.TryParse(Tseg.Location, out decimal kmStart);
-            decimal TsegLoc = kmStart;
-            decimal gap = 0.000m;
-            if (trainDirection == DirectionType.down)
-            {
-                kmStart += minDistance;
-            }
-            else if (trainDirection == DirectionType.up)
-            {
-                kmStart -= minDistance;
-            }
-            TrackSegmentTmp trackSegment = TrackSegmentsTmp
-                                               .Where(x => x.Designation == Tseg.TrackSegmentID)
-                                               .FirstOrDefault();
-            TrackSegmentTmp segmentTmpAc = trackSegment;
-            if (trainDirection == DirectionType.down)
-            {
-                if (segmentTmpAc.Vertex2.XsdName == "Connector")
-                {
-                    gap += Convert.ToDecimal(segmentTmpAc.Vertex2.Attributes["KMGAP"].Value) * -1 / 1000;
-                }
-            }
-            else if (trainDirection == DirectionType.up)
-            {
-                if (segmentTmpAc.Vertex1.XsdName == "Connector")
-                {
-                    gap += Convert.ToDecimal(segmentTmpAc.Vertex2.Attributes["KMGAP"].Value) * -1 / 1000;
-                }
-            }
-            List<SspAct> speedProfilesAct =
-                   new List<SspAct>();
-            List<LxActivation> lxActivations = new List<LxActivation>();
-            while (Math.Abs(TsegLoc - kmStart) < maxDistance && segmentTmpAc != null)
-            {
-                List<Block> Acs = new List<Block>();
-                List<SpeedProfilesSpeedProfile> ssps = new List<SpeedProfilesSpeedProfile>();
-                if (trainDirection == DirectionType.down)
-                {
-                    Acs = blocks
-                      .Where(x => x.XsdName == "DetectionPoint" &&
-                                  x.Location > kmStart &&
-                                  x.TrackSegId == segmentTmpAc.Designation)
-                      .OrderBy(x => x.Location)
-                      .ToList();
-                    ssps = speedProfiles
-                           .Where(x => x.TrackSegments.TrackSegment
-                                       .Any(t => t.Value == segmentTmpAc.Designation &&
-                                                 Convert.ToDecimal(t.OperationalKM2) > TsegLoc))
-                           .ToList();
-                }
-                else if (trainDirection == DirectionType.up)
-                {
-                    Acs = blocks
-                      .Where(x => x.XsdName == "DetectionPoint" &&
-                                  x.Location < kmStart &&
-                                  x.TrackSegId == segmentTmpAc.Designation)
-                      .OrderByDescending(x => x.Location)
-                      .ToList();
-                    ssps = speedProfiles
-                           .Where(x => x.TrackSegments.TrackSegment
-                                       .Any(t => t.Value == segmentTmpAc.Designation &&
-                                                 Convert.ToDecimal(t.OperationalKM1) < TsegLoc))
-                           .ToList();
-                }
-
-                foreach (var ssp in ssps)
-                {
-                    speedProfilesAct.Add(
-                        new SspAct
-                        {
-                            speed = ssp.TrainTypes.TrainTyp.Max(s => s.SpeedLimit),
-                            kmStart = ssp.TrackSegments.TrackSegment
-                                      .Where(t => t.Value == segmentTmpAc.Designation)
-                                      .Min(t => Convert.ToDecimal(t.OperationalKM1)),
-                            kmEnd = ssp.TrackSegments.TrackSegment
-                                      .Where(t => t.Value == segmentTmpAc.Designation)
-                                      .Max(t => Convert.ToDecimal(t.OperationalKM2))
-                        });
-                }
-                if (Acs.Count == 0)
-                {
-                    List<TrackSegmentTmp> segAcTmp = new List<TrackSegmentTmp>();
-                    if (trainDirection == DirectionType.down)
-                    {
-                        segmentTmpAc = TrackSegmentsTmp
-                                   .Where(x => x.Vertex1 == segmentTmpAc.Vertex2 && 
-                                               x.Designation != segDevId)
-                                   .FirstOrDefault();
-                    }
-                    else if (trainDirection == DirectionType.up)
-                    {
-                        segmentTmpAc = TrackSegmentsTmp
-                                   .Where(x => x.Vertex2 == segmentTmpAc.Vertex1 &&
-                                               x.Designation != segDevId)
-                                   .FirstOrDefault();
-                    }
-
-                    if (segmentTmpAc != null)
-                    {
-                        if (trainDirection == DirectionType.down)
-                        {
-                            segAcTmp = TrackSegmentsTmp
-                                   .Where(x => x.Vertex1 == segmentTmpAc.Vertex1)
-                                   .ToList();
-                        }
-                        else if (trainDirection == DirectionType.up)
-                        {
-                            segAcTmp = TrackSegmentsTmp
-                                   .Where(x => x.Vertex2 == segmentTmpAc.Vertex2)
-                                   .ToList();
-                        }
-                        if (segAcTmp.Count > 1)
-                        {
-                            segDevId = segAcTmp
-                                       .Where(x => x.Designation == segmentTmpAc.Designation)
-                                       .FirstOrDefault().Designation;
-                            point = true;
-                        }
-                        ssps = speedProfiles
-                               .Where(x => x.TrackSegments.TrackSegment
-                                           .Any(t => t.Value == segmentTmpAc.Designation))
-                               .ToList();
-                        foreach (var ssp in ssps)
-                        {
-                            speedProfilesAct.Add(
-                                new SspAct
-                                {
-                                    speed = ssp.TrainTypes.TrainTyp.Max(s => s.SpeedLimit),
-                                    kmStart = ssp.TrackSegments.TrackSegment
-                                              .Where(t => t.Value == segmentTmpAc.Designation)
-                                              .Min(t => Convert.ToDecimal(t.OperationalKM1)),
-                                    kmEnd = ssp.TrackSegments.TrackSegment
-                                              .Where(t => t.Value == segmentTmpAc.Designation)
-                                              .Max(t => Convert.ToDecimal(t.OperationalKM2))
-                                });
-                        }
-                    }
-                }
-                else
-                {
-                    foreach (var Ac in Acs)
-                    {
-                        lxActivations.Add(new LxActivation { id = Ac.Designation, km = Ac.Location + gap });
-                    }
-                    if (trainDirection == DirectionType.down)
-                    {
-                        ssps = speedProfiles
-                               .Where(x => x.TrackSegments.TrackSegment
-                                           .Any(t => t.Value == segmentTmpAc.Designation &&
-                                                     Convert.ToDecimal(t.OperationalKM2) <= Acs.Last().Location))
-                               .ToList();
-                    }
-                    else if (trainDirection == DirectionType.up)
-                    {
-                        ssps = speedProfiles
-                               .Where(x => x.TrackSegments.TrackSegment
-                                           .Any(t => t.Value == segmentTmpAc.Designation &&
-                                                     Convert.ToDecimal(t.OperationalKM1) <= Acs.Last().Location))
-                               .ToList();
-                    }
-                    
-                    foreach (var ssp in ssps)
-                    {
-                        speedProfilesAct.Add(
-                            new SspAct
-                            {
-                                speed = ssp.TrainTypes.TrainTyp.Max(s => s.SpeedLimit),
-                                kmStart = ssp.TrackSegments.TrackSegment
-                                          .Where(t => t.Value == segmentTmpAc.Designation)
-                                          .Min(t => Convert.ToDecimal(t.OperationalKM1)),
-                                kmEnd = ssp.TrackSegments.TrackSegment
-                                          .Where(t => t.Value == segmentTmpAc.Designation)
-                                          .Max(t => Convert.ToDecimal(t.OperationalKM2)),
-                                kmGap = gap
-                            });
-                    }
-                    kmStart = Acs.Last().Location;
-                }
-            }
-            if (trainDirection == DirectionType.down)
-            {
-                speedProfilesAct = speedProfilesAct.OrderBy(x => x.kmStart).ToList();
-            }
-            else if (trainDirection == DirectionType.up)
-            {
-                speedProfilesAct = speedProfilesAct.OrderByDescending(x => x.kmStart).ToList();
-            }
-            
-            for (int j = 1; j < speedProfilesAct.Count; j++)
-            {
-                if (speedProfilesAct[j - 1].speed == speedProfilesAct[j].speed)
-                {
-                    continue;
-                }
-                lxActivations.Add(new LxActivation
-                {
-                    id = "sc-" + speedProfilesAct[j - 1].speed + "-" + speedProfilesAct[j].speed,
-                    km = 
-                    trainDirection == DirectionType.down ? speedProfilesAct[j - 1].kmEnd : speedProfilesAct[j - 1].kmStart +
-                    gap
-                });
-            }
-            lxActivations.Add(new LxActivation { id = "LX", km = TsegLoc });
-
-            if (trainDirection == DirectionType.down)
-            {             
-                lxActivations = lxActivations.Where(x => x.km <= TsegLoc + maxDistance).OrderByDescending(x => x.km).ToList();
-            }
-            else if (trainDirection == DirectionType.up)
-            {
-                lxActivations = lxActivations.Where(x => x.km >= TsegLoc - maxDistance).OrderBy(x => x.km).ToList();
-            }         
-            return new ActivationsSet {lxActivations = lxActivations, point = point, segDeviationId = segDevId };
-        }
-
         /// <summary>
         /// Gets all lines from block
         /// </summary>
