@@ -4564,7 +4564,7 @@ namespace ExpPt1
                     Destination = route.Dest,
                     Default = route.Default,
                     SdLastElementID = route.SdLast,
-                    SafetyDistance = route.SafeDist.ToLower() == "integrated" ? null : route.SafeDist,
+                    SafetyDistance = route.SafeDist ?? null,
                 };
                 List<RoutesRouteStartAreaGroupStartArea> areas = new List<RoutesRouteStartAreaGroupStartArea>();
                 route.StartAreas.Sort();

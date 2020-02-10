@@ -1190,10 +1190,10 @@ namespace ReadExcel
                                                                p.Field<string>(NotesColumn).ToLower() != "not available"
                                                     select new XlsRoute
                                                     {
-                                                        Type = 
+                                                        Type =
                                                                 (KindOfRouteType)Enum
-                                                                .Parse(typeof(KindOfRouteType), 
-                                                                 p.Field<string>(TypeCoulumn).ToLower().Contains("shunt") ? 
+                                                                .Parse(typeof(KindOfRouteType),
+                                                                 p.Field<string>(TypeCoulumn).ToLower().Contains("shunt") ?
                                                                     "shunting" : p.Field<string>(TypeCoulumn).ToLower()),
                                                         Start = p.Field<string>(StartColumn),
                                                         Dest = p.Field<string>(DestColumn),
@@ -1201,9 +1201,11 @@ namespace ReadExcel
                                                                   .Trim().Any(x => x
                                                                   .ToString()
                                                                   .ToLower() == "x") ? YesNoType.yes : YesNoType.no,
-                                                        SafeDist = p.Field<string>(SafeDistColumn),
+                                                        SafeDist = p.Field<string>(SafeDistColumn).Trim()
+                                                                   .Split(new string[] { "integrated", "-" }, StringSplitOptions.RemoveEmptyEntries).Length < 2 ? null :
+                                                                   p.Field<string>(SafeDistColumn),
                                                         Points = (from pt in p.Field<string>(PointsColumn)
-                                                                           .Split(new Char[] { ';', ',', '.', ':', '\n', '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                                                                           .Split(new char[] { ';', ',', '.', ':', '\n', '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries)
                                                                            .Where(x => x.Trim() != "-")
                                                                   select new XlsPoint
                                                                   {
