@@ -14,6 +14,7 @@ namespace ExpPt1
         public void Initialize()
         {
             MyAcadCommands.DwgPath = AcadApp.DocumentManager.CurrentDocument.Name;
+            MyAcadCommands.AddPalette();
             AcadApp.DocumentManager.DocumentActivated += new DocumentCollectionEventHandler(DocColDocAct);
             AcadApp.DocumentManager.DocumentCreated += new DocumentCollectionEventHandler(DocColDocAct);
 

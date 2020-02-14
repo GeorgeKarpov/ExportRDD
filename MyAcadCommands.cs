@@ -7,7 +7,7 @@ namespace ExpPt1
     public static class MyAcadCommands 
     {
         public static string DwgPath { get; set; }
-
+        public static Palette Pl { get; set; }
         //static ExpPt1.Export exportTmp;
         [CommandMethod("ExportRDD")]
         public static void ExportRdd()
@@ -15,6 +15,19 @@ namespace ExpPt1
             Export export = new Export(DwgPath);
             export.ExportRdd();
             export.Dispose();
+        }
+
+        [CommandMethod("RDDPALETTE")]
+        public static void AddPalette()
+        {
+            if (Pl == null)
+            {
+                Pl = new Palette(DwgPath);
+            }
+            else
+            {
+                Pl.Reload();
+            }
         }
 
         [CommandMethod("ExportBlocks")]
