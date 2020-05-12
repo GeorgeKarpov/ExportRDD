@@ -19,7 +19,7 @@ namespace ReadWord
                 document =
                 application.Documents.Open(path);
             }
-            catch 
+            catch
             {
                 application.Quit();
                 error = true;
@@ -46,7 +46,7 @@ namespace ReadWord
                                       .Replace("v", "").Replace("\r\a", "");
                     found1 = true;
                 }
-                
+
                 if (range.Cells[i].RowIndex == 11 && range.Cells[i].ColumnIndex == 3)
                 {
                     bool datconv = DateTime.TryParse(range.Cells[i].Range.Text
@@ -86,7 +86,7 @@ namespace ReadWord
                                         .Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)[1]
                                         .Trim().Replace("\r\a", "");
                         found2 = true;
-                    }   
+                    }
                 }
 
                 if (found1 && found2)

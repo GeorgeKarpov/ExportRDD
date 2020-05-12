@@ -1,4 +1,7 @@
-#TIB  nummer	Stationsnavn 	Perron- nummer 	Spor- nummer	Perron- laengde i	Perronhøjde  cm over  skinneoverkant "
+# usage: Defines Platforms
+# format:
+# <Line Id>	<Station Name>	<Platform Id>	<Track number>	<Platform Length>	<Platform Height>
+# [TIB  nummer]	[Stationsnavn]	[Perron- nummer]	[Spor- nummer]	Perron- laengde i	[Perronhøjde  cm over  skinneoverkant]
 30	Ribe Nørremark T 	1	1	99	26
 30	Ribe 	1	1	171	26
 30	Ribe 	2	2	117	26

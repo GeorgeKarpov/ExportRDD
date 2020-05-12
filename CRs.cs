@@ -47,7 +47,7 @@ namespace ExpPt1
                                                          x.Status.status != StatusType.deleted)
                                              //.DistinctBy(x => x.Start + x.Destination)
                                              .ToList();
-     
+
                 if (crStack.Count > 0 && (crStack.Count == Constants.maxCmpRoutesIteraion || branches.Count == 0))
                 {
                     while (crStack.Peek().Count == 1)
@@ -75,7 +75,7 @@ namespace ExpPt1
                     }
                     catch (InvalidOperationException e)
                     {
-                        ErrLogger.Log(e.Message + crStart + "_" + crEnd );
+                        ErrLogger.Log(e.Message + crStart + "_" + crEnd);
                         error = true;
                         break;
                     }
@@ -90,10 +90,10 @@ namespace ExpPt1
             if (error)
             {
                 ErrLogger.Log("Routes path between '" + crStart + "' and '" + crEnd + "' not found.");
-                return !error; 
+                return !error;
             }
 
-            CompoundRoutesCompoundRouteRouteIDsRouteID[] routeIDsRouteID = 
+            CompoundRoutesCompoundRouteRouteIDsRouteID[] routeIDsRouteID =
                 new CompoundRoutesCompoundRouteRouteIDsRouteID[crStack.Count];
             int j = 0;
             while (crStack.Count != 0)
@@ -133,7 +133,7 @@ namespace ExpPt1
                 {
                     continue;
                 }
-                CompoundRoutesCompoundRouteRouteIDsRouteID[] routeIDs = 
+                CompoundRoutesCompoundRouteRouteIDsRouteID[] routeIDs =
                     new CompoundRoutesCompoundRouteRouteIDsRouteID[r];
                 for (int rId = 0; rId < r; rId++)
                 {
@@ -145,7 +145,7 @@ namespace ExpPt1
                 CompoundRoutesCompoundRoute tmpcompoundRoute = new CompoundRoutesCompoundRoute
                 {
                     Designation = start + "_" + end,
-                    Status = new TStatus { status = StatusType.@new},
+                    Status = new TStatus { status = StatusType.@new },
                     Start = start,
                     Destination = end,
                     RouteIDs = new CompoundRoutesCompoundRouteRouteIDs
@@ -167,7 +167,7 @@ namespace ExpPt1
                 if (!existingCrs.Any(x => x.Designation == tmpcompoundRoute.Designation))
                 {
                     compoundRoutes.Add(tmpcompoundRoute);
-                }                            
+                }
             }
             return !error;
             //compoundRoutes.Add(compoundRoute);
@@ -175,7 +175,7 @@ namespace ExpPt1
 
         private void CheckForDefaults(CompoundRoutesCompoundRoute compoundRoute)
         {
-            foreach(var rt in compoundRoute.RouteIDs.RouteID)
+            foreach (var rt in compoundRoute.RouteIDs.RouteID)
             {
                 var nonDefRoutes = routes
                                .Where(x => x.Start == rt.Value.Split('_')[0] &&
@@ -194,7 +194,7 @@ namespace ExpPt1
                         builder.Append(crtid.Designation);
                         delimiter = ", ";
                     }
-                    ErrLogger.Log("CR '" + compoundRoute.Designation + 
+                    ErrLogger.Log("CR '" + compoundRoute.Designation +
                                   "' has additional non-default routes: " + builder.ToString());
                 }
             }
@@ -213,5 +213,5 @@ namespace ExpPt1
         public bool HasBranches { get; set; }
     }
 
-    
+
 }

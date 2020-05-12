@@ -7,7 +7,7 @@ namespace ExpPt1
     public static class MyAcadCommands 
     {
         public static string DwgPath { get; set; }
-
+        public static Palette Pl { get; set; }
         //static ExpPt1.Export exportTmp;
         [CommandMethod("ExportRDD")]
         public static void ExportRdd()
@@ -17,7 +17,20 @@ namespace ExpPt1
             export.Dispose();
         }
 
-        [CommandMethod("ExportBlocks")]
+        [CommandMethod("RDDPALETTE")]
+        public static void AddPalette()
+        {
+            if (Pl == null)
+            {
+                Pl = new Palette(DwgPath);
+            }
+            else
+            {
+                Pl.Reload();
+            }
+        }
+
+        //[CommandMethod("ExportBlocks")]
         public static void ExportBlocks()
         {
             Export export = new Export(DwgPath);
@@ -25,7 +38,7 @@ namespace ExpPt1
             export.Dispose();
         }
 
-        [CommandMethod("CopyAttributes")]
+        //[CommandMethod("CopyAttributes")]
         public static void CopyAtt()
         {
             Export export = new Export(DwgPath);
@@ -33,7 +46,7 @@ namespace ExpPt1
             export.Dispose();
         }
 
-        [CommandMethod("CheckIntersSections")]
+        //[CommandMethod("CheckIntersSections")]
         public static void TestInterSection()
         {
             Export export = new Export(DwgPath);

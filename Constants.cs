@@ -15,5 +15,7 @@
         public const int maxSxDelays = 20;
         public const string tdtNameRegexp = "tdt-[a-zæøåÆØÅA-Z]{2,3}-[0-9]{3}";
         public const int dpIterLimit = 9;
+        public const string cfgFolder = @"/cfg";
+        public const string logFolder = @"/log";
     }
 }
