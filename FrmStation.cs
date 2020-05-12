@@ -165,6 +165,24 @@ namespace ExpPt1
                 {
                     foreach (Control l in x.Controls)
                     {
+                        if (l is GroupBox)
+                        {
+                            foreach (Control ll in l.Controls)
+                            {
+                                if (ll is Label)
+                                {
+                                    labelsControls.Add(ll.Name, ll);
+                                    if (ll.Name.Contains("xls"))
+                                    {
+                                        loadFiles.Add(ll.Name, null);
+                                    }
+                                }
+                                if (ll is CheckBox)
+                                {
+                                    checkBoxControls.Add(ll.Name, (CheckBox)ll);
+                                }
+                            }
+                        }
                         if (l is Label)
                         {
                             labelsControls.Add(l.Name, l);
@@ -220,6 +238,13 @@ namespace ExpPt1
                     .ShowAlertDialog("Ordered Rdd not found '" + "'" + loadFiles[nameof(lblxlsOrderRdd)]);
                 return;
             }
+
+            if (InputFileNamesError())
+            {
+                e.Cancel = true;
+                return;
+            }
+            
             StationId = txtBoxStationId.Text;
             orderRddFileName = loadFiles[nameof(lblxlsOrderRdd)];
             foreach (Control x in this.Controls)
@@ -228,7 +253,17 @@ namespace ExpPt1
                 {
                     foreach (Control l in x.Controls)
                     {
-                        if (l is CheckBox)
+                        if (l is GroupBox)
+                        {
+                            foreach (Control ll in l.Controls)
+                            {
+                                if (ll is CheckBox)
+                                {
+                                    CheckData.Add(ll.Name, ((CheckBox)ll).Checked);
+                                }
+                            }
+                        }
+                        else if (l is CheckBox)
                         {
                             CheckData.Add(l.Name, ((CheckBox)l).Checked);
                         }
@@ -237,6 +272,28 @@ namespace ExpPt1
             }
         }
 
+        private bool InputFileNamesError()
+        {
+            foreach (KeyValuePair<string, string> entry in this.loadFiles)
+            {
+                if (!labelsControls.ContainsKey(entry.Key))
+                {
+                    continue;
+                }
+
+                if (string.IsNullOrEmpty(entry.Value) || !File.Exists(entry.Value))
+                {
+                    Label checkLabel = (Label)labelsControls[entry.Key];
+                    if (checkLabel.Visible && checkLabel.Enabled)
+                    {
+                        Autodesk.AutoCAD.ApplicationServices.Application
+                            .ShowAlertDialog("File name for '" + checkLabel.Tag.ToString() + "' is empty or not found.");
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
        
         private void BtnDetLock_Click(object sender, EventArgs e)
         {

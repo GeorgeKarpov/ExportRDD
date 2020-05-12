@@ -30,7 +30,7 @@ namespace ExpPt1
             }
         }
 
-        [CommandMethod("ExportBlocks")]
+        //[CommandMethod("ExportBlocks")]
         public static void ExportBlocks()
         {
             Export export = new Export(DwgPath);
@@ -38,7 +38,7 @@ namespace ExpPt1
             export.Dispose();
         }
 
-        [CommandMethod("CopyAttributes")]
+        //[CommandMethod("CopyAttributes")]
         public static void CopyAtt()
         {
             Export export = new Export(DwgPath);
@@ -46,7 +46,7 @@ namespace ExpPt1
             export.Dispose();
         }
 
-        [CommandMethod("CheckIntersSections")]
+        //[CommandMethod("CheckIntersSections")]
         public static void TestInterSection()
         {
             Export export = new Export(DwgPath);

@@ -53,11 +53,11 @@
       <HintPath>..\..\..\..\Program Files\Autodesk\AutoCAD 2020\acmgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="DocumentFormat.OpenXml, Version=2.0.5022.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="RddXmlLib">
+    <Reference Include="DocumentFormat.OpenXml, Version=2.0.5022.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="RddXmlLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\7.CompareRddXml\CompOrderRddLib\bin\Release\RddXmlLib.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -75,14 +75,15 @@
     <Compile Include="Blocks.cs" />
     <Compile Include="Calc.cs" />
     <Compile Include="Constants.cs" />
-    <Compile Include="ControlKm.cs">
+    <Compile Include="Control.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="ControlKm.designer.cs">
-      <DependentUpon>ControlKm.cs</DependentUpon>
+    <Compile Include="Control.designer.cs">
+      <DependentUpon>Control.cs</DependentUpon>
     </Compile>
     <Compile Include="CRs.cs" />
     <Compile Include="Data.cs" />
+    <Compile Include="Display.cs" />
     <Compile Include="Excel.cs" />
     <Compile Include="Export.cs" />
     <Compile Include="Extensions.cs" />
@@ -104,31 +105,25 @@
     <Compile Include="Word.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="BalAtt.dat">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="BlkMap.dat">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ColMap.dat">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="LinesDef.dat">
+    <Content Include="cfg\BlkMap.dat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="MainTracks.dat">
+    <Content Include="cfg\LinesDef.dat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Platforms.dat">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="cfg\MainTracks.dat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Stations.dat">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="cfg\Platforms.dat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="cfg\Stations.dat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="ControlKm.resx">
-      <DependentUpon>ControlKm.cs</DependentUpon>
+    <EmbeddedResource Include="Control.resx">
+      <DependentUpon>Control.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FrmStation.resx">
       <DependentUpon>FrmStation.cs</DependentUpon>
@@ -156,7 +151,13 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>if not exist $(TargetDir)\log mkdir $(TargetDir)\log
+if not exist $(TargetDir)\drv mkdir $(TargetDir)\drv
+if not exist $(TargetDir)\drv mkdir $(TargetDir)\doc
+xcopy /Y $(SolutionDir)AccessDatabaseEngine_X64.exe $(TargetDir)\drv
+xcopy /Y $(SolutionDir)mso.reg $(TargetDir)\drv
+xcopy /Y C:\3.TRDD\DynamicBlocks\Blks_Dynamic.dwg $(TargetDir)\cfg
+xcopy /Y C:\3.TRDD\DynamicBlocks\Blks_Dynamic.dwg $(TargetDir)\cfg
+del /f $(TargetDir)\log\error.log</PostBuildEvent>
   </PropertyGroup>
 </Project>

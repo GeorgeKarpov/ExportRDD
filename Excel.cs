@@ -12,53 +12,36 @@ using PwsActDls = StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCro
 using PwsActDl = StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracksStaffPassengerCrossingTrackActivationSectionsActivationSectionActivationDelaysActivationDelay;
 using LXactSection = LevelCrossingsLevelCrossingLevelCrossingTracksLevelCrossingTrackActivationSectionsActivationSection;
 using PWSactSection = StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracksStaffPassengerCrossingTrackActivationSectionsActivationSection;
+
+
 namespace ReadExcel
 {
-    /// <summary>
-    /// Basic class for reading excel table using OLEDB driver.
-    /// </summary>
     public class Excel
     {
-
-        ExpPt1.BlockProperties blckProp;
+        private ExpPt1.BlockProperties blckProp;
 
         public Excel(string stationId)
         {
-            blckProp = new ExpPt1.BlockProperties(stationId);
+            this.blckProp = new ExpPt1.BlockProperties(stationId);
         }
-        /// <summary>
-        /// Creates connection string.
-        /// </summary>
-        /// <param name="dataSource"></param>
-        /// <param name="ExtProp"></param>
-        /// <returns></returns>
+
         private string GetConnectionString(string dataSource, string ExtProp)
         {
-            Dictionary<string, string> props = new Dictionary<string, string>
+            Dictionary<string, string> dictionary = new Dictionary<string, string>();
+            dictionary["Provider"] = "Microsoft.ACE.OLEDB.12.0;";
+            dictionary["Extended Properties"] = ExtProp;
+            dictionary["Data Source"] = dataSource;
+            StringBuilder stringBuilder = new StringBuilder();
+            foreach (KeyValuePair<string, string> keyValuePair in dictionary)
             {
-                // XLSX - Excel 2007, 2010, 2012, 2013
-                ["Provider"] = "Microsoft.ACE.OLEDB.12.0;",
-                ["Extended Properties"] = ExtProp,
-                ["Data Source"] = dataSource
-            };
-
-            StringBuilder sb = new StringBuilder();
-            foreach (KeyValuePair<string, string> prop in props)
-            {
-                sb.Append(prop.Key);
-                sb.Append('=');
-                sb.Append(prop.Value);
-                sb.Append(';');
+                stringBuilder.Append(keyValuePair.Key);
+                stringBuilder.Append('=');
+                stringBuilder.Append(keyValuePair.Value);
+                stringBuilder.Append(';');
             }
-            return sb.ToString();
+            return stringBuilder.ToString();
         }
 
-        /// <summary>
-        /// Reads data from Signals Closure table.
-        /// </summary>
-        /// <param name="dataSource"></param>
-        /// <param name="document"></param>
-        /// <returns></returns>
         public List<Signal> DangerPoints(string dataSource,
             ref TFileDescr document)
         {
@@ -151,16 +134,16 @@ namespace ReadExcel
                     if (MbCoulumn != string.Empty && DistanceColumn != string.Empty && AcColumn != string.Empty)
                     {
                         List<Signal> query = (from p in dt.AsEnumerable()
-                                                   where p.Field<object>(MbCoulumn) != null &&
-                                                              p.Field<object>(DistanceColumn) != null
-                                                           && p.Field<string>(DistanceColumn) != "MB -> AxC"
-                                                   select new Signal
-                                                   {
-                                                       Mb = p.Field<string>(MbCoulumn),
-                                                       Ac = p.Field<string>(AcColumn),
-                                                       Distance = p.Field<string>(DistanceColumn),
-                                                       OCes = Convert.ToDecimal(p.Field<string>(OCesColumn))
-                                                   }).ToList();
+                                              where p.Field<object>(MbCoulumn) != null &&
+                                                         p.Field<object>(DistanceColumn) != null
+                                                      && p.Field<string>(DistanceColumn) != "MB -> AxC"
+                                              select new Signal
+                                              {
+                                                  Mb = p.Field<string>(MbCoulumn),
+                                                  Ac = p.Field<string>(AcColumn),
+                                                  Distance = p.Field<string>(DistanceColumn),
+                                                  OCes = Convert.ToDecimal(p.Field<string>(OCesColumn))
+                                              }).ToList();
                         //document.title += "SL " + dt.Rows[0][5].ToString() + " " + dt.Rows[0][6].ToString();
                         //document.title += ")";
                         return query;
@@ -172,12 +155,6 @@ namespace ReadExcel
             return null;
         }
 
-        /// <summary>
-        /// Reads data from Flank Protection table.
-        /// </summary>
-        /// <param name="dataSource"></param>
-        /// <param name="document"></param>
-        /// <returns></returns>
         public List<FlankProtection> FlankProtection(string dataSource,
             ref TFileDescr document)
         {
@@ -221,7 +198,7 @@ namespace ReadExcel
                         throw new Exception(ex.Message);
                     }
                 }
-                
+
                 ds.Tables.Add(dt);
 
                 for (int a = 0; a < dt.Rows.Count; a++)
@@ -242,7 +219,7 @@ namespace ReadExcel
                         }
                         if (dt.Rows[a][i] != DBNull.Value && ((string)dt.Rows[a][i]).Contains("Ed"))
                         {
-                            document.version = dt.Rows[a][i].ToString().Split(new string[] {"Ed"}, StringSplitOptions.RemoveEmptyEntries)[0];
+                            document.version = dt.Rows[a][i].ToString().Split(new string[] { "Ed" }, StringSplitOptions.RemoveEmptyEntries)[0];
                         }
                         //Udarbejdet
 
@@ -299,7 +276,7 @@ namespace ReadExcel
                     {
                         for (int i = 0; i < dt.Columns.Count - 1; i++)
                         {
-                            if (drow[i] != DBNull.Value && (drow[i].ToString().Contains("Flank Protection") || 
+                            if (drow[i] != DBNull.Value && (drow[i].ToString().Contains("Flank Protection") ||
                                                             drow[i].ToString().Contains("Points")))
                             {
                                 PointColumn = dt.Columns[i].ColumnName;
@@ -343,11 +320,6 @@ namespace ReadExcel
             return null;
         }
 
-        /// <summary>
-        /// Reads data from Flank Protection table.
-        /// </summary>
-        /// <param name="dataSource"></param>
-        /// <returns></returns>
         public List<TrckLackOfClearence> LackOfClearance(string dataSource)
         {
             DataSet ds = new DataSet();
@@ -397,12 +369,12 @@ namespace ReadExcel
                         if (dt.Rows[dr][cl] != DBNull.Value && (string)dt.Rows[dr][cl] == "Section requesting")
                         {
                             int count = 1;
-                            while((dr + count) < dt.Rows.Count && dt.Rows[dr+count][cl] != DBNull.Value)
+                            while ((dr + count) < dt.Rows.Count && dt.Rows[dr + count][cl] != DBNull.Value)
                             {
                                 lackOfClear.Add(new TrckLackOfClearence
                                 {
                                     TrackSection = (string)dt.Rows[dr + count][cl],
-                                    Value = (string)dt.Rows[dr + count][cl+1]
+                                    Value = (string)dt.Rows[dr + count][cl + 1]
                                 });
                                 count++;
                             }
@@ -416,14 +388,8 @@ namespace ReadExcel
             return lackOfClear;
         }
 
-        /// <summary>
-        /// Reads data from Emergency Stops table.
-        /// </summary>
-        /// <param name="dataSource"></param>
-        /// <param name="document"></param>
-        /// <returns></returns>
         public List<EmergStopGroup> EmergStops(string dataSource,
-            ref TFileDescr document)
+             ref TFileDescr document)
         {
             DataSet ds = new DataSet();
             string connectionString = GetConnectionString(dataSource, "'Excel 12.0;HDR=NO;IMEX=1'");
@@ -511,7 +477,7 @@ namespace ReadExcel
                             {
                                 EmRow = r;
                                 EmCol = i;
-                            }   
+                            }
                         }
                     }
                     if (DesignationCloumn != string.Empty && EmergSgColumn != string.Empty)
@@ -521,7 +487,7 @@ namespace ReadExcel
                                                              !p.Field<string>(DesignationCloumn).Contains("Designation") &&
                                                              !p.Field<string>(DesignationCloumn).Contains("Emergency") &&
                                                              p.Field<string>(DesignationCloumn).Split('-').Length == 3
-                                                             
+
                                                       select new EmergStopGroup
                                                       {
                                                           Designation = p.Field<string>(DesignationCloumn),
@@ -529,9 +495,9 @@ namespace ReadExcel
 
                                                       }).ToList();
                         string Design = (string)dt.Rows[++EmRow][EmCol];
-                        
-                        while (EmRow < dt.Rows.Count - 1 && 
-                               dt.Rows[EmRow + 1][EmCol + 1] != DBNull.Value && 
+
+                        while (EmRow < dt.Rows.Count - 1 &&
+                               dt.Rows[EmRow + 1][EmCol + 1] != DBNull.Value &&
                                (string)dt.Rows[EmRow + 1][EmCol + 1] != "")
                         {
                             query.Add(new EmergStopGroup
@@ -564,20 +530,13 @@ namespace ReadExcel
             return null;
         }
 
-        /// <summary>
-        /// Reads data from Track Detector Locking table.
-        /// </summary>
-        /// <param name="dataSource"></param>
-        /// <param name="document"></param>
-        /// <param name="error"></param>
-        /// <returns></returns>
         public List<DetLock> DetectorLockings(string dataSource,
-            ref TFileDescr document, ref bool error)
+             ref TFileDescr document, ref bool error)
         {
             DataSet ds = new DataSet();
             string connectionString = GetConnectionString(dataSource, "'Excel 12.0;HDR=NO;IMEX=1'");
             ReadWord.Word Word = new ReadWord.Word();
-            string path = 
+            string path =
                 Directory.GetFiles(Path.GetDirectoryName(dataSource),
                                    Path.GetFileNameWithoutExtension(dataSource) + "*.doc*").FirstOrDefault();
             document.title = "Tracks for detector locking";
@@ -637,7 +596,7 @@ namespace ReadExcel
                 document = Word.GetCoverData(path, ref error);
                 document.title = "Tracks for Detector Locking";
             }
-            
+
             using (OleDbConnection conn = new OleDbConnection(connectionString))
             {
                 conn.Open();
@@ -703,36 +662,36 @@ namespace ReadExcel
                                                select new DetLock
                                                {
                                                    Pt = p.Field<string>(PointCoulumn),
-                                                   Adjacents = new List<DetLock.Adjacent> 
+                                                   Adjacents = new List<DetLock.Adjacent>
                                                    {
                                                        new DetLock.Adjacent
-                                                       { 
-                                                           Tdt = p.Field<object>(TdtTipColumn) == null ? "" : p.Field<string>(TdtTipColumn), 
-                                                           Pt = p.Field<object>(TdtPtTipColumn) == null ? "" : p.Field<string>(TdtPtTipColumn) 
+                                                       {
+                                                           Tdts = p.Field<object>(TdtTipColumn) == null ? new List<string>() : 
+                                                           p.Field<string>(TdtTipColumn).Split(new string[] {"\r\n",";",",","\n","\t"," "}, 
+                                                           StringSplitOptions.RemoveEmptyEntries).ToList(),
+                                                           Pts = p.Field<object>(TdtPtTipColumn) == null ? new List<string>() :
+                                                           p.Field<string>(TdtPtTipColumn).Split(new string[] {"\r\n",";",",","\n","\t"," "},
+                                                           StringSplitOptions.RemoveEmptyEntries).ToList()
                                                        },
                                                        new DetLock.Adjacent
                                                        {
-                                                           Tdt = p.Field<object>(TdtLeftColumn) == null ? "" : p.Field<string>(TdtLeftColumn),
-                                                           Pt = p.Field<object>(TdtPtLeftColumn) == null ? "" : p.Field<string>(TdtPtLeftColumn)
+                                                           Tdts = p.Field<object>(TdtLeftColumn) == null ? new List<string>() :
+                                                           p.Field<string>(TdtLeftColumn).Split(new string[] {"\r\n",";",",","\n","\t"," "},
+                                                           StringSplitOptions.RemoveEmptyEntries).ToList(),
+                                                           Pts = p.Field<object>(TdtPtLeftColumn) == null ? new List<string>() :
+                                                           p.Field<string>(TdtPtLeftColumn).Split(new string[] {"\r\n",";",",","\n","\t"," "},
+                                                           StringSplitOptions.RemoveEmptyEntries).ToList()
                                                        },
                                                        new DetLock.Adjacent
                                                        {
-                                                           Tdt = p.Field<object>(TdtRightColumn) == null ? "" : p.Field<string>(TdtRightColumn),
-                                                           Pt = p.Field<object>(TdtPtRightColumn) == null ? "" : p.Field<string>(TdtPtRightColumn)
+                                                           Tdts = p.Field<object>(TdtRightColumn) == null ? new List<string>() :
+                                                           p.Field<string>(TdtRightColumn).Split(new string[] {"\r\n",";",",","\n","\t"," "},
+                                                           StringSplitOptions.RemoveEmptyEntries).ToList(),
+                                                           Pts = p.Field<object>(TdtPtRightColumn) == null ? new List<string>() :
+                                                           p.Field<string>(TdtPtRightColumn).Split(new string[] {"\r\n",";",",","\n","\t"," "},
+                                                           StringSplitOptions.RemoveEmptyEntries).ToList()
                                                        }
                                                    }
-                                                   //TipTdt = new List<string>
-                                                   //{
-                                                   //    p.Field<string>(TdtTipColumn),
-                                                   //    p.Field<string>(TdtLeftColumn),
-                                                   //    p.Field<string>(TdtRightColumn)
-                                                   //},
-                                                   //TipPt = new List<string>
-                                                   //{
-                                                   //    p.Field<string>(TdtPtTipColumn),
-                                                   //    p.Field<string>(TdtPtLeftColumn),
-                                                   //    p.Field<string>(TdtPtRightColumn)
-                                                   //}
                                                }).ToList();
                         return query;
                     }
@@ -743,25 +702,17 @@ namespace ReadExcel
             return null;
         }
 
-        /// <summary>
-        /// Reads data from Speed Profiles table.
-        /// </summary>
-        /// <param name="dataSource"></param>
-        /// <param name="document"></param>
-        /// <param name="stationID"></param>
-        /// <param name="error"></param>
-        /// <returns></returns>
         public List<SpeedProfilesSpeedProfile> SpeedProfiles(string dataSource,
             ref TFileDescr document, string stationID, ref bool error)
         {
             DataSet ds = new DataSet();
-            
+
             string connectionString = GetConnectionString(dataSource,
                 "'Excel 12.0;IMEX=1;HDR=NO'");
             ReadWord.Word Word = new ReadWord.Word();
             string path =
                 Directory.GetFiles(Path.GetDirectoryName(dataSource),
-                                   Path.GetFileNameWithoutExtension(dataSource) + "*.doc?").FirstOrDefault(); 
+                                   Path.GetFileNameWithoutExtension(dataSource) + "*.doc?").FirstOrDefault();
             document = Word.GetCoverData(path, ref error);
             document.title = "Speed Profile";
 
@@ -782,7 +733,7 @@ namespace ReadExcel
                 };
 
                 DataTable dtSheet = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, null);
-                
+
                 foreach (DataRow dr in dtSheet.Rows)
                 {
                     if (!dr["TABLE_NAME"].ToString().Trim(new char[] { (char)39 }).EndsWith("$"))
@@ -796,7 +747,7 @@ namespace ReadExcel
 
                 DataTable dt = new DataTable();
                 OleDbDataAdapter da = new OleDbDataAdapter(cmd);
-          
+
                 da.Fill(dt);
                 DataTable dtCloned = null;
                 dtCloned = dt.Clone();
@@ -805,7 +756,7 @@ namespace ReadExcel
                 int sspCount = 1;
                 foreach (DataColumn col in dtCloned.Columns)
                 {
-                    col.DataType = typeof(string);               
+                    col.DataType = typeof(string);
                 }
                 foreach (DataRow row in dt.Rows)
                 {
@@ -815,7 +766,10 @@ namespace ReadExcel
                 {
                     if (dt.Rows[0][col.ColumnName] != DBNull.Value)
                     {
-                        col.ColumnName = dt.Rows[0][col.ColumnName].ToString();
+                        if (!dtCloned.Columns.Contains(dt.Rows[0][col.ColumnName].ToString()))
+                        {
+                            col.ColumnName = dt.Rows[0][col.ColumnName].ToString();
+                        }
                     }
                 }
                 dtCloned.Rows[0].Delete();
@@ -881,7 +835,7 @@ namespace ReadExcel
                                                 TrackSegment = x.Field<string>("TrackSegments"),
                                                 Km1 = x.Field<string>("OperationalKm1").Replace(",", "."),
                                                 Km2 = x.Field<string>("OperationalKm2").Replace(",", "."),
-                                                Basic =  x.Field<string>("Basic"),
+                                                Basic = x.Field<string>("Basic"),
                                                 AlC2 = x.Field<string>("Axle Load Category C2"),
                                                 Fp = x.Field<string>("Other, Freight P, not replacing CD"),
                                                 Fg = x.Field<string>("Other, Freight G, not replacing CD"),
@@ -931,7 +885,7 @@ namespace ReadExcel
                             Value = blckProp.GetElemDesignation(ssp.TrackSegment),
                             OperationalKM1 = ssp.Km1,
                             OperationalKM2 = ssp.Km2,
-                        });                      
+                        });
                     }
                     if (sspGrp.First().Remarks != null && sspGrp.First().Remarks.Trim() == "-")
                     {
@@ -949,7 +903,11 @@ namespace ReadExcel
                     {
                         typesTrainTyps.Add(new SpeedProfilesSpeedProfileTrainTypesTrainTyp
                         {
-                            Item = "FP",
+                            Item = new SpeedProfilesSpeedProfileTrainTypesTrainTypTrainCategory
+                            {
+                                CategoryType = KindOfTrainCategory.freightTrainInP,
+                                ReplaceCDAndBasicLimit = YesNoType.No
+                            },
                             SpeedLimit = Convert.ToDecimal(sspGrp.First().Fp)
                         });
                     }
@@ -957,7 +915,11 @@ namespace ReadExcel
                     {
                         typesTrainTyps.Add(new SpeedProfilesSpeedProfileTrainTypesTrainTyp
                         {
-                            Item = "FG",
+                            Item = new SpeedProfilesSpeedProfileTrainTypesTrainTypTrainCategory
+                            {
+                                CategoryType = KindOfTrainCategory.freightTrainInG,
+                                ReplaceCDAndBasicLimit = YesNoType.No
+                            },
                             SpeedLimit = Convert.ToDecimal(sspGrp.First().Fg)
                         });
                     }
@@ -1047,7 +1009,7 @@ namespace ReadExcel
                         SpeedMax = Convert.ToDecimal(sspGrp.First().Basic),
                         Remarks = sspGrp.First().Remarks,
                         DirectionAll = sspGrp.First().Direction,
-                        
+
                     };
                     speedProfile.TrackSegments = new SpeedProfilesSpeedProfileTrackSegments
                     {
@@ -1068,15 +1030,8 @@ namespace ReadExcel
             return speedProfiles;
         }
 
-        /// <summary>
-        /// Reads data from Routes table.
-        /// </summary>
-        /// <param name="dataSource"></param>
-        /// <param name="document"></param>
-        /// <param name="error"></param>
-        /// <returns></returns>
         public List<XlsRoute> Routes(string dataSource,
-            ref TFileDescr document, ref bool error)
+           ref TFileDescr document, ref bool error)
         {
             DataSet ds = new DataSet();
             string connectionString = GetConnectionString(dataSource, "'Excel 12.0;HDR=NO;IMEX=1'");
@@ -1254,12 +1209,12 @@ namespace ReadExcel
                         }
                         catch (Exception ex)
                         {
-                            ErrLogger.Log(ex.Message + ": " +  dataSource + "'");
+                            ErrLogger.Log(ex.Message + ": " + dataSource + "'");
                             cmd = null;
                             conn.Close();
                             return null;
                         }
-                        
+
                     }
                     else
                     {
@@ -1272,127 +1227,98 @@ namespace ReadExcel
             return null;
         }
 
-        /// <summary>
-        /// Reads data from Compound Routes table.
-        /// </summary>
-        /// <param name="dataSource"></param>
-        /// <param name="document"></param>
-        /// <returns></returns>
-        public List<XlsCmpRoute> CompoundRoutes(string dataSource,
-            ref TFileDescr document)
+        public List<XlsCmpRoute> CompoundRoutes(
+          string dataSource,
+          ref TFileDescr document)
         {
-            DataSet ds = new DataSet();
-            string connectionString = GetConnectionString(dataSource, "'Excel 12.0;HDR=YES'");
+            DataSet dataSet = new DataSet();
+            string connectionString = this.GetConnectionString(dataSource, "'Excel 12.0;HDR=YES'");
             document.title = "Compound Routes Table";
-            using (OleDbConnection conn = new OleDbConnection(connectionString))
+            using (OleDbConnection oleDbConnection = new OleDbConnection(connectionString))
             {
-                conn.Open();
-                OleDbCommand cmd = new OleDbCommand
+                oleDbConnection.Open();
+                OleDbCommand selectCommand = new OleDbCommand();
+                selectCommand.Connection = oleDbConnection;
+                selectCommand.CommandText = "SELECT * FROM [FrontPage$]";
+                DataTable dataTable = new DataTable();
+                new OleDbDataAdapter(selectCommand).Fill(dataTable);
+                dataSet.Tables.Add(dataTable);
+                for (int index1 = 0; index1 < dataTable.Rows.Count; ++index1)
                 {
-                    Connection = conn
-                };
-
-                cmd.CommandText = "SELECT * FROM [FrontPage$]";
-                //DataTable dt = new DataTable();
-                //dt.TableName = sheetName;
-                DataTable dt = new DataTable();
-                OleDbDataAdapter da = new OleDbDataAdapter(cmd);
-                da.Fill(dt);
-                ds.Tables.Add(dt);
-
-                for (int a = 0; a < dt.Rows.Count; a++)
-                {
-                    for (int i = 0; i < dt.Columns.Count - 1; i++)
+                    for (int index2 = 0; index2 < dataTable.Columns.Count - 1; ++index2)
                     {
-                        if (dt.Rows[a][i] != DBNull.Value && ((string)dt.Rows[a][i]).Contains("Document Number"))
+                        if (dataTable.Rows[index1][index2] != DBNull.Value && ((string)dataTable.Rows[index1][index2]).Contains("Document Number"))
+                            document.docID = dataTable.Rows[index1][index2 + 3].ToString();
+                        if (dataTable.Rows[index1][index2] != DBNull.Value && ((string)dataTable.Rows[index1][index2]).Contains("Version"))
+                            document.version = dataTable.Rows[index1][index2 + 3].ToString();
+                        if (dataTable.Rows[index1][index2] != DBNull.Value && ((string)dataTable.Rows[index1][index2]).Contains("Prepared by"))
                         {
-                            document.docID = dt.Rows[a][i + 3].ToString();
-                        }
-                        if (dt.Rows[a][i] != DBNull.Value && ((string)dt.Rows[a][i]).Contains("Version"))
-                        {
-                            document.version = dt.Rows[a][i + 3].ToString();
-                        }
-                        if (dt.Rows[a][i] != DBNull.Value && ((string)dt.Rows[a][i]).Contains("Prepared by"))
-                        {
-                            document.creator = dt.Rows[a + 1][i].ToString();
-                            document.date = Convert.ToDateTime(dt.Rows[a + 2][i].ToString());
+                            document.creator = dataTable.Rows[index1 + 1][index2].ToString();
+                            document.date = Convert.ToDateTime(dataTable.Rows[index1 + 2][index2].ToString());
                         }
                     }
                 }
             }
-            using (OleDbConnection conn = new OleDbConnection(connectionString))
+            using (OleDbConnection oleDbConnection = new OleDbConnection(connectionString))
             {
-                conn.Open();
-                OleDbCommand cmd = new OleDbCommand
+                oleDbConnection.Open();
+                OleDbCommand selectCommand = new OleDbCommand()
                 {
-                    Connection = conn
+                    Connection = oleDbConnection
                 };
-                var dtExcelsheetname = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, new object[] { null, null, null, "TABLE" });
-
-                string TableName = "";
-                Regex name = new Regex("^.*Compound.*[$][']{0,1}$");
-                foreach (DataRow row in dtExcelsheetname.Rows)
+                DataTable oleDbSchemaTable = oleDbConnection.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, new object[4]
                 {
-                    if (name.IsMatch(row["TABLE_NAME"].ToString()))
-                    {
-                        TableName = row["TABLE_NAME"].ToString();
-                    }
+          null,
+          null,
+          null,
+          (object) "TABLE"
+                });
+                string str = "";
+                Regex regex = new Regex("^.*Compound.*[$][']{0,1}$");
+                foreach (DataRow row in (InternalDataCollectionBase)oleDbSchemaTable.Rows)
+                {
+                    if (regex.IsMatch(row["TABLE_NAME"].ToString()))
+                        str = row["TABLE_NAME"].ToString();
                 }
-                
-                cmd.CommandText = "SELECT * FROM [" + TableName + "]";
-                DataTable dt = new DataTable();
-                //dt.TableName = sheetName;
-
-                OleDbDataAdapter da = new OleDbDataAdapter(cmd);
+                selectCommand.CommandText = "SELECT * FROM [" + str + "]";
+                DataTable dataTable = new DataTable();
+                OleDbDataAdapter oleDbDataAdapter = new OleDbDataAdapter(selectCommand);
                 try
                 {
-                    da.Fill(dt);
+                    oleDbDataAdapter.Fill(dataTable);
                 }
                 catch
                 {
                     ErrLogger.Log("Unable to query compound routes table: '" + dataSource + "'");
-                    cmd = null;
-                    conn.Close();
-                    return null;
+                    oleDbConnection.Close();
+                    return (List<XlsCmpRoute>)null;
                 }
-                
-                ds.Tables.Add(dt);
-                List<XlsCmpRoute> routes = new List<XlsCmpRoute>();
-                for (int i = 0; i < dt.Rows.Count; i++)
+                dataSet.Tables.Add(dataTable);
+                List<XlsCmpRoute> xlsCmpRouteList = new List<XlsCmpRoute>();
+                for (int index1 = 0; index1 < dataTable.Rows.Count; ++index1)
                 {
-                    if (dt.Rows[i]["Compound Route"].ToString() == "")
+                    if (!(dataTable.Rows[index1]["Compound Route"].ToString() == ""))
                     {
-                        continue;
-                    }
-                    List<string> routesID = new List<string>();
-                    for (int a = 5; a < dt.Columns.Count; a++)
-                    {
-                        if (dt.Rows[i][a].ToString() != "")
+                        List<string> stringList = new List<string>();
+                        for (int index2 = 5; index2 < dataTable.Columns.Count; ++index2)
                         {
-                            routesID.Add(dt.Rows[i][a].ToString());
+                            if (dataTable.Rows[index1][index2].ToString() != "")
+                                stringList.Add(dataTable.Rows[index1][index2].ToString());
                         }
+                        XlsCmpRoute xlsCmpRoute = new XlsCmpRoute()
+                        {
+                            Designation = dataTable.Rows[index1]["Compound Route"].ToString(),
+                            Start = dataTable.Rows[index1]["Start Marker Board"].ToString(),
+                            Dest = dataTable.Rows[index1]["Destination Marker Board"].ToString(),
+                            Routes = stringList
+                        };
+                        xlsCmpRouteList.Add(xlsCmpRoute);
                     }
-                    XlsCmpRoute xlsCmpRoute = new XlsCmpRoute
-                    {
-                        Designation = dt.Rows[i]["Compound Route"].ToString(),
-                        Start = dt.Rows[i]["Start Marker Board"].ToString(),
-                        Dest = dt.Rows[i]["Destination Marker Board"].ToString(),
-                        Routes = routesID
-                    };
-                    routes.Add(xlsCmpRoute);
                 }
-                return routes;
+                return xlsCmpRouteList;
             }
         }
 
-        /// <summary>
-        /// Reads data from LX parameters table.
-        /// </summary>
-        /// <param name="dataSource"></param>
-        /// <param name="document"></param>
-        /// <param name="LxId"></param>
-        /// <param name="error"></param>
-        /// <returns></returns>
         public List<XlsLX> LevelCrossings(string dataSource,
             ref TFileDescr document, string LxId, ref bool error)
         {
@@ -1493,10 +1419,10 @@ namespace ReadExcel
                                      select new XlsLX
                                      {
                                          Index = index++,
-                                         Value = p.Field<object>(ValueColumn) != null ? 
+                                         Value = p.Field<object>(ValueColumn) != null ?
                                          p.Field<string>(ValueColumn)
                                          .Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)
-                                         .First() : 
+                                         .First() :
                                          null,
                                          Reference = p.Field<string>(DecrColumn).ToLower()
                                      }).ToList();
@@ -1505,15 +1431,8 @@ namespace ReadExcel
 
         }
 
-        /// <summary>
-        /// Reads data from PWS Activations Sections table.
-        /// </summary>
-        /// <param name="dataSource"></param>
-        /// <param name="document"></param>
-        /// <param name="blkRefLx"></param>
-        /// <returns></returns>
         public XlsPwsActivation PwsActivation(string dataSource,
-           ref TFileDescr document, ExpPt1.Block blkRefLx, string name)
+             ref TFileDescr document, ExpPt1.Block blkRefLx, string name)
         {
             DataSet ds = new DataSet();
             string connectionString = GetConnectionString(dataSource, "'Excel 12.0;HDR=NO;IMEX=1'");
@@ -1613,7 +1532,7 @@ namespace ReadExcel
                     new XlsPwsActivation
                     {
                         ActivationSections =
-                        new List<XlsPwsActSection>()
+                        new List<PWSactSection>()
                     };
                 int ColumnNumber = 0;
                 int RowNumber = 0;
@@ -1647,12 +1566,12 @@ namespace ReadExcel
                     {
                         iterCount = 0;
                     }
-                    XlsPwsActSection section = new XlsPwsActSection();
+                    PWSactSection section = new PWSactSection();
                     Regex delays = new Regex("ActivationDelays");
                     List<PwsActDl> activationDelays =
                                  new List<PwsActDl>();
                     string actName = (string)dt.Rows[a - 2][ColumnNumber + 1];
-                    
+
                     activation.SpeedIfUnprotectedUp = (dt.Rows[a][ColumnNumber + 6] as string) ?? "";
                     activation.SpeedIfUnprotectedDown = (dt.Rows[a + 1][ColumnNumber + 6] as string) ?? "";
                     activation.TSRStartInRearOfAreaUp = (dt.Rows[a + 2][ColumnNumber + 6] as string) ?? "";
@@ -1682,7 +1601,7 @@ namespace ReadExcel
                         {
                             maxTrainSpeed = mTrSpeed,
                             ActivationDelayTime = actDelT
-                        });                  
+                        });
                         a += 1;
                     }
                     section.ActivationDelays = new PwsActDls
@@ -1700,21 +1619,21 @@ namespace ReadExcel
                                  (string)dt.Rows[a][ColumnNumber + 1] + "'");
                         ErrLogger.error = true;
                     }
-                    
+
                     a++;
                     section.RouteChain = new PwsChain();
                     List<string> chains = new List<string>();
                     while ((a <= (dt.Rows.Count - 1)) &&
                            !(dt.Rows[a][ColumnNumber] != DBNull.Value && ((string)dt.Rows[a][ColumnNumber]).Contains("DestinationArea")))
                     {
-                        if(dt.Rows[a][ColumnNumber + 1] != DBNull.Value)
+                        if (dt.Rows[a][ColumnNumber + 1] != DBNull.Value)
                         {
                             chains.Add(dt.Rows[a][ColumnNumber + 1].ToString());
                         }
                         a++;
                     }
                     section.RouteChain.RouteID = chains.ToArray();
-                    a ++;
+                    a++;
                     if (tdtRegex.IsMatch((string)dt.Rows[a][ColumnNumber + 1]))
                     {
                         section.LxAxleCounterSectionID = (string)dt.Rows[a][ColumnNumber + 1];
@@ -1725,9 +1644,9 @@ namespace ReadExcel
                                  (string)dt.Rows[a][ColumnNumber + 1] + "'");
                         ErrLogger.error = true;
                     }
-                    
+
                     a++;
-                    
+
                     while ((a <= (dt.Rows.Count - 1)) &&
                            !(dt.Rows[a][ColumnNumber] != DBNull.Value && ((string)dt.Rows[a][ColumnNumber]).Contains("DeactivationAxleCounterSectionID")))
                     {
@@ -1742,7 +1661,7 @@ namespace ReadExcel
                         ErrLogger.Log(blckProp.GetElemDesignation(blkRefLx) + "' Activation '" + actName + "': wrong DeactivationAxleCounterSectionID '" +
                                  (string)dt.Rows[a][ColumnNumber + 1] + "'");
                         ErrLogger.error = true;
-                    }                   
+                    }
                     activation.ActivationSections.Add(section);
 
                     while ((a <= (dt.Rows.Count - 1)) &&
@@ -1765,19 +1684,12 @@ namespace ReadExcel
             Dictionary<string, XlsLxActivation> LxActs = new Dictionary<string, XlsLxActivation>();
             foreach (var info in fileInfos)
             {
-                string lxName = info.Name.Split('_').First().Replace("LX","");
+                string lxName = info.Name.Split('_').First().Replace("LX", "");
                 LxActs.Add(lxName, LxActivations(info.FullName, lxName));
             }
             return LxActs;
         }
 
-        /// <summary>
-        /// Reads data from LX Activations Sections table.
-        /// </summary>
-        /// <param name="dataSource"></param>
-        /// <param name="document"></param>
-        /// <param name="blkRefLx"></param>
-        /// <returns></returns>
         private XlsLxActivation LxActivations(string dataSource, string LXname)
         {
             DataSet ds = new DataSet();
@@ -1871,7 +1783,7 @@ namespace ReadExcel
                             {
 
                             }
-                            
+
                         }
                     }
                 }
@@ -1917,9 +1829,9 @@ namespace ReadExcel
                         break;
                     }
                 }
-                
+
                 for (int a = 0; a < dt.Rows.Count; a++)
-                {                 
+                {
                     LXactSection section =
                                 new LXactSection();
                     int j = 1;
@@ -1930,7 +1842,7 @@ namespace ReadExcel
                         if (dt.Rows[a + j][ColumnNumber].ToString() != "" &&
                             ((string)dt.Rows[a + j][ColumnNumber]).Contains("ActivationDelayTime"))
                         {
-                            actName = dt.Rows[a + j - 1 ][ColumnNumber].ToString();
+                            actName = dt.Rows[a + j - 1][ColumnNumber].ToString();
                             if (dt.Rows[a + j][ColumnNumber + 1] != null &&
                                 dt.Rows[a + j][ColumnNumber + 1].ToString() != "")
                             {
@@ -1953,7 +1865,7 @@ namespace ReadExcel
                         {
                             if (dt.Rows[a + j][ColumnNumber + 1] != null &&
                                 dt.Rows[a + j][ColumnNumber + 1].ToString() != "")
-                            {                              
+                            {
                                 if (tdtRegex.IsMatch((string)dt.Rows[a + j][ColumnNumber + 1]))
                                 {
                                     section.ActivationAxleCounterSectionID = (string)dt.Rows[a + j][ColumnNumber + 1];
@@ -2011,72 +1923,82 @@ namespace ReadExcel
             }
         }
 
-        /// <summary>
-        /// Reads data from Balise Groups table.
-        /// </summary>
-        /// <param name="dataSource"></param>
-        /// <param name="document"></param>
-        /// <returns></returns>
-        public List<BaliseGroupsBaliseGroup> BaliseGroups(string dataSource,
-            ref TFileDescr document)
+        public List<BaliseGroupsBaliseGroup> BaliseGroups(
+          string dataSource,
+          ref TFileDescr document)
         {
-            string connectionString = GetConnectionString(dataSource, "'Excel 12.0;IMEX=1;HDR=YES;TypeGuessRows=0;ImportMixedTypes=Text'");
+            string connectionString = this.GetConnectionString(dataSource, "'Excel 12.0;IMEX=1;HDR=YES;TypeGuessRows=0;ImportMixedTypes=Text'");
             document.title = "Balise Group";
             using (OleDbConnection conn = new OleDbConnection(connectionString))
             {
                 conn.Open();
-                OleDbCommand cmd = new OleDbCommand
+                OleDbCommand selectCommand = new OleDbCommand()
                 {
                     Connection = conn
                 };
-                cmd.CommandText = "SELECT * FROM [FrontPage$]";
-
+                selectCommand.CommandText = "SELECT * FROM [FrontPage$]";
                 DataTable dt = new DataTable();
-                OleDbDataAdapter da = new OleDbDataAdapter(cmd);
-                da.Fill(dt);
-
-                for (int a = 0; a < dt.Rows.Count; a++)
+                OleDbDataAdapter oleDbDataAdapter = new OleDbDataAdapter(selectCommand);
+                oleDbDataAdapter.Fill(dt);
+                for (int r = 0; r < dt.Rows.Count; ++r)
                 {
-                    for (int i = 0; i < dt.Columns.Count - 1; i++)
+                    for (int c = 0; c < dt.Columns.Count - 1; ++c)
                     {
-                        if (dt.Rows[a][i] != DBNull.Value && (((string)dt.Rows[a][i]).Contains("Document Number") || 
-                                                             ((string)dt.Rows[a][i]).Contains("Tegningsnr")))
+                        if (dt.Rows[r][c] != DBNull.Value && (((string)dt.Rows[r][c]).Contains("Document Number") || ((string)dt.Rows[r][c]).Contains("Tegningsnr")))
+                            document.docID = dt.Rows[r][c + 3].ToString();
+                        if (dt.Rows[r][c] != DBNull.Value && ((string)dt.Rows[r][c]).Contains("Version"))
+                            document.version = dt.Rows[r][c + 3].ToString();
+                        if (dt.Rows[r][c] != DBNull.Value && ((string)dt.Rows[r][c]).Contains("Prepared by"))
                         {
-                            document.docID = dt.Rows[a][i + 3].ToString();
-                        }
-                        if (dt.Rows[a][i] != DBNull.Value && ((string)dt.Rows[a][i]).Contains("Version"))
-                        {
-                            document.version = dt.Rows[a][i + 3].ToString();
-                        }
-                        if (dt.Rows[a][i] != DBNull.Value && ((string)dt.Rows[a][i]).Contains("Prepared by"))
-                        {
-                            document.creator = dt.Rows[a + 1][i].ToString();
-                            document.date = Convert.ToDateTime(dt.Rows[a + 2][i].ToString());
+                            document.creator = dt.Rows[r + 1][c].ToString();
+                            document.date = Convert.ToDateTime(dt.Rows[r + 2][c].ToString());
                         }
                     }
                 }
                 DataTable dtSheet = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, null);
-
                 foreach (DataRow dr in dtSheet.Rows)
                 {
-                    if (!dr["TABLE_NAME"].ToString().Trim(new char[] { (char)39 }).EndsWith("$"))
-                        continue;
-                    if (dr["TABLE_NAME"].ToString().Contains("BG"))
+                    if (dr["TABLE_NAME"].ToString().Trim('\'').EndsWith("$") && dr["TABLE_NAME"].ToString().Contains("BG"))
                     {
-                        cmd.CommandText = "SELECT * FROM [" + dr["TABLE_NAME"].ToString() + "]";
+                        selectCommand.CommandText = "SELECT * FROM [" + dr["TABLE_NAME"].ToString() + "]";
                         break;
                     }
                 }
-                da.Fill(dt);
-
-                int row = 1;
-                dt.Columns.Add("RowNum", typeof(Int32));
-                foreach (DataRow r in dt.Rows)
+                oleDbDataAdapter.Fill(dt);
+                int num1 = 1;
+                dt.Columns.Add("RowNum", typeof(int));
+                foreach (DataRow row in (InternalDataCollectionBase)dt.Rows)
                 {
-                    r["RowNum"] = row++;
+                    row["RowNum"] = (object)num1++;
+                    for (int c = 0; c < dt.Columns.Count; ++c)
+                    {
+                        if (row[c].ToString().ToLower().Contains("designation") && !dt.Columns.Contains("Designation"))
+                            dt.Columns[c].ColumnName = "Designation";
+                        if (row[c].ToString().ToLower().Contains("status") && !dt.Columns.Contains("Status"))
+                            dt.Columns[c].ColumnName = "Status";
+                        if (row[c].ToString().ToLower().Contains("orientation") && !dt.Columns.Contains("Orientation"))
+                            dt.Columns[c].ColumnName = "Orientation";
+                        if (row[c].ToString().ToLower().Contains("direction") && !dt.Columns.Contains("Direction"))
+                            dt.Columns[c].ColumnName = "Direction";
+                        if (row[c].ToString().ToLower().Contains("balise groupe types") && !dt.Columns.Contains("Balise Groupe Types"))
+                            dt.Columns[c].ColumnName = "Balise Groupe Types";
+                        if (row[c].ToString().ToLower().Contains("border balise") && !dt.Columns.Contains("Border Balise"))
+                            dt.Columns[c].ColumnName = "Border Balise";
+                        if (row[c].ToString().ToLower().Contains("inside psa") && !dt.Columns.Contains("Inside PSA"))
+                            dt.Columns[c].ColumnName = "Inside PSA";
+                        if (row[c].ToString().ToLower().Contains("duplicated") && !dt.Columns.Contains("Duplicated"))
+                            dt.Columns[c].ColumnName = "Duplicated";
+                        if (row[c].ToString().ToLower().Contains("track segment") && !dt.Columns.Contains("Track Segment"))
+                            dt.Columns[c].ColumnName = "Track Segment";
+                        if (row[c].ToString().ToLower().Contains("line id") && !dt.Columns.Contains("Line ID"))
+                            dt.Columns[c].ColumnName = "Line ID";
+                        if (row[c].ToString().ToLower().Contains("location") && !dt.Columns.Contains("Location"))
+                            dt.Columns[c].ColumnName = "Location";
+                        if (row[c].ToString().ToLower().Contains("remarks") && !dt.Columns.Contains("Remarks"))
+                            dt.Columns[c].ColumnName = "Remarks";
+                    }
                 }
-
-                DataRow[] BGs = 
+                DataRow[] BGs =
                     dt.Select("[Balise Groupe Types] is not NULL AND [Balise Groupe Types] <> ''", "RowNum");
 
                 List<BaliseGroupsBaliseGroup> baliseGroups = new List<BaliseGroupsBaliseGroup>();
@@ -2086,16 +2008,16 @@ namespace ReadExcel
                         new List<BaliseGroupsBaliseGroupBaliseGroupTypesKindOfBG>();
                     if (!Enum.TryParse(BGs[b]["Balise Groupe Types"].ToString().Replace(" ", string.Empty), out KindOfBG kindOfBG))
                     {
-                        ErrLogger.Log("BG '" + BGs[b]["Designation"].ToString().ToLower() + 
+                        ErrLogger.Log("BG '" + BGs[b]["Designation"].ToString().ToLower() +
                             "' unable parse KindOfBG - " + BGs[b]["Balise Groupe Types"].ToString().Replace(" ", string.Empty));
                     }
                     BaliseGroupsBaliseGroupBaliseGroupTypesKindOfBG KindOfBG =
                         new BaliseGroupsBaliseGroupBaliseGroupTypesKindOfBG
-                    {
-                        Value = kindOfBG,
-                        direction = (NominalReverseBothType)Enum.Parse(typeof(NominalReverseBothType),
+                        {
+                            Value = kindOfBG,
+                            direction = (NominalReverseBothType)Enum.Parse(typeof(NominalReverseBothType),
                                     BGs[b]["Direction"].ToString().ToLower())
-                    };
+                        };
                     if (BGs[b].Table.Columns.Contains("Duplicated"))
                     {
                         if (BGs[b]["Duplicated"].ToString() != "")
@@ -2114,13 +2036,13 @@ namespace ReadExcel
                     }
                     kindOfBGs.Add(KindOfBG);
                     int routeChainCounter = 1;
-                    while ((b + routeChainCounter) < BGs.Count() && 
+                    while ((b + routeChainCounter) < BGs.Count() &&
                             BGs[b + routeChainCounter]["Designation"].ToString() == "")
                     {
                         if (!Enum.TryParse(BGs[b + routeChainCounter]["Balise Groupe Types"].ToString()
                                       .Replace(" ", string.Empty), out kindOfBG))
                         {
-                            ErrLogger.Log("BG '" + BGs[b]["Designation"].ToString().ToLower() + 
+                            ErrLogger.Log("BG '" + BGs[b]["Designation"].ToString().ToLower() +
                                 "' unable parse KindOfBG - " + BGs[b + routeChainCounter]["Balise Groupe Types"].ToString().Replace(" ", string.Empty));
                             ErrLogger.error = true;
                         }
@@ -2154,7 +2076,6 @@ namespace ReadExcel
                         kindOfBGs.Add(KindOfBG);
                         routeChainCounter++;
                     }
-
                     BaliseGroupsBaliseGroup BG = new BaliseGroupsBaliseGroup
                     {
                         Designation = BGs[b]["Designation"].ToString().ToLower(),
@@ -2178,170 +2099,177 @@ namespace ReadExcel
                     baliseGroups.Add(BG);
                     b += routeChainCounter - 1;
                 }
-                //List<BaliseGroupsBaliseGroup> baliseGroups = (from b in dt.AsEnumerable()
-                //                                 where b.Field<string>("Designation") != "" &&
-                //                                       b.Field<object>("Designation") != null
-                //                                 group b by b.Field<string>("Designation") into g
-                //                                 select new BaliseGroupsBaliseGroup
-                //                                 {
-                //                                     Designation = blckProp.GetElemDesignation(g.Key),
-                //                                     BorderBalise = g.Select(bb => bb.Field<string>("Border Balise"))
-                //                                        .FirstOrDefault() == null ? YesNoType.no : YesNoType.yes,
-                //                                     Status = new TStatus
-                //                                     {
-                //                                         status = (StatusType)Enum.Parse(typeof(StatusType), g.Select(x => x.Field<string>("Status")).FirstOrDefault())
-                //                                     },
-                //                                     Orientation = (UpDownSingleType)Enum.Parse(typeof(UpDownSingleType), g.Select(x => x.Field<string>("Orientation")).FirstOrDefault().ToLower()),
-                //                                     TrackSegmentID = blckProp.GetElemDesignation(g.Select(t => t.Field<string>("Track Segment")).FirstOrDefault()),
-                //                                     LineID = g.Select(l => l.Field<double>("Line ID"))
-                //                                               .FirstOrDefault().ToString(),
-                //                                     Location = g.Select(lc => lc.Field<string>("Location")).FirstOrDefault().Replace(",","."),
-                //                                     BaliseGroupTypes = new BaliseGroupsBaliseGroupBaliseGroupTypes
-                //                                     {
-                //                                         KindOfBG = g.Select(k => new BaliseGroupsBaliseGroupBaliseGroupTypesKindOfBG
-                //                                         {
-                //                                             Value = (KindOfBG)Enum.Parse(typeof(KindOfBG), k.Field<string>("Balise Groupe Types").Replace(" ", string.Empty)),
-                //                                             direction = (NominalReverseBothType)Enum.Parse(typeof(NominalReverseBothType), k.Field<string>("Direction").ToLower()),
-                //                                             duplicatedSpecified = k.Field<string>("Direction") == "Duplicated" ?
-                //                                              true : false,
-                //                                             duplicated = k.Field<string>("Direction") == "Duplicated" ?
-                //                                              YesNoType.yes : YesNoType.no
-                //                                         }).ToArray()
-                //                                     }
-                //                                 }).ToList();
                 return baliseGroups;
             }
         }
     }
-
-
-    public class TrckLackOfClearence
+    public class DetLock
     {
-        public string TrackSection { get; set; }
-        public string Value { get; set; }
-    }
-    
-    public class XlsLX
-    {
-        public int Index { get; set; }
-        public string Value { get; set; }
-        public string Reference { get; set; }
-    }
+        public string Pt { get; set; }
 
-    public class XlsLxActivation
-    {
-        public TFileDescr Document { get; set; }
-        public List<LXactSection> ActivationSections { get; set; }
-        public List<string> Remarks { get; set; }
+        public List<Adjacent> Adjacents { get; set; }
+
+        public class Adjacent
+        {
+            public List<string> Tdts { get; set; }
+
+            public List<string> Pts { get; set; }
+        }
     }
 
-    public class XlsPwsActivation
-    {
-        public TFileDescr Document { get; set; }
-        public List<XlsPwsActSection> ActivationSections { get; set; }
-        public string SpeedIfUnprotectedUp { get; set; }
-        public string SpeedIfUnprotectedDown { get; set; }
-        public string TSRStartInRearOfAreaUp { get; set; }
-        public string TSRExtensionBeyondAreaUp { get; set; }
-        public string TSRStartInRearOfAreaDown { get; set; }
-        public string TSRExtensionBeyondAreaDown { get; set; }
-    }
-
-    public class XlsPwsActSection : PWSactSection
-    {
-
-    }
-
-    public class XlsCmpRoute
+    public class EmergStopGroup
     {
         public string Designation { get; set; }
-        public string Start { get; set; }
-        public string Dest { get; set; }
-        public List<string> Routes { get; set; }
+
+        public string EmergSg { get; set; }
     }
 
-    public class XlsPoint
+    public class FlankProtection
     {
-        public string Designation { get; set; }
-        public LeftRightType ReqPosition { get; set; }
+        public string Pt { get; set; }
+
+        public YesNoType Left { get; set; }
+
+        public YesNoType Right { get; set; }
+
+        public string LeftFrom { get; set; }
+
+        public string RightFrom { get; set; }
+
+        public string LeftTdt { get; set; }
+
+        public string RightTdt { get; set; }
     }
 
-    public class XlsRoute
+    public class Signal
     {
-        public KindOfRouteType Type { get; set; }
-        public string Start { get; set; }
-        public string Dest { get; set; }
-        public YesNoType Default { get; set; }
-        public IEnumerable<string> ActCross { get; set; }
-        public string SafeDist { get; set; }
-        public IEnumerable<XlsPoint> Points { get; set; }
-        public IEnumerable<XlsPoint> PointsGrps { get; set; }
-        public string SdLast { get; set; }
-        public List<string> StartAreas { get; set; }
-        public List<string> Overlaps { get; set; }
-        public string ExtDest { get; set; }
-    }
+        public string Mb { get; set; }
 
+        public string Ac { get; set; }
+
+        public string Distance { get; set; }
+
+        public Decimal OCes { get; set; }
+    }
 
     public class SpeedProfile
     {
         public string Designation { get; set; }
+
         public List<SpeedProfilesTrackSegment> TrackSegments { get; set; }
+
         public KindOfCantDeficiancy? CD { get; set; }
+
         public KindOfTrainCategory? TrainCat { get; set; }
+
         public string AxLoad { get; set; }
     }
 
     public class SpeedProfilesTrackSegment
     {
         public string TrckSg { get; set; }
+
         public string Okm1 { get; set; }
+
         public string Okm2 { get; set; }
+
         public UpDownBothType Direction { get; set; }
+
         public string Remarks { get; set; }
+
         public string SpeedMax { get; set; }
+
         public string SpeedLimit { get; set; }
     }
 
-    public class DetLock
+    public class TrckLackOfClearence
     {
-        public string Pt { get; set; }
-        public List<Adjacent> Adjacents { get; set; }
-        //public List<string> TipTdt { get; set; }
-        //public List<string> TipPt { get; set; }
-        //public List<string> LeftTdt { get; set; }
-        //public List<string> LeftTipPt { get; set; }
-        //public List<string> RightTdt { get; set; }
-        //public List<string> RightPt { get; set; }
-        public class Adjacent
-        {
-            public string Tdt { get; set; }
-            public string Pt { get; set; }
-        }
+        public string TrackSection { get; set; }
+
+        public string Value { get; set; }
     }
 
-    public class Signal
-    {
-        public string Mb { get; set; }
-        public string Ac { get; set; }
-        public string Distance { get; set; }
-        public decimal OCes { get; set; }
-    }
-
-    public class FlankProtection
-    {
-        public string Pt { get; set; }
-        public YesNoType Left { get; set; }
-        public YesNoType Right { get; set; }
-        public string LeftFrom { get; set; }
-        public string RightFrom { get; set; }
-        public string LeftTdt { get; set; }
-        public string RightTdt { get; set; }
-    }
-
-    public class EmergStopGroup
+    public class XlsCmpRoute
     {
         public string Designation { get; set; }
-        public string EmergSg { get; set; }
+
+        public string Start { get; set; }
+
+        public string Dest { get; set; }
+
+        public List<string> Routes { get; set; }
+    }
+
+    public class XlsLX
+    {
+        public int Index { get; set; }
+
+        public string Value { get; set; }
+
+        public string Reference { get; set; }
+    }
+
+    public class XlsLxActivation
+    {
+        public TFileDescr Document { get; set; }
+
+        public List<LevelCrossingsLevelCrossingLevelCrossingTracksLevelCrossingTrackActivationSectionsActivationSection> ActivationSections { get; set; }
+
+        public List<string> Remarks { get; set; }
+    }
+
+    public class XlsPoint
+    {
+        public string Designation { get; set; }
+
+        public LeftRightType ReqPosition { get; set; }
+    }
+
+    public class XlsPwsActivation
+    {
+        public TFileDescr Document { get; set; }
+
+        public List<PWSactSection> ActivationSections { get; set; }
+
+        public string SpeedIfUnprotectedUp { get; set; }
+
+        public string SpeedIfUnprotectedDown { get; set; }
+
+        public string TSRStartInRearOfAreaUp { get; set; }
+
+        public string TSRExtensionBeyondAreaUp { get; set; }
+
+        public string TSRStartInRearOfAreaDown { get; set; }
+
+        public string TSRExtensionBeyondAreaDown { get; set; }
+    }
+
+    public class XlsRoute
+    {
+        public KindOfRouteType Type { get; set; }
+
+        public string Start { get; set; }
+
+        public string Dest { get; set; }
+
+        public YesNoType Default { get; set; }
+
+        public IEnumerable<string> ActCross { get; set; }
+
+        public string SafeDist { get; set; }
+
+        public IEnumerable<XlsPoint> Points { get; set; }
+
+        public IEnumerable<XlsPoint> PointsGrps { get; set; }
+
+        public string SdLast { get; set; }
+
+        public List<string> StartAreas { get; set; }
+
+        public List<string> Overlaps { get; set; }
+
+        public string ExtDest { get; set; }
     }
 }
+
+

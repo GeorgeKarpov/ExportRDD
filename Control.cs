@@ -3,15 +3,18 @@ using System.Windows.Forms;
 
 namespace ExpPt1
 {
-    public partial class CtrlMb : UserControl
+    public partial class Cntrl : UserControl
     {
-        public Button BtnDist { get; set; }
+        public Button BtnLoad { get; set; }
         public DataGridView DataGridView { get; set; }
-        public CtrlMb()
+
+        public Label LblInfo { get; set; }
+        public Cntrl()
         {
             InitializeComponent();
-            BtnDist = this.btnLoad;
+            BtnLoad = this.btnLoad;
             DataGridView = this.dgwMb;
+            LblInfo = lblInfo;
         }
 
         private void DgwKms_DataSourceChanged(object sender, EventArgs e)

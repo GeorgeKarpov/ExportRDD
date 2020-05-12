@@ -1,3 +1,6 @@
+# usage: AutoCad blocks mapping
+# format:
+#<Block Name>	<Sw name>	<Rdd type id>	<extended type[optional]>
 AS_Counter_Section_new	AxleCounterSection	tdt	
 AXlecounter_Section	AxleCounterSection	tdt	
 AXlecounter_Section	AxleCounterSection	tdt	
@@ -233,6 +236,7 @@ PWS-UP-1-Track	StaffPassengerCrossing	va
 PWS-UP-2-Track	StaffPassengerCrossing	va	
 PWS-UP-3-Track	StaffPassengerCrossing	va	
 PWS-UP-4-Track	StaffPassengerCrossing	va	
+Exclude_Dynamic	ExcludeBlock		
 Platform_Dynamic	PlatformDyn	pr	
 Platform	Platform	pr	
 Point_Left_Down_Double_RS	Point	spsk	
