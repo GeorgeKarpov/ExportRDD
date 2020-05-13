@@ -25,6 +25,25 @@ namespace ExpPt1
             
         }
 
+        public void Reset()
+        {
+            if (_ps == null)
+            {
+                Reload();
+            }
+            else
+            {
+                palCntrlSigLay.DataGridView.DataSource = "";
+                palCntrlSeg.DataGridView.DataSource = "";
+                palCntrlMb.DataGridView.DataSource = "";
+                palCntrlPt.DataGridView.DataSource = "";
+
+                palCntrlSeg.LblInfo.Text = "";
+                palCntrlMb.LblInfo.Text = "";
+                palCntrlPt.LblInfo.Text = "";
+            }          
+        }
+
         public void Reload()
         {
             if (_ps == null)
@@ -81,6 +100,9 @@ namespace ExpPt1
             expDispl.LoadData();
             if (expDispl.Segments != null && expDispl.Segments.Count > 0)
             {
+                DataTable sigLayout = Data.SigLayouToDataTable(expDispl.SigLayout);
+                palCntrlSigLay.DataGridView.DataSource = sigLayout;
+
                 DataTable segments = Data.SegsToDataTable(expDispl.Segments);
                 palCntrlSeg.DataGridView.DataSource = segments;
                 palCntrlSeg.LblInfo.Text = "Segments count: " + segments.Rows.Count;
@@ -91,10 +113,7 @@ namespace ExpPt1
 
                 DataTable points = Data.PointsToDataTable(expDispl.Points);
                 palCntrlPt.DataGridView.DataSource = points;
-                palCntrlPt.LblInfo.Text = "Points count: " + points.Rows.Count;
-
-                DataTable sigLayout = Data.SigLayouToDataTable(expDispl.SigLayout);
-                palCntrlSigLay.DataGridView.DataSource = sigLayout;
+                palCntrlPt.LblInfo.Text = "Points count: " + points.Rows.Count;               
             }
             expDispl.Dispose();
         }

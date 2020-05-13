@@ -411,13 +411,14 @@ namespace ExpPt1
             // Set Next station blocks
             SetBlocksNextStations(blocks);
 
+            SetBlocksExclude(blocks);
+
             // Assign comp routes starts and destinations
             SetSignalsStartDestCompRoutes(blocks);
 
             // Segments
             err.Add(!GetSegments(blocks, TracksLines, Tracks, pSAs));
-
-            SetBlocksExclude(blocks);
+         
 
             //Test
             CheckAttSameKm(blocks);
@@ -632,7 +633,7 @@ namespace ExpPt1
             }
 
             Verify verify = new Verify();
-            verify.CheckSSPsSegments(RDD);
+            verify.CheckSSPsSegments(RDD, TrackSegmentsTmp);
 
             File.WriteAllLines(Path.GetDirectoryName(saveTo) + "//" +
                                Path.GetFileNameWithoutExtension(saveTo) + "_Signals.txt", ExportCigClosure);
@@ -8280,7 +8281,7 @@ namespace ExpPt1
                     }
                     else
                     {
-                        if (stackNodes.Peek().Peek().Vertex2.XsdName == "Point")
+                        if (stackNodes.Peek().Peek().Vertex2.XsdName == "Point" )
                         {
                             elements.Add(stackNodes.Peek().Peek().Vertex2);
                         }

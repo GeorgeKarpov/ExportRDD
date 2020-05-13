@@ -79,6 +79,7 @@ namespace ExpPt1
         public void LoadData()
         {
             SetBlocksNextStations(blocks);
+            SetBlocksExclude(blocks);
             List<PSA> pSAs = GetPsas().ToList();
             // Segments
             if (!GetSegments(blocks, TracksLines, Tracks, pSAs, true))
@@ -86,7 +87,6 @@ namespace ExpPt1
                 AcadApp.ShowAlertDialog("Track Segments error. See error log");
                 return;
             }
-            SetBlocksExclude(blocks);
             checkData = new Dictionary<string, bool> { 
                 { "checkBoxRts", false },
                 { "checkBoxSC", false },

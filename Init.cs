@@ -74,6 +74,11 @@ namespace ExpPt1
         public void DocColDocAct(object senderObj, DocumentCollectionEventArgs docColDocActEvtArgs)
         {
             MyAcadCommands.DwgPath = docColDocActEvtArgs.Document.Database.Filename;
+            if (MyAcadCommands.Pl != null)
+            {
+                MyAcadCommands.Pl.DwgPath = docColDocActEvtArgs.Document.Database.Filename;
+                MyAcadCommands.Pl.Reset();
+            }           
             docColDocActEvtArgs.Document.Database.SaveComplete += new DatabaseIOEventHandler(DocSave);
         }
     }

@@ -1927,7 +1927,8 @@ namespace ReadExcel
           string dataSource,
           ref TFileDescr document)
         {
-            string connectionString = this.GetConnectionString(dataSource, "'Excel 12.0;IMEX=1;HDR=YES;TypeGuessRows=0;ImportMixedTypes=Text'");
+            string connectionString = this.GetConnectionString(dataSource, 
+                "'Excel 12.0;IMEX=1;HDR=NO;TypeGuessRows=0;ImportMixedTypes=Text'");
             document.title = "Balise Group";
             using (OleDbConnection conn = new OleDbConnection(connectionString))
             {
@@ -1999,7 +2000,7 @@ namespace ReadExcel
                     }
                 }
                 DataRow[] BGs =
-                    dt.Select("[Balise Groupe Types] is not NULL AND [Balise Groupe Types] <> ''", "RowNum");
+                    dt.Select("([Balise Groupe Types] is not NULL AND[Balise Groupe Types] <> 'Balise Groupe Types')", "RowNum");
 
                 List<BaliseGroupsBaliseGroup> baliseGroups = new List<BaliseGroupsBaliseGroup>();
                 for (int b = 0; b < BGs.Count(); b++)
@@ -2011,12 +2012,18 @@ namespace ReadExcel
                         ErrLogger.Log("BG '" + BGs[b]["Designation"].ToString().ToLower() +
                             "' unable parse KindOfBG - " + BGs[b]["Balise Groupe Types"].ToString().Replace(" ", string.Empty));
                     }
+                    if (!Enum.TryParse(BGs[b]["Direction"].ToString().ToLower(),
+                        out NominalReverseBothType nominalReverseBothType))
+                    {
+                        ErrLogger.Log("BG '" + BGs[b]["Designation"].ToString().ToLower() +
+                               "' unable parse NominalReverseBothType - " + BGs[b]["Direction"].ToString().ToLower());
+                        ErrLogger.error = true;
+                    }
                     BaliseGroupsBaliseGroupBaliseGroupTypesKindOfBG KindOfBG =
                         new BaliseGroupsBaliseGroupBaliseGroupTypesKindOfBG
                         {
                             Value = kindOfBG,
-                            direction = (NominalReverseBothType)Enum.Parse(typeof(NominalReverseBothType),
-                                    BGs[b]["Direction"].ToString().ToLower())
+                            direction = nominalReverseBothType
                         };
                     if (BGs[b].Table.Columns.Contains("Duplicated"))
                     {
