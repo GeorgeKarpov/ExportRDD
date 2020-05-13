@@ -635,10 +635,10 @@ namespace ExpPt1
             Verify verify = new Verify();
             verify.CheckSSPsSegments(RDD, TrackSegmentsTmp);
 
-            File.WriteAllLines(Path.GetDirectoryName(saveTo) + "//" +
-                               Path.GetFileNameWithoutExtension(saveTo) + "_Signals.txt", ExportCigClosure);
-            File.WriteAllLines(Path.GetDirectoryName(saveTo) + "//" +
-                               Path.GetFileNameWithoutExtension(saveTo) + "_Points.txt", ExportPoints);
+            //File.WriteAllLines(Path.GetDirectoryName(saveTo) + "//" +
+            //                   Path.GetFileNameWithoutExtension(saveTo) + "_Signals.txt", ExportCigClosure);
+            //File.WriteAllLines(Path.GetDirectoryName(saveTo) + "//" +
+            //                   Path.GetFileNameWithoutExtension(saveTo) + "_Points.txt", ExportPoints);
 
             if (err.Contains(true) || ErrLogger.error)
             {
@@ -2032,18 +2032,6 @@ namespace ExpPt1
                                                    x.Visible == true))
                                       .ToList();
             TFileDescr document;
-
-            List<ReadExcel.DetLock> Tracks = new List<ReadExcel.DetLock>();
-            if (checkData["checkBoxDL"])
-            {
-                document = new TFileDescr();
-                Tracks = excel.DetectorLockings(loadFiles["lblxlsDetLock"], ref document, ref error);
-                Documents.Add(document);
-            }
-            else
-            {
-                Logger.Log("Track for detector locking data skipped\tTrack for detector locking table");
-            }
 
             List<ReadExcel.FlankProtection> FlankProtection = new List<ReadExcel.FlankProtection>();
             if (checkData["checkBoxFP"])
@@ -8281,7 +8269,8 @@ namespace ExpPt1
                     }
                     else
                     {
-                        if (stackNodes.Peek().Peek().Vertex2.XsdName == "Point" )
+                        if (stackNodes.Peek().Peek().Vertex2.XsdName == "Point" && 
+                             stackNodes.Peek().Peek().Vertex2.KindOf != "derailer")
                         {
                             elements.Add(stackNodes.Peek().Peek().Vertex2);
                         }
