@@ -22,9 +22,9 @@ namespace ExpPt1
         public List<TrackSegmentsTrackSegment> Segments { get; set; }
         public List<SignalsSignal> Signals { get; set; }
         public List<PointsPoint> Points { get; set; }
-        List<SignalsSignal> signals;
-        List<PointsPoint> points;
-        List<SpeedProfilesSpeedProfile> speedProfiles;
+        //List<SignalsSignal> signals;
+        //List<PointsPoint> points;
+        //List<SpeedProfilesSpeedProfile> speedProfiles;
         public Display(string dwgPath) : base(dwgPath)
         {
             assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -86,6 +86,7 @@ namespace ExpPt1
                 AcadApp.ShowAlertDialog("Track Segments error. See error log");
                 return;
             }
+            SetBlocksExclude(blocks);
             checkData = new Dictionary<string, bool> { 
                 { "checkBoxRts", false },
                 { "checkBoxSC", false },

@@ -62,7 +62,9 @@ namespace ExpPt1
         protected List<Block> blocks;
         protected bool blocksErr;
         private FrmStation frmStation;
-        private List<PointsPoint> points;
+        protected List<PointsPoint> points;
+        protected List<SignalsSignal> signals;
+        protected List<SpeedProfilesSpeedProfile> speedProfiles;
         private List<AxleCounterSectionsAxleCounterSection> acsections;
 
         public Export(string dwgPath)
@@ -311,11 +313,11 @@ namespace ExpPt1
             TFileDescr siglayout = new TFileDescr();
             List<StationsAndStopsStationsAndStop> stationsandstops = new List<StationsAndStopsStationsAndStop>();
             List<DetectionPointsDetectionPoint> detpoints = new List<DetectionPointsDetectionPoint>();
-            List<SignalsSignal> signals = new List<SignalsSignal>();
+            signals = new List<SignalsSignal>();
             List<ConnectorsConnector> connectors = new List<ConnectorsConnector>();
-            List<PointsPoint> points = new List<PointsPoint>();
+            points = new List<PointsPoint>();
             List<BaliseGroupsBaliseGroup> balises = new List<BaliseGroupsBaliseGroup>();
-            List<AxleCounterSectionsAxleCounterSection> acsections = new List<AxleCounterSectionsAxleCounterSection>();
+            acsections = new List<AxleCounterSectionsAxleCounterSection>();
             List<TrackSectionsTrackSection> tsections = new List<TrackSectionsTrackSection>();
             List<EndOfTracksEndOfTrack> endoftracks = new List<EndOfTracksEndOfTrack>();
             List<StaffPassengerCrossingsStaffPassengerCrossing> staffpassengercrossings =
@@ -324,7 +326,7 @@ namespace ExpPt1
                 new List<LevelCrossingsLevelCrossing>();
             List<EmergencyStopGroupsEmergencyStopGroup> emergencystopgroups =
                 new List<EmergencyStopGroupsEmergencyStopGroup>();
-            List<SpeedProfilesSpeedProfile> speedprofiles = new List<SpeedProfilesSpeedProfile>();
+            speedProfiles = new List<SpeedProfilesSpeedProfile>();
             List<RoutesRoute> routes = new List<RoutesRoute>();
             List<TrustedAreasTrustedArea> trustedareas = new List<TrustedAreasTrustedArea>();
             List<PlatformsPlatform> platforms = new List<PlatformsPlatform>();
@@ -415,6 +417,7 @@ namespace ExpPt1
             // Segments
             err.Add(!GetSegments(blocks, TracksLines, Tracks, pSAs));
 
+            SetBlocksExclude(blocks);
 
             //Test
             CheckAttSameKm(blocks);
@@ -433,13 +436,13 @@ namespace ExpPt1
             err.Add(!ReadSignals(blocks, ref signals));
 
             // Speed Profiles
-            ReadSps(blocks, ref speedprofiles);
+            ReadSps(blocks, ref speedProfiles);
 
             //PSA
             err.Add(!ReadPSAs(blocks, pSAs, ref permanentshuntareas));
 
             //Points
-            err.Add(!ReadPoints(blocks, ref points, speedprofiles, pSAs, emGs));
+            err.Add(!ReadPoints(blocks, ref points, speedProfiles, pSAs, emGs));
 
             // Connectors
             ReadConnectors(blocks, ref connectors);
@@ -465,7 +468,7 @@ namespace ExpPt1
             LxsActivations = excel.LoopLxActivations(dwgDir);
 
             // Level Crossings
-            err.Add(!ReadLxs(blocks, ref levelcrossings, acsections, speedprofiles));
+            err.Add(!ReadLxs(blocks, ref levelcrossings, acsections, speedProfiles));
 
             // Emergency Stop Groups
             ReadEms(blocks, ref emergencystopgroups, emGs);
@@ -541,9 +544,9 @@ namespace ExpPt1
                 {
                     EmergencyStopGroup = emergencystopgroups.ToArray()
                 },
-                SpeedProfiles = (speedprofiles.Count == 0) ? null : new SpeedProfiles
+                SpeedProfiles = (speedProfiles.Count == 0) ? null : new SpeedProfiles
                 {
-                    SpeedProfile = speedprofiles.ToArray()
+                    SpeedProfile = speedProfiles.ToArray()
                 },
                 Routes = (routes.Count == 0) ? null : new Routes
                 {
@@ -1343,7 +1346,7 @@ namespace ExpPt1
                                 Rotation = (int)(blkRef.Rotation * (180 / Math.PI)),
                                 KindOf = BlocksToGet[btr.Name].Split('\t')[3],
                                 Attributes = Attributes,
-                                IsOnCurrentArea = false,
+                                IsOnCurrentArea = true,
                                 Visible = !(Attributes.Any(x => x.Value.Name == "NAME" &&
                                                                x.Value.Visible == false))
                             };
@@ -1541,7 +1544,7 @@ namespace ExpPt1
                                 Rotation = (int)(blkRef.Rotation * (180 / Math.PI)),
                                 KindOf = BlocksToGet[btr.Name].Split('\t')[3],
                                 Attributes = Attributes,
-                                IsOnCurrentArea = false,
+                                IsOnCurrentArea = true,
                                 Visible = !(Attributes.Any(x => x.Value.Name == "NAME" &&
                                                                x.Value.Visible == false) ||
                                           !blkRef.BlockName.Contains("MODEL_SPACE"))
@@ -1848,6 +1851,12 @@ namespace ExpPt1
                     GetSigClosure(BlkSignal, signal, blocks);
                 }
 
+                if (this.GetType() == typeof(Display))
+                {
+                    signalsSignal.Add(signal);
+                    continue;
+                }
+
                 if (CesLocs == null)
                 {
                     continue;
@@ -1952,10 +1961,14 @@ namespace ExpPt1
                 // DK2.1 Danger point distance by DMT
                 signal.DangerPointDistanceSpecified = false;
                 signal.DangerPointID = null;
-
-
                 signalsSignal.Add(signal);
             }
+
+            if (this.GetType() == typeof(Display))
+            {
+                return !error;
+            }
+
             Regex spstSig = new Regex("^(spst-[a-zæøåÆØÅ]{2,3}-)S([0-9]{1,3})");
             List<ReadExcel.XlsRoute> checkSpsts = xlsRoutes.Where(x => spstSig.IsMatch(x.Start)).ToList();
             foreach (ReadExcel.XlsRoute route in checkSpsts)
@@ -2074,11 +2087,11 @@ namespace ExpPt1
                         Location = Convert.ToDecimal(BlkPoint.Attributes["KMP"].Value).ToString()
                     });
                     Logger.Log(blckProp.GetElemDesignation(BlkPoint) + ": Fouling point not found");
-                    ExportPoints.Add(stationName + "\t" +
-                                     BlkPoint.Attributes["NAME"].Value + "\t" +
-                                     Convert.ToInt32(Convert.ToDecimal(BlkPoint.Attributes["KMP"].Value) * 1000) + "\t" +
-                                     Convert.ToInt32(Convert.ToDecimal(BlkPoint.Attributes["KMP"].Value) * 1000) + "\t" +
-                                     Convert.ToInt32(Convert.ToDecimal(BlkPoint.Attributes["KMP"].Value) * 1000));
+                    //ExportPoints.Add(stationName + "\t" +
+                    //                 BlkPoint.Attributes["NAME"].Value + "\t" +
+                    //                 Convert.ToInt32(Convert.ToDecimal(BlkPoint.Attributes["KMP"].Value) * 1000) + "\t" +
+                    //                 Convert.ToInt32(Convert.ToDecimal(BlkPoint.Attributes["KMP"].Value) * 1000) + "\t" +
+                    //                 Convert.ToInt32(Convert.ToDecimal(BlkPoint.Attributes["KMP"].Value) * 1000));
                 }
                 else
                 {
@@ -2123,11 +2136,11 @@ namespace ExpPt1
                         FoulingPointLocation =
                             GetFoulPointLocation(FoulPoints, BlkPoint, ConnectionBranchType.left)
                     });
-                    ExportPoints.Add(stationName + "\t" +
-                                     BlkPoint.Attributes["NAME"].Value + "\t" +
-                                     Convert.ToInt32(locTip * 1000) + "\t" +
-                                     Convert.ToInt32(locRight * 1000) + "\t" +
-                                     Convert.ToInt32(locLeft * 1000));
+                    //ExportPoints.Add(stationName + "\t" +
+                    //                 BlkPoint.Attributes["NAME"].Value + "\t" +
+                    //                 Convert.ToInt32(locTip * 1000) + "\t" +
+                    //                 Convert.ToInt32(locRight * 1000) + "\t" +
+                    //                 Convert.ToInt32(locLeft * 1000));
                 }
 
                 List<PointsPointPointMachinesPointMachine> pointMachines =
