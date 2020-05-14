@@ -906,7 +906,7 @@ namespace ReadExcel
                             Item = new SpeedProfilesSpeedProfileTrainTypesTrainTypTrainCategory
                             {
                                 CategoryType = KindOfTrainCategory.freightTrainInP,
-                                ReplaceCDAndBasicLimit = YesNoType.No
+                                ReplaceCDAndBasicLimit = YesNoType.no
                             },
                             SpeedLimit = Convert.ToDecimal(sspGrp.First().Fp)
                         });
@@ -918,7 +918,7 @@ namespace ReadExcel
                             Item = new SpeedProfilesSpeedProfileTrainTypesTrainTypTrainCategory
                             {
                                 CategoryType = KindOfTrainCategory.freightTrainInG,
-                                ReplaceCDAndBasicLimit = YesNoType.No
+                                ReplaceCDAndBasicLimit = YesNoType.no
                             },
                             SpeedLimit = Convert.ToDecimal(sspGrp.First().Fg)
                         });

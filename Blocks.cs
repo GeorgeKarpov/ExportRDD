@@ -357,25 +357,4 @@ namespace ExpPt1
         public Polyline PsaPolyLine;
         public int Order;
     }
-
-    public class SspAct
-    {
-        public decimal speed;
-        public decimal kmStart;
-        public decimal kmEnd;
-        public decimal kmGap;
-    }
-
-    public class LxActivation
-    {
-        public string id;
-        public decimal km;
-    }
-
-    public class ActivationsSet
-    {
-        public List<LxActivation> lxActivations;
-        public bool point;
-        public string segDeviationId;
-    }
 }

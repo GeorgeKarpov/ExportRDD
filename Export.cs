@@ -120,7 +120,7 @@ namespace ExpPt1
                         AcadApp.ShowAlertDialog("File '" + blockFileName + "' doesn't exist");
                         return;
                     }
-                    CopyBlockFromFile(@"C:\3.TRDD\DynamicBlocks\Blks_Dynamic.dwg", "Platform_Dynamic");
+                    CopyBlockFromFile(this.assemblyPath + Constants.cfgFolder +  @"\Blks_Dynamic.dwg", "Platform_Dynamic");
 
                     BlockReference blkRefInserted =
                         (BlockReference)tr.GetObject(InsertBlock("Platform_Dynamic",
@@ -141,6 +141,11 @@ namespace ExpPt1
                                          block.BlkRef.GeometricExtents.MinPoint.X);
                         }
                     }
+                    if (LayerExists("KMP"))
+                    {
+                        block.BlkRef.Layer = "KMP";
+                    }
+
                     Erase.Erase();
                     tr.Commit();
                 }
@@ -631,10 +636,12 @@ namespace ExpPt1
             {
                 AcadApp.ShowAlertDialog(e.Message);
             }
-
-            Verify verify = new Verify();
-            verify.CheckSSPsSegments(RDD, TrackSegmentsTmp);
-
+            if (RDD.SpeedProfiles != null && RDD.SpeedProfiles.SpeedProfile != null)
+            {
+                Verify verify = new Verify();
+                verify.CheckSSPsSegments(RDD, TrackSegmentsTmp);
+            }
+            
             //File.WriteAllLines(Path.GetDirectoryName(saveTo) + "//" +
             //                   Path.GetFileNameWithoutExtension(saveTo) + "_Signals.txt", ExportCigClosure);
             //File.WriteAllLines(Path.GetDirectoryName(saveTo) + "//" +
@@ -4199,51 +4206,39 @@ namespace ExpPt1
                         ActivateCrossingElement = crossingElements.ToArray()
                     };
                 }
-                List<RoutesRoutePointGroupPoint> groupPoints = null;
-                if (route.Points != null && route.Points.Count() != 0)
-                {
-                    groupPoints = new List<RoutesRoutePointGroupPoint>();
-                    foreach (ReadExcel.XlsPoint point in route.Points.Where(x => x.Designation != null))
-                    {
-                        groupPoints.Add(new RoutesRoutePointGroupPoint
-                        {
-                            Value = blckProp.GetElemDesignation(blocks
-                                                       .Where(x => x.XsdName == "Point" &&
-                                                              x.Attributes["NAME"].Value == point.Designation)
-                                                       .FirstOrDefault()),
-                            RequiredPosition = point.ReqPosition
-                        });
-                    }
-                }
+
+                List<RoutesRoutePointGroupPoint> groupPoints = new List<RoutesRoutePointGroupPoint>();
                 if (route.PointsGrps.Count() != 0)
                 {
-                    if (groupPoints == null)
+                    foreach (ReadExcel.XlsPoint xlsPoint in route.PointsGrps.Where(x => x.Designation != null))
                     {
-                        groupPoints = new List<RoutesRoutePointGroupPoint>();
-                    }
-                    List<ReadExcel.XlsPoint> grpPoints = route.PointsGrps
-                                .Where(p => !route.Points.Any(p2 => p2.Designation == p.Designation))
-                                .ToList();
-                    foreach (ReadExcel.XlsPoint point in grpPoints)
-                    {
-                        groupPoints.Add(new RoutesRoutePointGroupPoint
+                        ReadExcel.XlsPoint point = xlsPoint;
+                        Block pointBlk = blocks
+                                         .Where(x => x.XsdName == "Point" &&
+                                                     x.Attributes["NAME"].Value == point.Designation)
+                                         .FirstOrDefault();
+                        string pointDesignation = point.Designation;
+                        if (pointBlk != null)
                         {
-                            Value = blckProp.GetElemDesignation(blocks
-                                                       .Where(x => x.XsdName == "Point" &&
-                                                              x.Attributes["NAME"].Value == point.Designation)
-                                                       .FirstOrDefault()),
+                            pointDesignation = this.blckProp.GetElemDesignation(pointBlk, false, true);
+                            ErrLogger.Log("Route '" + Route.Designation + 
+                                "' - point '" + point.Designation + "' not found in points");
+                            ErrLogger.error = true;
+                        }
+                        groupPoints.Add(new RoutesRoutePointGroupPoint()
+                        {
+                            Value = pointDesignation,
                             RequiredPosition = point.ReqPosition
                         });
                     }
                 }
                 if (groupPoints != null && groupPoints.Count > 0)
-                {
-                    Route.PointGroup = new RoutesRoutePointGroup { Point = groupPoints.ToArray() };
-                }
+                    Route.PointGroup = new RoutesRoutePointGroup()
+                    {
+                        Point = groupPoints.ToArray()
+                    };
                 else
-                {
-                    Route.PointGroup = null;
-                }
+                    Route.PointGroup = (RoutesRoutePointGroup)null;
                 routes.Add(Route);
             }
             List<RoutesRoute> dubplicatesRoutes = routes.GroupBy(s => s.Designation)
@@ -4419,7 +4414,7 @@ namespace ExpPt1
                 {
                     if (plCount > 1)
                     {
-                        a = a + a1++;
+                        a += a1++;
                     }
                     platforms.Add(PlatformsCalc(Blkplatform, ref errors, a));
                 }
@@ -4571,15 +4566,23 @@ namespace ExpPt1
                 //Regex.Replace(Blkplatform.Attributes["PLATFORM_1"].Value, "[^0-9]", ""),
                 Designation = "pr-" + Blkplatform.StId + "-" + Blkplatform.PlatformTrack.ToString() + a, //.Replace("0",""),
                 Status = Status,
-                TrainRunningDirection =
-                    (UpDownBothType)Enum.Parse(typeof(UpDownBothType),
-                        Blkplatform.Attributes["DIRECTION_PLAT"].Value),
                 TrackSegments = new PlatformsPlatformTrackSegments
                 {
                     TrackSegment = segmentTypes.ToArray()
                 },
-                Remarks = "Extracted from SL. Not found in 'Banedanmarks Netredegørelse 2018 Bilag 3.6A Perronlængder og - højder'"
+                Remarks = "Default Platform Height. Not found in 'Banedanmarks Netredegørelse 2018 Bilag 3.6A Perronlængder og - højder'"
             };
+
+            UpDownBothType direction;
+            if (Enum.TryParse(Blkplatform.Attributes["DIRECTION_PLAT"].Value, out direction))
+            {
+                platformsPlatform.TrainRunningDirection = direction;
+            }
+            else
+            {
+                errors = true;
+                ErrLogger.Log("Platform: " + platformsPlatform.Designation + "Cannot parse direction from attributes");
+            }
 
             if (Enum.TryParse(Blkplatform.Attributes["POSITION_PLAT"].Value,
                           out LeftRightType ParsePosition))
