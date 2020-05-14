@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ExpRDD")]
+[assembly: AssemblyTitle("ExpPt1")]
 [assembly: AssemblyDescription("Export Railway Design Data")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Thales Latvia")]
-[assembly: AssemblyProduct("ExpRDD")]
+[assembly: AssemblyProduct("ExpPt1")]
 [assembly: AssemblyCopyright("Copyright © Thales Latvia 2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

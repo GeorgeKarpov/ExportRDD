@@ -59,7 +59,7 @@ namespace ExpPt1
 #if DEBUG
                 _ps = new PaletteSet("RDD");
 #else
-                _ps = new PaletteSet("RDD", new Guid("87374E16-C0DB-4F3F-9271-7A71ED921567"));
+                _ps = new PaletteSet("RDD", new Guid("87374E16-C0DB-4F3F-9271-7A71ED921568"));
 #endif
 
                 _ps.Add("SL", palCntrlSigLay);

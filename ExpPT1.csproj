@@ -153,11 +153,11 @@
   <PropertyGroup>
     <PostBuildEvent>if not exist $(TargetDir)\log mkdir $(TargetDir)\log
 if not exist $(TargetDir)\drv mkdir $(TargetDir)\drv
-if not exist $(TargetDir)\drv mkdir $(TargetDir)\doc
+if not exist $(TargetDir)\doc mkdir $(TargetDir)\doc
 xcopy /Y $(SolutionDir)AccessDatabaseEngine_X64.exe $(TargetDir)\drv
 xcopy /Y $(SolutionDir)mso.reg $(TargetDir)\drv
 xcopy /Y C:\3.TRDD\DynamicBlocks\Blks_Dynamic.dwg $(TargetDir)\cfg
-xcopy /Y C:\3.TRDD\DynamicBlocks\Blks_Dynamic.dwg $(TargetDir)\cfg
+xcopy /Y $(SolutionDir)\docs\ExpPt1_User_Manual_01P01.pdf $(TargetDir)\doc
 del /f $(TargetDir)\log\error.log</PostBuildEvent>
   </PropertyGroup>
 </Project>
