@@ -53,13 +53,9 @@ namespace ExpPt1
             excel = new ReadExcel.Excel(stationID);
             
             TrustedAreaLines = GetTrustedAreasLines();
-            
             Tracks = GetTracksNames().ToList();
-
             ReadLines(blocks, ref lines);
-
             CollectTrustedAreas(TrustedAreaLines, TracksLines);
-
             pSAs = GetPsas().ToList();
         }
 
