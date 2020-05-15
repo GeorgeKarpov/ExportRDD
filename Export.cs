@@ -1637,10 +1637,9 @@ namespace ExpPt1
                 siglayout.creator = tmpCreator
                     .Split(new char[] { ' ', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries)[1].Trim();
             }
-            siglayout.date =
-                    Convert.ToDateTime(
-                        Regex.
-                        Split(BlkSigLayout.Attributes["UDGAVE"].Value, @"\s{1,}")[1]);
+            string inputDate = Regex.Split(BlkSigLayout.Attributes["UDGAVE"].Value, @"\s{1,}")[1];
+            
+            siglayout.date = Calc.StringToDate(inputDate, out DateTime date, out bool flag); 
             siglayout.title = BlkSigLayout.Attributes["2-TEGN.NAVN"].Value + " - " +
                               BlkSigLayout.Attributes["1-ST.NAVN"].Value;
             //siglayout.title += " (rev. " + Regex.Split(BlkSigLayout.Attributes["UDGAVE"].Value, @"\s{1,}")[0] + ")";
@@ -4221,7 +4220,10 @@ namespace ExpPt1
                         if (pointBlk != null)
                         {
                             pointDesignation = this.blckProp.GetElemDesignation(pointBlk, false, true);
-                            ErrLogger.Log("Route '" + Route.Designation + 
+                        }
+                        else
+                        {
+                            ErrLogger.Log("Route '" + Route.Designation +
                                 "' - point '" + point.Designation + "' not found in points");
                             ErrLogger.error = true;
                         }

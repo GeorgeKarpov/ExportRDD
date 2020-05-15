@@ -78,7 +78,8 @@ namespace ReadExcel
                         if (dt.Rows[a][i] != DBNull.Value && ((string)dt.Rows[a][i]).Contains("Prepared by"))
                         {
                             document.creator = dt.Rows[a + 1][i].ToString();
-                            document.date = Convert.ToDateTime(dt.Rows[a + 2][i].ToString());
+                            document.date = ExpPt1.Calc.StringToDate(dt.Rows[a + 2][i].ToString(), out DateTime date, out bool flag);
+                            //document.date = Convert.ToDateTime(dt.Rows[a + 2][i].ToString());
                         }
                     }
                 }
@@ -226,7 +227,9 @@ namespace ReadExcel
                         if (dt.Rows[a][i] != DBNull.Value && ((string)dt.Rows[a][i]).Contains("Prepared by"))
                         {
                             document.creator = dt.Rows[a + 1][i].ToString();
-                            document.date = Convert.ToDateTime(dt.Rows[a + 2][i].ToString());
+                            document.date =
+                            ExpPt1.Calc.StringToDate(dt.Rows[a + 2][i].ToString(), out DateTime date, out bool flag, false);
+                            //document.date = Convert.ToDateTime(dt.Rows[a + 2][i].ToString());
                         }
                         else if (dt.Rows[a][i] != DBNull.Value && ((string)dt.Rows[a][i]).Contains("Udarbejdet"))
                         {
@@ -235,8 +238,12 @@ namespace ReadExcel
                             {
                                 offset++;
                             } while (dt.Rows[a][i + offset].ToString() == "");
-                            document.creator = dt.Rows[a][i + offset].ToString().Split(new char[0], StringSplitOptions.RemoveEmptyEntries)[1].Trim();
-                            document.date = Convert.ToDateTime(dt.Rows[a][i + offset].ToString().Split(new char[0], StringSplitOptions.RemoveEmptyEntries)[0].Trim());
+                            document.creator = dt.Rows[a][i + offset].ToString()
+                                .Split(new char[0], StringSplitOptions.RemoveEmptyEntries)[1].Trim();
+                            document.date =
+                            ExpPt1.Calc.StringToDate(dt.Rows[a][i + offset].ToString()
+                            .Split(new char[0], StringSplitOptions.RemoveEmptyEntries)[0].Trim(), out DateTime date, out bool flag);
+                            //document.date = Convert.ToDateTime(dt.Rows[a][i + offset].ToString().Split(new char[0], StringSplitOptions.RemoveEmptyEntries)[0].Trim());
                         }
                     }
                 }
@@ -424,7 +431,9 @@ namespace ReadExcel
                         if (dt.Rows[a][i] != DBNull.Value && ((string)dt.Rows[a][i]).Contains("Prepared by"))
                         {
                             document.creator = dt.Rows[a + 1][i].ToString();
-                            document.date = Convert.ToDateTime(dt.Rows[a + 2][i].ToString());
+                            document.date =
+                            ExpPt1.Calc.StringToDate(dt.Rows[a + 2][i].ToString(), out DateTime date, out bool flag);
+                            //document.date = Convert.ToDateTime(dt.Rows[a + 2][i].ToString());
                         }
                     }
                 }
@@ -579,7 +588,9 @@ namespace ReadExcel
                             if (dt.Rows[a][i] != DBNull.Value && ((string)dt.Rows[a][i]).Contains("Udarbejdet"))
                             {
                                 document.creator = dt.Rows[a][i + 2].ToString().Split(' ')[1];
-                                document.date = Convert.ToDateTime(dt.Rows[a][i + 2].ToString().Split(' ')[0]);
+                                document.date =
+                                ExpPt1.Calc.StringToDate(dt.Rows[a][i + 2].ToString().Split(' ')[0], out DateTime date, out bool flag);
+                                //document.date = Convert.ToDateTime(dt.Rows[a][i + 2].ToString().Split(' ')[0]);
                                 found = true;
                                 break;
                             }
@@ -1254,7 +1265,9 @@ namespace ReadExcel
                         if (dataTable.Rows[index1][index2] != DBNull.Value && ((string)dataTable.Rows[index1][index2]).Contains("Prepared by"))
                         {
                             document.creator = dataTable.Rows[index1 + 1][index2].ToString();
-                            document.date = Convert.ToDateTime(dataTable.Rows[index1 + 2][index2].ToString());
+                            document.date =
+                            ExpPt1.Calc.StringToDate(dataTable.Rows[index1 + 2][index2].ToString(), out DateTime date, out bool flag);
+                            //document.date = Convert.ToDateTime(dataTable.Rows[index1 + 2][index2].ToString());
                         }
                     }
                 }
@@ -1508,7 +1521,9 @@ namespace ReadExcel
                         if (dt.Rows[a][i] != DBNull.Value && ((string)dt.Rows[a][i]).Contains("Prepared by"))
                         {
                             document.creator = dt.Rows[a + 1][i].ToString();
-                            document.date = Convert.ToDateTime(dt.Rows[a + 2][i].ToString());
+                            document.date =
+                            ExpPt1.Calc.StringToDate(dt.Rows[a + 2][i].ToString(), out DateTime date, out bool flag);
+                            //document.date = Convert.ToDateTime(dt.Rows[a + 2][i].ToString());
                         }
                     }
                 }
@@ -1777,7 +1792,9 @@ namespace ReadExcel
                             document.creator = dt.Rows[a + 1][i].ToString();
                             try
                             {
-                                document.date = Convert.ToDateTime(dt.Rows[a + 2][i].ToString());
+                                document.date =
+                                ExpPt1.Calc.StringToDate(dt.Rows[a + 2][i].ToString(), out DateTime date, out bool flag);
+                                //document.date = Convert.ToDateTime(dt.Rows[a + 2][i].ToString());
                             }
                             catch
                             {
@@ -1952,7 +1969,9 @@ namespace ReadExcel
                         if (dt.Rows[r][c] != DBNull.Value && ((string)dt.Rows[r][c]).Contains("Prepared by"))
                         {
                             document.creator = dt.Rows[r + 1][c].ToString();
-                            document.date = Convert.ToDateTime(dt.Rows[r + 2][c].ToString());
+                            document.date =
+                            ExpPt1.Calc.StringToDate(dt.Rows[r + 2][c].ToString(), out DateTime date, out bool flag);
+                            //document.date = Convert.ToDateTime(dt.Rows[r + 2][c].ToString());
                         }
                     }
                 }
