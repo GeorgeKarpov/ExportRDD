@@ -22,9 +22,7 @@ namespace ExpPt1
         public List<TrackSegmentsTrackSegment> Segments { get; set; }
         public List<SignalsSignal> Signals { get; set; }
         public List<PointsPoint> Points { get; set; }
-        //List<SignalsSignal> signals;
-        //List<PointsPoint> points;
-        //List<SpeedProfilesSpeedProfile> speedProfiles;
+
         public Display(string dwgPath) : base(dwgPath)
         {
             assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -60,19 +58,8 @@ namespace ExpPt1
 
             ReadLines(blocks, ref lines);
 
-            // Signaling Layout
-            //if (!ReadSigLayout(blocks, ref siglayout))
-            //{
-            //    return;
-            //}
             CollectTrustedAreas(TrustedAreaLines, TracksLines);
-            //if (!CollectTrustedAreas(TrustedAreaLines, TracksLines))
-            //{
-            //    AcadApp.ShowAlertDialog("Trusted Areas error. See error log");
-            //    return;
-            //}
 
-            // Get PSAs
             pSAs = GetPsas().ToList();
         }
 
