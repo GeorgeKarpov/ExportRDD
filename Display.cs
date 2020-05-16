@@ -1,12 +1,8 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
 using AcadApp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
 namespace ExpPt1
@@ -15,7 +11,6 @@ namespace ExpPt1
     {
         List<Track> Tracks;
         List<Line> TrustedAreaLines = new List<Line>();
-        List<PSA> pSAs;
         List<LinesLine> lines = new List<LinesLine>();
         TFileDescr sigLayout = new TFileDescr();
         public TFileDescr SigLayout { get; set; }
@@ -51,12 +46,11 @@ namespace ExpPt1
             RailwayLines = GetRailwayLines(TracksLines, blocks);
             blckProp = new BlockProperties(stationID);
             excel = new ReadExcel.Excel(stationID);
-            
+
             TrustedAreaLines = GetTrustedAreasLines();
             Tracks = GetTracksNames().ToList();
-            ReadLines(blocks, ref lines);
+            ReadLines(ref lines);
             CollectTrustedAreas(TrustedAreaLines, TracksLines);
-            pSAs = GetPsas().ToList();
         }
 
         public void LoadData()
@@ -70,7 +64,7 @@ namespace ExpPt1
                 AcadApp.ShowAlertDialog("Track Segments error. See error log");
                 return;
             }
-            checkData = new Dictionary<string, bool> { 
+            checkData = new Dictionary<string, bool> {
                 { "checkBoxRts", false },
                 { "checkBoxSC", false },
                 { "checkBoxSCN", false },
@@ -79,7 +73,7 @@ namespace ExpPt1
                 { "checkBoxEmSt", false },
                 //checkBoxDL
             };
-            
+
             List<EmSG> emGs = GetEmGs().ToList();
             ExportCigClosure = new List<string>();
             GetDocIdVrs();
@@ -87,7 +81,7 @@ namespace ExpPt1
             ReadSignals(blocks, ref signals);
             ReadPoints(blocks, ref points, speedProfiles, pSAs, emGs);
             SigLayout = sigLayout;
-            Segments =  trcksegments;
+            Segments = trcksegments;
             Signals = signals;
             Points = points;
         }

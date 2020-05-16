@@ -24,7 +24,8 @@ namespace ExpPt1
         public bool CopyLevel { set; get; }
         public bool AutoAC { set; get; }
 
-        public string StationId {
+        public string StationId
+        {
             get
             {
                 return stationId;
@@ -49,7 +50,8 @@ namespace ExpPt1
             }
         }
 
-        public Dictionary<string, string> LoadFiles {
+        public Dictionary<string, string> LoadFiles
+        {
             get
             {
                 return loadFiles;
@@ -61,7 +63,7 @@ namespace ExpPt1
                                                                .Where(x => x.Key.Contains("xls") &&
                                                                             !string.IsNullOrEmpty(x.Value)))
                 {
-                        labelsControls[entry.Key].Text = Path.GetFileName(entry.Value);
+                    labelsControls[entry.Key].Text = Path.GetFileName(entry.Value);
                 }
                 if (loadFiles.ContainsKey("VersId"))
                 {
@@ -82,7 +84,7 @@ namespace ExpPt1
                     else
                     {
                         checkBoxControls[entry.Key].Checked = false;
-                    }  
+                    }
                 }
             }
         }
@@ -96,14 +98,14 @@ namespace ExpPt1
             set
             {
                 lines = value;
-                foreach (RailwayLine line  in lines)
+                foreach (RailwayLine line in lines)
                 {
                     int row = dgwLines.Rows.Add();
                     dgwLines.Rows[row].Cells["Line"].Value = line.designation;
                     dgwLines.Rows[row].Cells["From"].Value = line.start;
                     dgwLines.Rows[row].Cells["To"].Value = line.end;
                     dgwLines.Rows[row].Cells["Direction"].Value = line.direction;
-                    dgwLines.Rows[row].Cells["Color"].Style.BackColor = line.color;                  
+                    dgwLines.Rows[row].Cells["Color"].Style.BackColor = line.color;
                 }
                 if (lines.Count > 0)
                 {
@@ -124,7 +126,7 @@ namespace ExpPt1
             set
             {
                 zeroLevelLine = value;
-            }     
+            }
         }
 
         public string GetVersion()
@@ -191,12 +193,12 @@ namespace ExpPt1
                                 loadFiles.Add(l.Name, null);
                             }
                         }
-                        if (l is CheckBox )
+                        if (l is CheckBox)
                         {
                             checkBoxControls.Add(l.Name, (CheckBox)l);
                         }
                     }
-                } 
+                }
             }
             loadFiles.Add("VersId", null);
             loadFiles.Add("DocId", null);
@@ -218,7 +220,7 @@ namespace ExpPt1
                 return;
             }
 
-            foreach(KeyValuePair<string, CheckBox>  box in checkBoxControls)
+            foreach (KeyValuePair<string, CheckBox> box in checkBoxControls)
             {
                 loadFiles[box.Key] = box.Value.Checked.ToString();
             }
@@ -231,7 +233,7 @@ namespace ExpPt1
                 return;
             }
 
-            if (version != "01P01" &&  !File.Exists(loadFiles[nameof(lblxlsOrderRdd)]))
+            if (version != "01P01" && !File.Exists(loadFiles[nameof(lblxlsOrderRdd)]))
             {
                 e.Cancel = true;
                 Autodesk.AutoCAD.ApplicationServices.Application
@@ -244,7 +246,7 @@ namespace ExpPt1
                 e.Cancel = true;
                 return;
             }
-            
+
             StationId = txtBoxStationId.Text;
             orderRddFileName = loadFiles[nameof(lblxlsOrderRdd)];
             foreach (Control x in this.Controls)
@@ -294,7 +296,7 @@ namespace ExpPt1
             }
             return false;
         }
-       
+
         private void BtnDetLock_Click(object sender, EventArgs e)
         {
             string sTypes = "xlsx; xlsm";
@@ -464,7 +466,7 @@ namespace ExpPt1
             BtnBgs.Enabled = lblxlsBgs.Enabled = checkBoxBG.Checked;
         }
 
-        
+
         private void FrmStation_Load(object sender, EventArgs e)
         {
             dgwLines.ClearSelection();

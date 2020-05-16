@@ -4,7 +4,7 @@
 
 namespace ExpPt1
 {
-    public static class MyAcadCommands 
+    public static class MyAcadCommands
     {
         public static string DwgPath { get; set; }
         public static Palette Pl { get; set; }

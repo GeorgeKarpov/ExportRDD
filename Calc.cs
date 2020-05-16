@@ -176,7 +176,7 @@ namespace ExpPt1
         {
             StackTrace stackTrace = new StackTrace();
             success = false;
-            
+
             if (!DateTime.TryParseExact(s, "dd.MM.yyyy", CultureInfo.InvariantCulture,
                                    DateTimeStyles.None, out date))
             {
@@ -189,12 +189,12 @@ namespace ExpPt1
                         ErrLogger.error = true;
                     }
                     success = false;
-                }             
+                }
             }
             else
             {
                 success = true;
-            }          
+            }
             return date;
         }
     }

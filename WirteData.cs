@@ -1,16 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using System.Xml;
-using System.IO;
-using System.Diagnostics;
-using System.Reflection;
-using System.Text.RegularExpressions;
 
 namespace ExpPt1
 {
@@ -62,7 +52,7 @@ namespace ExpPt1
                 stylesPart.Stylesheet.Fonts.AppendChild(font);
 
                 var solidRed = new PatternFill() { PatternType = PatternValues.Solid };
-                solidRed.ForegroundColor = new ForegroundColor { Rgb = HexBinaryValue.FromString("FFFFC7CE") }; 
+                solidRed.ForegroundColor = new ForegroundColor { Rgb = HexBinaryValue.FromString("FFFFC7CE") };
                 solidRed.BackgroundColor = new BackgroundColor { Indexed = 64 };
                 // create fills
                 stylesPart.Stylesheet.Fills = new Fills();
@@ -164,7 +154,7 @@ namespace ExpPt1
                     row.AppendChild(new Cell() { CellValue = new CellValue(doc.date.ToString("d")), DataType = CellValues.String, StyleIndex = style, CellReference = "D" + index });
                     index++;
                 }
-                
+
 
                 SheetView sheetView = new SheetView { TabSelected = true, WorkbookViewId = 0 };
                 //Selection sel = new Selection { Pane = PaneValues.BottomLeft, ActiveCell = "F" + (index -1) };
@@ -181,6 +171,6 @@ namespace ExpPt1
                 spreadsheet.WorkbookPart.Workbook.Save();
 
             }
-        }    
+        }
     }
 }

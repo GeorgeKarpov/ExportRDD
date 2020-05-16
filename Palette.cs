@@ -1,11 +1,7 @@
 ﻿using Autodesk.AutoCAD.Windows;
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ExpPt1
 {
@@ -16,13 +12,13 @@ namespace ExpPt1
         private static Cntrl palCntrlSeg = null;
         private static Cntrl palCntrlMb = null;
         private static Cntrl palCntrlPt = null;
-        public string DwgPath { get; set;}
-        
+        public string DwgPath { get; set; }
+
         public Palette(string dwgPath)
         {
             DwgPath = dwgPath;
             Reload();
-            
+
         }
 
         public void Reset()
@@ -41,7 +37,7 @@ namespace ExpPt1
                 palCntrlSeg.LblInfo.Text = "";
                 palCntrlMb.LblInfo.Text = "";
                 palCntrlPt.LblInfo.Text = "";
-            }          
+            }
         }
 
         public void Reload()
@@ -76,18 +72,18 @@ namespace ExpPt1
             }
         }
 
-        private void BtnLoadMb_Click(object sender, EventArgs e)
-        {
-            throw new NotImplementedException();
-        }
+        //private void BtnLoadMb_Click(object sender, EventArgs e)
+        //{
+        //    throw new NotImplementedException();
+        //}
 
-        private void BtnExpXls_Click(object sender, EventArgs e)
-        {
-            //Distance distance = new Distance(DwgPath);
-            //distance.GetDistToDisplay();
-            //distance.WriteDists(false);
-            //distance.Dispose();
-        }
+        //private void BtnExpXls_Click(object sender, EventArgs e)
+        //{
+        //    //Distance distance = new Distance(DwgPath);
+        //    //distance.GetDistToDisplay();
+        //    //distance.WriteDists(false);
+        //    //distance.Dispose();
+        //}
 
         public void ClearKmData()
         {
@@ -113,7 +109,7 @@ namespace ExpPt1
 
                 DataTable points = Data.PointsToDataTable(expDispl.Points);
                 palCntrlPt.DataGridView.DataSource = points;
-                palCntrlPt.LblInfo.Text = "Points count: " + points.Rows.Count;               
+                palCntrlPt.LblInfo.Text = "Points count: " + points.Rows.Count;
             }
             expDispl.Dispose();
         }

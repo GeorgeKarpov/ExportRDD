@@ -1,6 +1,6 @@
-using Win = Microsoft.Win32;
-using System.Reflection;
 using Autodesk.AutoCAD.DatabaseServices;
+using System.Reflection;
+using Win = Microsoft.Win32;
 
 //[assembly: CommandClass(typeof(ExpPt1.Register))]
 
@@ -11,7 +11,7 @@ namespace ExpPt1
     /// </summary>
     class Register
     {
-        
+
         public void RegisterMyApp()
         {
             // Get the AutoCAD Applications key
@@ -47,7 +47,7 @@ namespace ExpPt1
             regAcadAppKey.Close();
         }
 
-        
+
         public void UnregisterMyApp()
         {
             // Get the AutoCAD Applications key

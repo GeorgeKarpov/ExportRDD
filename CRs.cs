@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace ExpPt1
 {
@@ -12,7 +11,7 @@ namespace ExpPt1
         public List<CompoundRoutesCompoundRoute> compoundRoutes;
         List<CompoundRoutesCompoundRoute> existingCrs;
         List<CrStartEnd> crStartEnds;
-        List<CompoundRoutesCompoundRouteRouteIDsRouteID> tmpCRts;
+        //List<CompoundRoutesCompoundRouteRouteIDsRouteID> tmpCRts;
         public bool error;
         public CRs(List<RoutesRoute> routes, List<CrStartEnd> crStartEnds, List<CompoundRoutesCompoundRoute> compounds)
         {
@@ -26,7 +25,7 @@ namespace ExpPt1
             compoundRoutes = new List<CompoundRoutesCompoundRoute>();
             foreach (var cr in crStartEnds)
             {
-                tmpCRts = new List<CompoundRoutesCompoundRouteRouteIDsRouteID>();
+                //tmpCRts = new List<CompoundRoutesCompoundRouteRouteIDsRouteID>();
                 this.error = !GetCrRoutesList(cr.Start, cr.End);
             }
             return compoundRoutes;
@@ -36,7 +35,7 @@ namespace ExpPt1
         {
             Stack<Stack<RoutesRoute>> crStack = new Stack<Stack<RoutesRoute>>();
             string crStartInter = crStart;
-            List<CompoundRoutesCompoundRoute> test = new List<CompoundRoutesCompoundRoute>();
+            //List<CompoundRoutesCompoundRoute> test = new List<CompoundRoutesCompoundRoute>();
             bool error = false;
             do
             {

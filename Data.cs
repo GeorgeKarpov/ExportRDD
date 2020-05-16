@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Data;
-using System.Reflection;
 
 namespace ExpPt1
 {
@@ -19,7 +18,7 @@ namespace ExpPt1
                 values[0] = item.Designation;
                 values[1] = item.LineID;
                 values[2] = item.Vertex1.vertexID;
-                values[3] = item.Vertex2.vertexID; ;             
+                values[3] = item.Vertex2.vertexID; ;
                 dataTable.Rows.Add(values);
             }
 

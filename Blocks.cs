@@ -1,10 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Runtime;
-using Autodesk.AutoCAD.Geometry;
-using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.Text.RegularExpressions;
 
 [assembly: CommandClass(typeof(ExpPt1.Block))]
@@ -46,7 +42,7 @@ namespace ExpPt1
         public string ElType;
         public string StId;
         public string StName;
-        public Dictionary<string,Attribute> Attributes;
+        public Dictionary<string, Attribute> Attributes;
         public double X;
         public double Y;
         public int Rotation;
@@ -102,7 +98,7 @@ namespace ExpPt1
         public double minY;
         public bool betweenLevels;
         public string lineId;
-    } 
+    }
 
     /// <summary>
     /// Track <SP>.
@@ -232,7 +228,7 @@ namespace ExpPt1
                 {
                     names[2] = NamelowCase ? names[2].ToLower() : names[2].ToUpper();
                 }
-                return string.Join("-", names).Trim();      
+                return string.Join("-", names).Trim();
             }
             else if (Name.Split('-').Length > 1)
             {

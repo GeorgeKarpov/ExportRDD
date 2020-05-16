@@ -7,11 +7,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using PwsChain = StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracksStaffPassengerCrossingTrackActivationSectionsActivationSectionRouteChain;
-using PwsActDls = StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracksStaffPassengerCrossingTrackActivationSectionsActivationSectionActivationDelays;
-using PwsActDl = StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracksStaffPassengerCrossingTrackActivationSectionsActivationSectionActivationDelaysActivationDelay;
 using LXactSection = LevelCrossingsLevelCrossingLevelCrossingTracksLevelCrossingTrackActivationSectionsActivationSection;
+using PwsActDl = StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracksStaffPassengerCrossingTrackActivationSectionsActivationSectionActivationDelaysActivationDelay;
+using PwsActDls = StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracksStaffPassengerCrossingTrackActivationSectionsActivationSectionActivationDelays;
 using PWSactSection = StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracksStaffPassengerCrossingTrackActivationSectionsActivationSection;
+using PwsChain = StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracksStaffPassengerCrossingTrackActivationSectionsActivationSectionRouteChain;
 
 
 namespace ReadExcel
@@ -366,7 +366,6 @@ namespace ReadExcel
                 OleDbDataAdapter da = new OleDbDataAdapter(cmd);
 
                 da.Fill(dt);
-                DataTable dtCloned = dt.Clone();
 
                 ds.Tables.Add(dt);
                 for (int dr = 0; dr < dt.Rows.Count - 1; dr++)
@@ -677,8 +676,8 @@ namespace ReadExcel
                                                    {
                                                        new DetLock.Adjacent
                                                        {
-                                                           Tdts = p.Field<object>(TdtTipColumn) == null ? new List<string>() : 
-                                                           p.Field<string>(TdtTipColumn).Split(new string[] {"\r\n",";",",","\n","\t"," "}, 
+                                                           Tdts = p.Field<object>(TdtTipColumn) == null ? new List<string>() :
+                                                           p.Field<string>(TdtTipColumn).Split(new string[] {"\r\n",";",",","\n","\t"," "},
                                                            StringSplitOptions.RemoveEmptyEntries).ToList(),
                                                            Pts = p.Field<object>(TdtPtTipColumn) == null ? new List<string>() :
                                                            p.Field<string>(TdtPtTipColumn).Split(new string[] {"\r\n",";",",","\n","\t"," "},
@@ -1458,7 +1457,7 @@ namespace ReadExcel
                     Connection = conn
                 };
 
-                var dtExcelsheetname = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, new object[] { null, null, null, "TABLE" });
+                //var dtExcelsheetname = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, new object[] { null, null, null, "TABLE" });
                 //string InputDocSheet = "";
                 //foreach (DataRow row in dtExcelsheetname.Rows)
                 //{
@@ -1944,7 +1943,7 @@ namespace ReadExcel
           string dataSource,
           ref TFileDescr document)
         {
-            string connectionString = this.GetConnectionString(dataSource, 
+            string connectionString = this.GetConnectionString(dataSource,
                 "'Excel 12.0;IMEX=1;HDR=NO;TypeGuessRows=0;ImportMixedTypes=Text'");
             document.title = "Balise Group";
             using (OleDbConnection conn = new OleDbConnection(connectionString))
