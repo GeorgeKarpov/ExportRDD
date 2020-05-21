@@ -75,15 +75,21 @@
     <Compile Include="Blocks.cs" />
     <Compile Include="Calc.cs" />
     <Compile Include="Constants.cs" />
-    <Compile Include="Control.cs">
+    <Compile Include="ElementsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Control.designer.cs">
-      <DependentUpon>Control.cs</DependentUpon>
+    <Compile Include="ElementsControl.designer.cs">
+      <DependentUpon>ElementsControl.cs</DependentUpon>
     </Compile>
     <Compile Include="CRs.cs" />
     <Compile Include="Data.cs" />
     <Compile Include="Display.cs" />
+    <Compile Include="ErrorsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ErrorsControl.Designer.cs">
+      <DependentUpon>ErrorsControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Excel.cs" />
     <Compile Include="Export.cs" />
     <Compile Include="Extensions.cs" />
@@ -127,8 +133,11 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Control.resx">
-      <DependentUpon>Control.cs</DependentUpon>
+    <EmbeddedResource Include="ElementsControl.resx">
+      <DependentUpon>ElementsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ErrorsControl.resx">
+      <DependentUpon>ErrorsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FrmStation.resx">
       <DependentUpon>FrmStation.cs</DependentUpon>
