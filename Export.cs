@@ -8115,7 +8115,7 @@ namespace ExpPt1
 
         private KindOfPointType IsPointHtt(Block point, ref List<Block> blocks)
         {
-            if (blocks.Any(x => x.XsdName == "Hht" && ObjectsIntersects(point.BlkRef, x.BlkRef, Intersect.OnBothOperands)))
+            if (blocks.Any(x => x.XsdName == "Hht" && ObjectsIntersects(x.BlkRef, point.BlkRef, Intersect.OnBothOperands)))
             {
                 if (point.XsdName == "Point")
                 {
