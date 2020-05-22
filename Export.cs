@@ -2196,7 +2196,7 @@ namespace ExpPt1
                 {
                     Designation = blckProp.GetElemDesignation(BlkPoint),
                     Status = Status,
-                    KindOfPoint = IsPointHtt(BlkPoint, ref blocks),
+                    KindOfPoint = IsPointHht(BlkPoint, ref blocks),
                     Lines = new PointsPointLines { Line = pointsPointLines.ToArray() },
                     Trailable = PointTrailable(BlkPoint),
                     PointPosIndicator = GetPointPosIndicator(BlkPoint),
@@ -8113,7 +8113,7 @@ namespace ExpPt1
             }
         }
 
-        private KindOfPointType IsPointHtt(Block point, ref List<Block> blocks)
+        private KindOfPointType IsPointHht(Block point, ref List<Block> blocks)
         {
             if (blocks.Any(x => x.XsdName == "Hht" && ObjectsIntersects(x.BlkRef, point.BlkRef, Intersect.OnBothOperands)))
             {
