@@ -213,7 +213,7 @@ namespace ExpPt1
             using (Transaction transaction = this.db.TransactionManager.StartTransaction())
             {
                 PromptSelectionResult selection = this.acDoc.Editor.GetSelection();
-                if (selection.Status != PromptStatus.Cancel)
+                if (selection.Status == PromptStatus.Cancel)
                     return;
                 SelectionSet selectionSet = selection.Value;
                 if (selectionSet.Count != 2)
