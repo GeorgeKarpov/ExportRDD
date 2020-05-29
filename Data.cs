@@ -5,7 +5,7 @@ namespace ExpPt1
 {
     public static class Data
     {
-        public static DataTable SegsToDataTable(List<TrackSegmentsTrackSegment> items)
+        public static DataTable ToDataTable(List<TrackSegmentsTrackSegment> items)
         {
             DataTable dataTable = new DataTable("Segments");
             dataTable.Columns.Add("Designation", typeof(string));
@@ -25,7 +25,7 @@ namespace ExpPt1
             return dataTable;
         }
 
-        public static DataTable SignalsToDataTable(List<SignalsSignal> items)
+        public static DataTable ToDataTable(List<SignalsSignal> items)
         {
             DataTable dataTable = new DataTable("Signals");
             dataTable.Columns.Add("Designation", typeof(string));
@@ -33,20 +33,24 @@ namespace ExpPt1
             dataTable.Columns.Add("Location", typeof(string));
             dataTable.Columns.Add("Track Segment", typeof(string));
             dataTable.Columns.Add("Line", typeof(string));
+            dataTable.Columns.Add("Danger Point Id", typeof(string));
+            dataTable.Columns.Add("Danger Point Distance", typeof(decimal));
             foreach (var item in items)
             {
-                var values = new object[5];
+                var values = new object[7];
                 values[0] = item.Designation;
                 values[1] = item.KindOfSignal;
                 values[2] = item.Location;
                 values[3] = item.TrackSegmentID;
                 values[4] = item.LineID;
+                values[5] = item.DangerPointID;
+                values[6] = item.DangerPointDistance;
                 dataTable.Rows.Add(values);
             }
             return dataTable;
         }
 
-        public static DataTable PointsToDataTable(List<PointsPoint> items)
+        public static DataTable ToDataTable(List<PointsPoint> items)
         {
             DataTable dataTable = new DataTable("Points");
             dataTable.Columns.Add("Designation", typeof(string));
@@ -67,7 +71,7 @@ namespace ExpPt1
             return dataTable;
         }
 
-        public static DataTable SigLayouToDataTable(TFileDescr siglayout)
+        public static DataTable ToDataTable(TFileDescr siglayout)
         {
             DataTable dataTable = new DataTable("Sig Layout");
             dataTable.Columns.Add("Title", typeof(string));

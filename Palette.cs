@@ -102,18 +102,18 @@ namespace ExpPt1
             expDispl.LoadData();
             if (expDispl.Segments != null && expDispl.Segments.Count > 0)
             {
-                DataTable sigLayout = Data.SigLayouToDataTable(expDispl.SigLayout);
+                DataTable sigLayout = Data.ToDataTable(expDispl.SigLayout);
                 palCntrlSigLay.DataGridView.DataSource = sigLayout;
 
-                DataTable segments = Data.SegsToDataTable(expDispl.Segments);
+                DataTable segments = Data.ToDataTable(expDispl.Segments);
                 palCntrlSeg.DataGridView.DataSource = segments;
                 palCntrlSeg.LblInfo.Text = "Segments count: " + segments.Rows.Count;
 
-                DataTable signals = Data.SignalsToDataTable(expDispl.Signals);
+                DataTable signals = Data.ToDataTable(expDispl.Signals);
                 palCntrlMb.DataGridView.DataSource = signals;
                 palCntrlMb.LblInfo.Text = "Signals count: " + signals.Rows.Count;
 
-                DataTable points = Data.PointsToDataTable(expDispl.Points);
+                DataTable points = Data.ToDataTable(expDispl.Points);
                 palCntrlPt.DataGridView.DataSource = points;
                 palCntrlPt.LblInfo.Text = "Points count: " + points.Rows.Count;
             }          

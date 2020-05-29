@@ -46,7 +46,7 @@ namespace ExpPt1
             export.Dispose();
         }
 
-        //[CommandMethod("CheckIntersSections")]
+        [CommandMethod("CheckIntersSections")]
         public static void TestInterSection()
         {
             Export export = new Export(DwgPath);

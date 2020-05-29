@@ -75,6 +75,7 @@
     <Compile Include="Blocks.cs" />
     <Compile Include="Calc.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="DangerPoint.cs" />
     <Compile Include="ElementsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

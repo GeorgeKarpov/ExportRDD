@@ -1854,12 +1854,30 @@ namespace ExpPt1
                 signal.Location = Convert.ToDecimal(BlkSignal.Attributes["KMP"].Value);
                 signal.Direction = GetSignalDirection(BlkSignal, ref error);
                 signal.TrackPosition = GetSignalTrackPosition(BlkSignal, ref error);
-                if (!checkData["checkBoxSC"])
-                {
-                    GetSigClosure(BlkSignal, signal, blocks);
-                }
+                //if (!checkData["checkBoxSC"])
+                //{
+                //    GetSigClosure(BlkSignal, signal, blocks);
+                //}
 
-                if (this.GetType() == typeof(Display))
+                // DK2.1 Danger point distance is calculated by DMT,
+                // but requested to validation facilities
+                DangerPoint dangerPoint = new DangerPoint();
+                if (signal.KindOfSignal == TKindOfSignal.L2EntrySignal ||
+                              signal.KindOfSignal == TKindOfSignal.L2ExitSignal ||
+                              signal.KindOfSignal == TKindOfSignal.foreignSignal)
+                {
+                    dangerPoint.Distance = 0;
+                    dangerPoint.DistanceSpecified = true;
+                }
+                else
+                {
+                    dangerPoint = GetDangerPoint(BlkSignal, signal.Direction);
+                }
+                signal.DangerPointDistanceSpecified = dangerPoint.DistanceSpecified;
+                signal.DangerPointDistance = dangerPoint.Distance;
+                signal.DangerPointID = dangerPoint.Id;
+
+                if (GetType() == typeof(Display))
                 {
                     signalsSignal.Add(signal);
                     continue;
@@ -1908,34 +1926,34 @@ namespace ExpPt1
                         }
                     }
                 }
-                signal.DangerPointDistanceSpecified = true;
+                //signal.DangerPointDistanceSpecified = true;
                 signal.ShiftCESLocationSpecified = true;
                 signal.ShiftCESLocation = 0;
 
-                List<string> overPts = null;
-                Block blockTdt = null;
-                bool overlaps = CheckExtOverlap(BlkSignal, xlsRoutes, blocks, ref overPts, ref blockTdt);
+                //List<string> overPts = null;
+                //Block blockTdt = null;
+                //bool overlaps = CheckExtOverlap(BlkSignal, xlsRoutes, blocks, ref overPts, ref blockTdt);
 
-                if (overlaps)
-                {
-                    GetDangerPoint(BlkSignal, ref signal, blocks, ref error, ref overPts, ref blockTdt);
-                    if (signal.KindOfSignal == TKindOfSignal.mb && signal.TrackPosition != LeftRightOthersType.others)
-                    {
-                        signal.ShiftCESLocation = cesLoc.OCes;
-                    }
-                }
-                else
+                //if (overlaps)
+                //{
+                //    GetDangerPointOld(BlkSignal, ref signal, blocks, ref error, ref overPts, ref blockTdt);
+                //    if (signal.KindOfSignal == TKindOfSignal.mb && signal.TrackPosition != LeftRightOthersType.others)
+                //    {
+                //        signal.ShiftCESLocation = cesLoc.OCes;
+                //    }
+                //}
+                //else
                 {
                     if (signal.KindOfSignal == TKindOfSignal.eotmb ||
                         signal.KindOfSignal == TKindOfSignal.L2EntrySignal ||
                         signal.KindOfSignal == TKindOfSignal.L2ExitSignal || cesLoc.Ac == "N/A")
                     {
-                        signal.DangerPointDistance = 0;
+                        //signal.DangerPointDistance = 0;
                         signal.ShiftCESLocation = 0;
                     }
                     else
                     {
-                        signal.DangerPointDistance = Convert.ToDecimal(cesLoc.Distance);
+                        //signal.DangerPointDistance = Convert.ToDecimal(cesLoc.Distance);
                         signal.ShiftCESLocation = cesLoc.OCes;
                         Block Ac = null;
                         if (sigNextStat)
@@ -1958,17 +1976,14 @@ namespace ExpPt1
                         {
                             ErrLogger.Log("Signal '" + signal.Designation + "' danger point '" + cesLoc.Ac + "' not found on SL.");
                             error = true;
-                            signal.DangerPointID = "not found";
+                            //signal.DangerPointID = "not found";
                         }
                         else
                         {
-                            signal.DangerPointID = blckProp.GetElemDesignation(Ac);
+                            //signal.DangerPointID = blckProp.GetElemDesignation(Ac);
                         }
                     }
                 }
-                // DK2.1 Danger point distance by DMT
-                signal.DangerPointDistanceSpecified = false;
-                signal.DangerPointID = null;
                 signalsSignal.Add(signal);
             }
 
@@ -4868,7 +4883,165 @@ namespace ExpPt1
             return sigDir;
         }
 
-        private void GetDangerPoint(Block BlkSignal, ref SignalsSignal signal,
+        private DangerPoint GetDangerPoint(Block signal, DirectionType direction)
+        {
+            DangerPoint dangerPoint = new DangerPoint();
+            List<Block> dpsFound = new List<Block>();
+            List<TrackSegmentTmp> segNodes = this.TrackSegmentsTmp
+                              .Where(x => x.Designation == signal.TrackSegId)
+                              .ToList();
+            //skipNodes.AddRange(segNodes);
+            if (segNodes.Count == 0)
+            {
+                ErrLogger.Log("Start Segment(s) not found Signal - " + signal.Designation);
+                ErrLogger.error = true;
+                return dangerPoint;
+            }
+            Stack<Stack<TrackSegmentTmp>> stackNodes = new Stack<Stack<TrackSegmentTmp>>();
+            stackNodes.Push(new Stack<TrackSegmentTmp>(segNodes));
+            int iterCount = 0;
+            //List<TrackSegmentTmp> skipNodes = new List<TrackSegmentTmp>();
+            //skipNodes.AddRange(segNodes);
+            List<Block> connectors = new List<Block>();
+            while (stackNodes.Count > 0)
+            {
+                Block nextDp = null;
+                if (direction == DirectionType.up)
+                {
+                    nextDp = this.blocks
+                             .Where(x => x.XsdName == "DetectionPoint" &&
+                                         x.Location >= signal.Location &&
+                                         x.TrackSegId == stackNodes.Peek().Peek().Designation)
+                             .OrderBy(x => Convert.ToDecimal(x.Location))
+                             .FirstOrDefault();
+                }
+                else
+                {
+                    nextDp = this.blocks
+                             .Where(x => x.XsdName == "DetectionPoint" &&
+                                         x.Location <= signal.Location &&
+                                         x.TrackSegId == stackNodes.Peek().Peek().Designation)
+                             .OrderByDescending(x => Convert.ToDecimal(x.Location))
+                             .FirstOrDefault();
+                }
+                
+                if (nextDp != null)
+                {
+                    dpsFound.Add(nextDp);
+                    do
+                    {
+                        if (stackNodes.Peek().Count == 2)
+                        {
+                            stackNodes.Peek().Pop();
+                            break;
+                        }
+                        stackNodes.Pop();
+                        iterCount--;
+                    }
+                    while (stackNodes.Count > 0);
+                }
+                else
+                {
+                    
+                    if (direction == DirectionType.up)
+                    {
+                        if (stackNodes.Peek().Peek().Vertex2.XsdName == "Connector")
+                        {
+                            connectors.Add(stackNodes.Peek().Peek().Vertex2);
+                        }
+                        if (stackNodes.Peek().Peek().Vertex2.XsdName == "Point")
+                        {
+                            return GetDangerPoint(signal, DirectionType.down);
+                        }
+                        segNodes = this.TrackSegmentsTmp
+                               .Where(x => (x.Vertex1 == stackNodes.Peek().Peek().Vertex2))
+                               .ToList();
+                    }
+                    else
+                    {
+                        if (stackNodes.Peek().Peek().Vertex1.XsdName == "Connector")
+                        {
+                            connectors.Add(stackNodes.Peek().Peek().Vertex2);
+                        }
+                        if (stackNodes.Peek().Peek().Vertex1.XsdName == "Point")
+                        {
+                            return GetDangerPoint(signal, DirectionType.up);
+                        }
+                        segNodes = this.TrackSegmentsTmp
+                               .Where(x => (x.Vertex2 == stackNodes.Peek().Peek().Vertex1))
+                               .ToList();
+                    }                  
+
+                    iterCount++;
+                    if (segNodes.Count == 0 || Constants.dpIterLimit == iterCount)
+                    {
+                        if (Constants.dpIterLimit == iterCount)
+                        {
+                            ErrLogger.Log("Iteration limit reached for danger point. Signal -" + signal.Designation);
+                        }
+                        else
+                        {
+                            ErrLogger.Log("Segment(s) for next dp for danger point not found. Signal -" + signal.Designation);
+                        }
+                        ErrLogger.error = true;
+                        break;
+                    }
+                    else
+                    {
+                        stackNodes.Push(new Stack<TrackSegmentTmp>(segNodes));
+                    }
+                }
+            }
+
+            if (dpsFound.Count == 0)
+            {
+                ErrLogger.Log("Unable to find danger point. Signal -" + signal.Designation);
+                ErrLogger.error = true;
+                return dangerPoint;
+            }
+            Block dpFound = null;
+            if (dpsFound.Count == 1)
+            {
+                dpFound = dpsFound[0];
+            }
+            else
+            {
+                decimal min = dpsFound
+                              .Min(x => Math.Abs(x.Location - signal.Location));
+                dpFound = dpsFound
+                          .Where(x => Math.Abs(x.Location - signal.Location) == min)
+                          .FirstOrDefault();
+            }
+            decimal KmGapAc = 0;
+            foreach (Block dpConn in connectors)
+            {
+                if (decimal.TryParse(dpConn.Attributes["KMGAP"].Value, out decimal tmp))
+                {
+                    KmGapAc += tmp;
+                }
+                else
+                {
+                    ErrLogger.Log("Unable to parse KMGAP value for danger point. Connector -" + dpConn.Designation);
+                    ErrLogger.error = true;
+                }
+            }
+            
+
+            //kmAc = (Math.Abs(Math.Round(Ac.Location * 1000, 0)) + KmGapAc).ToString();
+            if (direction == DirectionType.up)
+            {
+                dangerPoint.Distance = Math.Round(Math.Abs(dpFound.Location - signal.Location) * 1000, 0) - KmGapAc;
+            }
+            else
+            {
+                dangerPoint.Distance = Math.Round(Math.Abs(dpFound.Location - signal.Location) * 1000, 0) + KmGapAc;
+            }
+            dangerPoint.Id = dpFound.Designation;
+            dangerPoint.DistanceSpecified = true;
+            return dangerPoint;
+        }
+
+        private void GetDangerPointOld(Block BlkSignal, ref SignalsSignal signal,
                                      List<Block> blocks, ref bool error,
                                      ref List<string> overPts, ref Block blockTdt)
         {
