@@ -61,8 +61,9 @@ namespace ExpPt1
             // Segments
             if (!GetSegments(blocks, TracksLines, Tracks, pSAs, true))
             {
-                AcadApp.ShowAlertDialog("Track Segments error. See error log");
-                return;
+                AcadApp.ShowAlertDialog("Track Segments errors. See Errors Tab");
+                ErrLogger.error = true;
+                //return;
             }
             checkData = new Dictionary<string, bool> {
                 { "checkBoxRts", false },

@@ -1,6 +1,6 @@
 ﻿namespace ExpPt1
 {
-    partial class Cntrl
+    partial class ElCntrl
     {
         /// <summary> 
         /// Required designer variable.

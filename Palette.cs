@@ -2,16 +2,20 @@
 using System;
 using System.Data;
 using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace ExpPt1
 {
     public class Palette
     {
         private static PaletteSet _ps = null;
-        private static Cntrl palCntrlSigLay = null;
-        private static Cntrl palCntrlSeg = null;
-        private static Cntrl palCntrlMb = null;
-        private static Cntrl palCntrlPt = null;
+        private static ElCntrl palCntrlSigLay = null;
+        private static ElCntrl palCntrlSeg = null;
+        private static ElCntrl palCntrlMb = null;
+        private static ElCntrl palCntrlPt = null;
+        private static ErrCntrl errCntrl = null;
         public string DwgPath { get; set; }
 
         public Palette(string dwgPath)
@@ -44,10 +48,11 @@ namespace ExpPt1
         {
             if (_ps == null)
             {
-                palCntrlSeg = new Cntrl();
-                palCntrlMb = new Cntrl();
-                palCntrlPt = new Cntrl();
-                palCntrlSigLay = new Cntrl();
+                palCntrlSeg = new ElCntrl();
+                palCntrlMb = new ElCntrl();
+                palCntrlPt = new ElCntrl();
+                palCntrlSigLay = new ElCntrl();
+                errCntrl = new ErrCntrl();
                 palCntrlSeg.BtnLoad.Click += BtnLoadSeg_Click;
                 palCntrlMb.BtnLoad.Click += BtnLoadSeg_Click;
                 palCntrlPt.BtnLoad.Click += BtnLoadSeg_Click;
@@ -62,6 +67,7 @@ namespace ExpPt1
                 _ps.Add("Track Segments", palCntrlSeg);
                 _ps.Add("Sinals", palCntrlMb);
                 _ps.Add("Points", palCntrlPt);
+                _ps.Add("Errors", errCntrl);
                 _ps.MinimumSize = new Size(200, 40);
                 _ps.DockEnabled = (DockSides)(DockSides.Left | DockSides.Right);
                 _ps.Visible = true;
@@ -110,6 +116,18 @@ namespace ExpPt1
                 DataTable points = Data.PointsToDataTable(expDispl.Points);
                 palCntrlPt.DataGridView.DataSource = points;
                 palCntrlPt.LblInfo.Text = "Points count: " + points.Rows.Count;
+            }          
+            foreach (var line in File.ReadAllLines(ErrLogger.filePath)
+                                .Where(x => x[0] != '#' && 
+                                            !x.Contains("log begin") && 
+                                            !x.Contains("log end")))
+            {
+                ListViewItem tmp = new ListViewItem(line.Split(new string[] { " -- ", }, StringSplitOptions.RemoveEmptyEntries), 2);
+                errCntrl.ListView.Items.Add(tmp);
+            }     
+            if (ErrLogger.error)
+            {
+                _ps.Activate(_ps.Count - 1);
             }
             expDispl.Dispose();
         }

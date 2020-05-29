@@ -1800,19 +1800,23 @@ namespace ExpPt1
                 CesLocs =
                     excel.DangerPoints(loadFiles["lblxlsSigClos"], ref document);
                 Documents.Add(document);
+                if (CesLocs == null)
+                {
+                    ErrLogger.Log("Can't get data from file 'Signals closure table'");
+                    error = true;
+                    //return !error;
+                }
             }
             else
             {
-                ErrLogger.Log("Data skipped. Signals closure table");
-                error = true;
-                //return !error;
+                if (this.GetType() != typeof(Display))
+                {
+                    ErrLogger.Log("Data skipped. Signals closure table");
+                    error = true;
+                    //return !error;
+                }
             }
-            if (CesLocs == null)
-            {
-                ErrLogger.Log("Can't get data from file 'Signals closure table'");
-                error = true;
-                //return !error;
-            }
+            
             foreach (Block BlkSignal in BlkSignals)
             {
                 SignalsSignal signal = new SignalsSignal

@@ -3,13 +3,13 @@ using System.Windows.Forms;
 
 namespace ExpPt1
 {
-    public partial class Cntrl : UserControl
+    public partial class ElCntrl : UserControl
     {
         public Button BtnLoad { get; set; }
         public DataGridView DataGridView { get; set; }
 
         public Label LblInfo { get; set; }
-        public Cntrl()
+        public ElCntrl()
         {
             InitializeComponent();
             BtnLoad = this.btnLoad;
