@@ -13,6 +13,7 @@ namespace ExpPt1
         List<Line> TrustedAreaLines = new List<Line>();
         List<LinesLine> lines = new List<LinesLine>();
         TFileDescr sigLayout = new TFileDescr();
+        List<PermanentShuntingAreasPermanentShuntingArea> areas = new List<PermanentShuntingAreasPermanentShuntingArea>();
         public TFileDescr SigLayout { get; set; }
         public List<TrackSegmentsTrackSegment> Segments { get; set; }
         public List<SignalsSignal> Signals { get; set; }
@@ -57,7 +58,7 @@ namespace ExpPt1
         {
             SetBlocksNextStations(blocks);
             SetBlocksExclude(blocks);
-            List<PSA> pSAs = GetPsas().ToList();
+            pSAs = GetPsas().ToList();
             // Segments
             if (!GetSegments(blocks, TracksLines, Tracks, pSAs, true))
             {
@@ -79,12 +80,14 @@ namespace ExpPt1
             ExportCigClosure = new List<string>();
             GetDocIdVrs();
             ReadSigLayout(blocks, ref sigLayout, true);
+            ReadPSAs(pSAs, ref areas);
             ReadSignals(blocks, ref signals);
             ReadPoints(blocks, ref points, speedProfiles, pSAs, emGs);
             SigLayout = sigLayout;
             Segments = trcksegments;
             Signals = signals;
             Points = points;
+            Blocks = blocks;
         }
     }
 }

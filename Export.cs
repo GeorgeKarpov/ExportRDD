@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+//using System.Windows.Forms;
 using System.Xml;
 using AcadApp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 using LXactSection = LevelCrossingsLevelCrossingLevelCrossingTracksLevelCrossingTrackActivationSectionsActivationSection;
@@ -57,12 +58,14 @@ namespace ExpPt1
         private List<AcSection> acSections;
         private Dictionary<string, ReadExcel.XlsLxActivation> LxsActivations;
         protected List<Block> blocks;
+        public List<Block> Blocks { get; set; }
         protected bool blocksErr;
         private FrmStation frmStation;
         protected List<PointsPoint> points;
         protected List<SignalsSignal> signals;
         protected List<SpeedProfilesSpeedProfile> speedProfiles;
         private List<AxleCounterSectionsAxleCounterSection> acsections;
+        protected List<PSA> pSAs;
 
         public Export(string dwgPath)
         {
@@ -99,6 +102,7 @@ namespace ExpPt1
             this.blocksErr = false;
             this.blocks = this.GetBlocks(ref this.blocksErr);
             this.acSections = new List<AcSection>();
+            pSAs = new List<PSA>();
         }
 
         [CommandMethod("ReplacePlatorms")]
@@ -406,7 +410,7 @@ namespace ExpPt1
             err.Add(!CollectTrustedAreas(TrustedAreaLines, TracksLines));
 
             // Get PSAs
-            List<PSA> pSAs = GetPsas().ToList();
+            pSAs = GetPsas().ToList();
 
             List<EmSG> emGs = GetEmGs().ToList();
 
@@ -435,14 +439,14 @@ namespace ExpPt1
             // Detection Points
             err.Add(!ReadDps(blocks, ref detpoints, pSAs));
 
+            //PSA
+            err.Add(!ReadPSAs(pSAs, ref permanentshuntareas));
+
             // Signals
             err.Add(!ReadSignals(blocks, ref signals));
 
             // Speed Profiles
             ReadSps(ref speedProfiles);
-
-            //PSA
-            err.Add(!ReadPSAs(pSAs, ref permanentshuntareas));
 
             //Points
             err.Add(!ReadPoints(blocks, ref points, speedProfiles, pSAs, emGs));
@@ -1861,15 +1865,17 @@ namespace ExpPt1
 
                 // DK2.1 Danger point distance is calculated by DMT,
                 // but requested to validation facilities
+                //bool toPsa = IsSignalToPSA(BlkSignal, signal.Direction);
                 DangerPoint dangerPoint = new DangerPoint();
                 if (signal.KindOfSignal == TKindOfSignal.L2EntrySignal ||
                               signal.KindOfSignal == TKindOfSignal.L2ExitSignal ||
-                              signal.KindOfSignal == TKindOfSignal.foreignSignal)
+                              signal.KindOfSignal == TKindOfSignal.foreignSignal ||
+                              signal.KindOfSignal == TKindOfSignal.eotmb)
                 {
                     dangerPoint.Distance = 0;
                     dangerPoint.DistanceSpecified = true;
                 }
-                else
+                else if(!IsSignalToPSA(BlkSignal, signal.Direction))
                 {
                     dangerPoint = GetDangerPoint(BlkSignal, signal.Direction);
                 }
@@ -1912,13 +1918,14 @@ namespace ExpPt1
                     {
                         if (signal.KindOfSignal == TKindOfSignal.L2EntrySignal ||
                               signal.KindOfSignal == TKindOfSignal.L2ExitSignal ||
-                              signal.KindOfSignal == TKindOfSignal.foreignSignal)
+                              signal.KindOfSignal == TKindOfSignal.foreignSignal ||
+                              signal.KindOfSignal == TKindOfSignal.eotmb )
                         {
                             cesLoc = new ReadExcel.Signal { Ac = "N/A" };
                         }
                         //if (!(signal.KindOfSignal == TKindOfSignal.L2EntrySignal ||
                         //      signal.KindOfSignal == TKindOfSignal.L2ExitSignal))
-                        else
+                        else 
                         {
                             ErrLogger.Log("Signal '" + signal.Designation + "' not found in Signals Closure Table.");
                             error = true;
@@ -1945,6 +1952,7 @@ namespace ExpPt1
                 //else
                 {
                     if (signal.KindOfSignal == TKindOfSignal.eotmb ||
+                        signal.KindOfSignal == TKindOfSignal.foreignSignal ||
                         signal.KindOfSignal == TKindOfSignal.L2EntrySignal ||
                         signal.KindOfSignal == TKindOfSignal.L2ExitSignal || cesLoc.Ac == "N/A")
                     {
@@ -2946,7 +2954,12 @@ namespace ExpPt1
                     ErrLogger.Log(this.blckProp.GetElemDesignation(BlkBalisGrp, false, true) + " To many Segments found " + str2);
                     flag = true;
                 }
-                PSA psa = pSAs.Where((Func<PSA, bool>)(x => BlkBalisGrp.X >= x.MinX - 1.0 && BlkBalisGrp.X <= x.MaxX + 1.0 && BlkBalisGrp.Y >= x.MinY - 1.0 && BlkBalisGrp.Y <= x.MaxY + 1.0)).FirstOrDefault();
+                PSA psa = pSAs
+                          .Where(x => BlkBalisGrp.X >= x.MinX - 1.0 && 
+                                      BlkBalisGrp.X <= x.MaxX + 1.0 && 
+                                      BlkBalisGrp.Y >= x.MinY - 1.0 && 
+                                      BlkBalisGrp.Y <= x.MaxY + 1.0)
+                          .FirstOrDefault();
                 if (psa != null)
                     groupsBaliseGroup3.InsidePSA = psa.Name.ToLower();
                 baliseGroups.Add(groupsBaliseGroup3);
@@ -4630,7 +4643,7 @@ namespace ExpPt1
             return platformsPlatform;
         }
 
-        private bool ReadPSAs(List<PSA> pSAs,
+        protected bool ReadPSAs(List<PSA> pSAs,
            ref List<PermanentShuntingAreasPermanentShuntingArea> areas)
         {
             bool errors = false;
@@ -4682,6 +4695,10 @@ namespace ExpPt1
                         ErrLogger.Log(pSA.Name.ToLower() + ". Begin PSA block not found");
                         errors = true;
                     }
+                }
+                if (blockBeginPsa != null)
+                {
+                    pSA.begin = blockBeginPsa.Location;
                 }
                 areas.Add(shuntingArea);
             }
@@ -4825,7 +4842,7 @@ namespace ExpPt1
             return LeftRightOthersType.others;
         }
 
-        private DirectionType GetSignalDirection(Block BlkSignal, ref bool error)
+        private DirectionType GetSignalDirection(Block BlkSignal, ref bool error, bool suppressLog = true)
         {
             DirectionType sigDir;
 
@@ -4877,10 +4894,128 @@ namespace ExpPt1
                 if (sigDir != dirTmp)
                 {
                     error = true;
-                    ErrLogger.Log("Signal direction not match with attribute '" + blckProp.GetElemDesignation(BlkSignal) + "'");
+                    if (!suppressLog)
+                    {
+                        ErrLogger.Log("Signal direction not match with attribute '" + blckProp.GetElemDesignation(BlkSignal) + "'");
+                        ErrLogger.error = true;
+                    }                  
                 }
             }
             return sigDir;
+        }
+
+        private bool IsBlockInsidePSA(BlockReference block, double tol)
+        {
+            return pSAs
+                   .Any(x => block.Position.X >= x.MinX - tol &&
+                             block.Position.X <= x.MaxX + tol &&
+                             block.Position.Y >= x.MinY - tol &&
+                             block.Position.Y <= x.MaxY + tol);
+        }
+
+        private bool IsSignalToPSA(Block signal, DirectionType direction)
+        {
+            if (IsBlockInsidePSA(signal.BlkRef, Constants.psaTol))
+            {
+                return false;
+            }
+            List<TrackSegmentTmp> segNodes = this.TrackSegmentsTmp
+                              .Where(x => x.Designation == signal.TrackSegId)
+                              .ToList();
+            if (segNodes.Count == 0)
+            {
+                ErrLogger.Log("Start Segment(s) not found Signal to PSA - " + signal.Designation);
+                ErrLogger.error = true;
+                return false;
+            }
+            Stack<Stack<TrackSegmentTmp>> stackNodes = new Stack<Stack<TrackSegmentTmp>>();
+            stackNodes.Push(new Stack<TrackSegmentTmp>(segNodes));
+            int iterCount = 0;
+            bool sigDirError = false;
+            while (stackNodes.Count > 0)
+            {
+                Block nextSignal = null;
+                if (direction == DirectionType.up)
+                {
+                    nextSignal = this.blocks
+                             .Where(x => x.XsdName == "Signal" &&
+                                         x.Location > signal.Location &&
+                                         GetSignalDirection(x, ref sigDirError, true) == direction &&
+                                         x.TrackSegId == stackNodes.Peek().Peek().Designation)
+                             .OrderBy(x => Convert.ToDecimal(x.Location))
+                             .FirstOrDefault();
+                }
+                else
+                {
+                    nextSignal = this.blocks
+                             .Where(x => x.XsdName == "Signal" &&
+                                         x.Location < signal.Location &&
+                                         GetSignalDirection(x, ref sigDirError, true) == direction &&
+                                         x.TrackSegId == stackNodes.Peek().Peek().Designation)
+                             .OrderByDescending(x => Convert.ToDecimal(x.Location))
+                             .FirstOrDefault();
+                }
+                PSA pSA = null;
+                pSA = pSAs
+                      .Where(x => stackNodes.Peek().Peek().TrackLines
+                                  .Any(l => ObjectsIntersects(l, x.PsaPolyLine, Intersect.OnBothOperands)))
+                      .FirstOrDefault();
+                if (pSA != null)
+                {
+                    if (nextSignal == null)
+                    {
+                        return true;
+                    }
+                    if (direction == DirectionType.up && pSA.begin > nextSignal.Location)
+                    {
+                        return false;
+                    }
+                    if (direction == DirectionType.down && pSA.begin < nextSignal.Location)
+                    {
+                        return false;
+                    }
+                }
+                if (nextSignal == null)
+                {
+                    iterCount++;
+                    if (direction == DirectionType.up)
+                    {
+                        segNodes = this.TrackSegmentsTmp
+                                   .Where(x => (x.Vertex1 == stackNodes.Peek().Peek().Vertex2))
+                                   .ToList();
+                    }
+                    else
+                    {
+                        segNodes = this.TrackSegmentsTmp
+                                   .Where(x => (x.Vertex2 == stackNodes.Peek().Peek().Vertex1))
+                                   .ToList();
+                    }
+                    iterCount++;
+                    if (segNodes.Count == 0 || Constants.dpIterLimit == iterCount)
+                    {
+                        if (Constants.dpIterLimit == iterCount)
+                        {
+                            ErrLogger.Log("Iteration limit reached for to PSA. Signal -" + signal.Designation);
+                        }
+                        else
+                        {
+                            ErrLogger.Log("Segment(s) for next signal for signal to PSA not found. Signal -" + signal.Designation);
+                        }
+                        ErrLogger.error = true;
+                        break;
+                    }
+                    else
+                    {
+                        stackNodes.Push(new Stack<TrackSegmentTmp>(segNodes));
+                    }
+                }
+                else
+                {
+                    return false;
+                    
+                }
+            }
+            return false;
         }
 
         private DangerPoint GetDangerPoint(Block signal, DirectionType direction)

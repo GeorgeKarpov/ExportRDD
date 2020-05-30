@@ -121,6 +121,7 @@ namespace ExpPt1
         public double MaxX;
         public double MaxY;
         public Polyline PsaPolyLine;
+        public decimal begin;
     }
 
     /// <summary>

@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.Windows;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.IO;
@@ -17,6 +18,7 @@ namespace ExpPt1
         private static ElCntrl palCntrlPt = null;
         private static ErrCntrl errCntrl = null;
         public string DwgPath { get; set; }
+        public List<Block> Blocks { get; set; }
 
         public Palette(string dwgPath)
         {
@@ -53,10 +55,13 @@ namespace ExpPt1
                 palCntrlPt = new ElCntrl();
                 palCntrlSigLay = new ElCntrl();
                 errCntrl = new ErrCntrl();
-                palCntrlSeg.BtnLoad.Click += BtnLoadSeg_Click;
-                palCntrlMb.BtnLoad.Click += BtnLoadSeg_Click;
-                palCntrlPt.BtnLoad.Click += BtnLoadSeg_Click;
-                palCntrlSigLay.BtnLoad.Click += BtnLoadSeg_Click;
+                palCntrlSeg.BtnLoad.Click += BtnLoad_Click;
+                palCntrlMb.BtnLoad.Click += BtnLoad_Click;
+                palCntrlPt.BtnLoad.Click += BtnLoad_Click;
+                palCntrlSigLay.BtnLoad.Click += BtnLoad_Click;
+                palCntrlMb.DataGridView.CellDoubleClick += DataGridView_CellDoubleClick;
+                palCntrlPt.DataGridView.CellDoubleClick += DataGridView_CellDoubleClick;
+
 #if DEBUG
                 _ps = new PaletteSet("RDD");
 #else
@@ -69,12 +74,29 @@ namespace ExpPt1
                 _ps.Add("Points", palCntrlPt);
                 _ps.Add("Errors", errCntrl);
                 _ps.MinimumSize = new Size(200, 40);
-                _ps.DockEnabled = (DockSides)(DockSides.Left | DockSides.Right);
+                _ps.DockEnabled = (DockSides.Left | DockSides.Right);
                 _ps.Visible = true;
             }
             else
             {
                 _ps.Visible = true;
+            }
+        }
+
+        private void DataGridView_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            DataGridView dataGrid = (DataGridView)sender;
+            if (e.RowIndex != -1)
+            {
+
+                string designation = dataGrid.Rows[e.RowIndex].Cells[0].Value.ToString();
+                Block element = Blocks
+                                .Where(x => x.Designation == designation)
+                                .FirstOrDefault();
+                if (element != null)
+                {
+                    AcadTools.ZoomToObjects(element.BlkRef, 70, element.BlkRef.Id);
+                }              
             }
         }
 
@@ -91,12 +113,7 @@ namespace ExpPt1
         //    //distance.Dispose();
         //}
 
-        public void ClearKmData()
-        {
-            palCntrlSeg.DataGridView.DataSource = null;
-        }
-
-        private void BtnLoadSeg_Click(object sender, EventArgs e)
+        private void BtnLoad_Click(object sender, EventArgs e)
         {
             Display expDispl = new Display(this.DwgPath);
             expDispl.LoadData();
@@ -116,7 +133,8 @@ namespace ExpPt1
                 DataTable points = Data.ToDataTable(expDispl.Points);
                 palCntrlPt.DataGridView.DataSource = points;
                 palCntrlPt.LblInfo.Text = "Points count: " + points.Rows.Count;
-            }          
+            }
+            errCntrl.ListView.Items.Clear();
             foreach (var line in File.ReadAllLines(ErrLogger.filePath)
                                 .Where(x => x[0] != '#' && 
                                             !x.Contains("log begin") && 
@@ -129,6 +147,7 @@ namespace ExpPt1
             {
                 _ps.Activate(_ps.Count - 1);
             }
+            Blocks = expDispl.Blocks;
             expDispl.Dispose();
         }
     }
