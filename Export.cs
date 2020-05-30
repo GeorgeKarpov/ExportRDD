@@ -4980,12 +4980,22 @@ namespace ExpPt1
                     iterCount++;
                     if (direction == DirectionType.up)
                     {
+                        if (stackNodes.Peek().Peek().Vertex2.XsdName == "Point" || 
+                            stackNodes.Peek().Peek().Vertex2.XsdName == "EndOfTrack")
+                        {
+                            return false;
+                        }
                         segNodes = this.TrackSegmentsTmp
                                    .Where(x => (x.Vertex1 == stackNodes.Peek().Peek().Vertex2))
                                    .ToList();
                     }
                     else
                     {
+                        if (stackNodes.Peek().Peek().Vertex1.XsdName == "Point" ||
+                            stackNodes.Peek().Peek().Vertex1.XsdName == "EndOfTrack")
+                        {
+                            return false;
+                        }
                         segNodes = this.TrackSegmentsTmp
                                    .Where(x => (x.Vertex2 == stackNodes.Peek().Peek().Vertex1))
                                    .ToList();
@@ -7566,8 +7576,17 @@ namespace ExpPt1
 
         private Dictionary<string, string> ReadLinesDefinitions()
         {
-            Dictionary<string, string> LinesDefinitions = new Dictionary<string, string>();
-            foreach (string line in File.ReadAllLines(assemblyPath + Constants.cfgFolder + "//LinesDef.dat")
+            string path;
+            if (File.Exists(dwgDir + "//LinesDef.dat"))
+            {
+                path = dwgDir + "//LinesDef.dat";
+            }
+            else
+            {
+                path = assemblyPath + Constants.cfgFolder + "//LinesDef.dat";
+            }
+                Dictionary<string, string> LinesDefinitions = new Dictionary<string, string>();
+            foreach (string line in File.ReadAllLines(path)
                                         .Where(arg => !string.IsNullOrWhiteSpace(arg)))
             {
                 if (!LinesDefinitions.ContainsKey(line.Split('\t')[0]))
