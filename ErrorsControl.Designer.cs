@@ -31,8 +31,8 @@
             this.components = new System.ComponentModel.Container();
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.ListViewErr = new System.Windows.Forms.ListView();
-            this.Message = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.Message = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.SuspendLayout();
             // 
             // imageList1
@@ -60,14 +60,15 @@
             this.ListViewErr.UseCompatibleStateImageBehavior = false;
             this.ListViewErr.View = System.Windows.Forms.View.Details;
             // 
+            // columnHeader1
+            // 
+            this.columnHeader1.Text = "Time";
+            this.columnHeader1.Width = 91;
+            // 
             // Message
             // 
             this.Message.Text = "Message";
             this.Message.Width = 525;
-            // 
-            // columnHeader1
-            // 
-            this.columnHeader1.Text = "Time";
             // 
             // ErrCntrl
             // 

@@ -1,5 +1,7 @@
-﻿using Autodesk.AutoCAD.Windows;
+﻿using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.Windows;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.IO;
@@ -17,6 +19,7 @@ namespace ExpPt1
         private static ElCntrl palCntrlPt = null;
         private static ErrCntrl errCntrl = null;
         public string DwgPath { get; set; }
+        public List<Block> Blocks { get; set; }
 
         public Palette(string dwgPath)
         {
@@ -54,6 +57,7 @@ namespace ExpPt1
                 palCntrlSigLay = new ElCntrl();
                 errCntrl = new ErrCntrl();
                 palCntrlSeg.BtnLoad.Click += BtnLoad_Click;
+<<<<<<< HEAD
                 palCntrlSeg.DataGridView.DataSourceChanged += Dgw_DataSourceChanged;
 
                 palCntrlMb.BtnLoad.Click += BtnLoad_Click;
@@ -64,6 +68,15 @@ namespace ExpPt1
 
                 palCntrlSigLay.BtnLoad.Click += BtnLoad_Click;
                 palCntrlSigLay.DataGridView.DataSourceChanged += Dgw_DataSourceChanged;
+=======
+                palCntrlMb.BtnLoad.Click += BtnLoad_Click;
+                palCntrlPt.BtnLoad.Click += BtnLoad_Click;
+                palCntrlSigLay.BtnLoad.Click += BtnLoad_Click;
+                palCntrlMb.DataGridView.CellDoubleClick += DataGridView_CellDoubleClick;
+                palCntrlPt.DataGridView.CellDoubleClick += DataGridView_CellDoubleClick;
+                palCntrlSeg.DataGridView.CellDoubleClick += DgwSegs_CellDoubleClick;
+
+>>>>>>> danger_point
 #if DEBUG
                 _ps = new PaletteSet("RDD");
 #else
@@ -76,7 +89,7 @@ namespace ExpPt1
                 _ps.Add("Points", palCntrlPt);
                 _ps.Add("Errors", errCntrl);
                 _ps.MinimumSize = new Size(200, 40);
-                _ps.DockEnabled = (DockSides)(DockSides.Left | DockSides.Right);
+                _ps.DockEnabled = (DockSides.Left | DockSides.Right);
                 _ps.Visible = true;
             }
             else
@@ -85,6 +98,7 @@ namespace ExpPt1
             }
         }
 
+<<<<<<< HEAD
         private void Dgw_DataSourceChanged(object sender, EventArgs e)
         {
             DataGridView dgw = (DataGridView)(sender);
@@ -104,31 +118,92 @@ namespace ExpPt1
                     dgw.Columns[i].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
                     //set width to calculated by autosize
                     dgw.Columns[i].Width = colw;
+=======
+        private void DgwSegs_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            DataGridView dataGrid = (DataGridView)sender;
+            if (e.RowIndex != -1)
+            {
+                Entity[] entities = new Entity[2];
+                string designation = dataGrid.Rows[e.RowIndex].Cells[2].Value.ToString();
+                string designation1 = dataGrid.Rows[e.RowIndex].Cells[3].Value.ToString();
+                Block element = Blocks
+                                .Where(x => x.Designation == designation)
+                                .FirstOrDefault();
+                if (element != null)
+                {
+                    entities[0] = element.BlkRef;
+                }
+                element = Blocks
+                          .Where(x => x.Designation == designation1)
+                          .FirstOrDefault();
+                if (element != null)
+                {
+                    entities[1] = element.BlkRef;
+                }
+                if (entities[0] != null && entities[1] != null)
+                {
+                    AcadTools.ZoomToObjects(entities, 70);
+>>>>>>> danger_point
                 }
             }
         }
 
+<<<<<<< HEAD
+=======
+        private void DataGridView_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            DataGridView dataGrid = (DataGridView)sender;
+            if (e.RowIndex != -1)
+            {
+
+                string designation = dataGrid.Rows[e.RowIndex].Cells[0].Value.ToString();
+                Block element = Blocks
+                                .Where(x => x.Designation == designation)
+                                .FirstOrDefault();
+                if (element != null)
+                {
+                    AcadTools.ZoomToObjects(element.BlkRef, 70);
+                }              
+            }
+        }
+
+        //private void BtnLoadMb_Click(object sender, EventArgs e)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //private void BtnExpXls_Click(object sender, EventArgs e)
+        //{
+        //    //Distance distance = new Distance(DwgPath);
+        //    //distance.GetDistToDisplay();
+        //    //distance.WriteDists(false);
+        //    //distance.Dispose();
+        //}
+
+>>>>>>> danger_point
         private void BtnLoad_Click(object sender, EventArgs e)
         {
             Display expDispl = new Display(this.DwgPath);
             expDispl.LoadData();
             if (expDispl.Segments != null && expDispl.Segments.Count > 0)
             {
-                DataTable sigLayout = Data.SigLayouToDataTable(expDispl.SigLayout);
+                System.Data.DataTable sigLayout = Data.ToDataTable(expDispl.SigLayout);
                 palCntrlSigLay.DataGridView.DataSource = sigLayout;
 
-                DataTable segments = Data.SegsToDataTable(expDispl.Segments);
+                System.Data.DataTable segments = Data.ToDataTable(expDispl.Segments);
                 palCntrlSeg.DataGridView.DataSource = segments;
                 palCntrlSeg.LblInfo.Text = "Segments count: " + segments.Rows.Count;
 
-                DataTable signals = Data.SignalsToDataTable(expDispl.Signals);
+                System.Data.DataTable signals = Data.ToDataTable(expDispl.Signals);
                 palCntrlMb.DataGridView.DataSource = signals;
                 palCntrlMb.LblInfo.Text = "Signals count: " + signals.Rows.Count;
 
-                DataTable points = Data.PointsToDataTable(expDispl.Points);
+                System.Data.DataTable points = Data.ToDataTable(expDispl.Points);
                 palCntrlPt.DataGridView.DataSource = points;
                 palCntrlPt.LblInfo.Text = "Points count: " + points.Rows.Count;
-            }          
+            }
+            errCntrl.ListView.Items.Clear();
             foreach (var line in File.ReadAllLines(ErrLogger.filePath)
                                 .Where(x => x[0] != '#' && 
                                             !x.Contains("log begin") && 
@@ -141,6 +216,7 @@ namespace ExpPt1
             {
                 _ps.Activate(_ps.Count - 1);
             }
+            Blocks = expDispl.Blocks;
             expDispl.Dispose();
         }
     }
