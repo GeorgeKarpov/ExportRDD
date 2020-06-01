@@ -53,10 +53,17 @@ namespace ExpPt1
                 palCntrlPt = new ElCntrl();
                 palCntrlSigLay = new ElCntrl();
                 errCntrl = new ErrCntrl();
-                palCntrlSeg.BtnLoad.Click += BtnLoadSeg_Click;
-                palCntrlMb.BtnLoad.Click += BtnLoadSeg_Click;
-                palCntrlPt.BtnLoad.Click += BtnLoadSeg_Click;
-                palCntrlSigLay.BtnLoad.Click += BtnLoadSeg_Click;
+                palCntrlSeg.BtnLoad.Click += BtnLoad_Click;
+                palCntrlSeg.DataGridView.DataSourceChanged += Dgw_DataSourceChanged;
+
+                palCntrlMb.BtnLoad.Click += BtnLoad_Click;
+                palCntrlMb.DataGridView.DataSourceChanged += Dgw_DataSourceChanged;
+
+                palCntrlPt.BtnLoad.Click += BtnLoad_Click;
+                palCntrlPt.DataGridView.DataSourceChanged += Dgw_DataSourceChanged;
+
+                palCntrlSigLay.BtnLoad.Click += BtnLoad_Click;
+                palCntrlSigLay.DataGridView.DataSourceChanged += Dgw_DataSourceChanged;
 #if DEBUG
                 _ps = new PaletteSet("RDD");
 #else
@@ -78,25 +85,30 @@ namespace ExpPt1
             }
         }
 
-        //private void BtnLoadMb_Click(object sender, EventArgs e)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //private void BtnExpXls_Click(object sender, EventArgs e)
-        //{
-        //    //Distance distance = new Distance(DwgPath);
-        //    //distance.GetDistToDisplay();
-        //    //distance.WriteDists(false);
-        //    //distance.Dispose();
-        //}
-
-        public void ClearKmData()
+        private void Dgw_DataSourceChanged(object sender, EventArgs e)
         {
-            palCntrlSeg.DataGridView.DataSource = null;
+            DataGridView dgw = (DataGridView)(sender);
+            dgw.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.False;
+            for (int i = 0; i <= dgw.Columns.Count - 1; i++)
+            {
+                dgw.Columns[i].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+                //store autosized widths
+                int colw = dgw.Columns[i].Width;
+                //remove autosizing
+                if (i == dgw.Columns.Count - 1)
+                {
+                    dgw.Columns[i].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                }
+                else
+                {
+                    dgw.Columns[i].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+                    //set width to calculated by autosize
+                    dgw.Columns[i].Width = colw;
+                }
+            }
         }
 
-        private void BtnLoadSeg_Click(object sender, EventArgs e)
+        private void BtnLoad_Click(object sender, EventArgs e)
         {
             Display expDispl = new Display(this.DwgPath);
             expDispl.LoadData();
