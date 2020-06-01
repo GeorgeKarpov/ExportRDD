@@ -57,26 +57,24 @@ namespace ExpPt1
                 palCntrlSigLay = new ElCntrl();
                 errCntrl = new ErrCntrl();
                 palCntrlSeg.BtnLoad.Click += BtnLoad_Click;
-<<<<<<< HEAD
+                palCntrlSeg.DataGridView.CellDoubleClick += Dgw_CellDoubleClick;
                 palCntrlSeg.DataGridView.DataSourceChanged += Dgw_DataSourceChanged;
 
                 palCntrlMb.BtnLoad.Click += BtnLoad_Click;
+                palCntrlMb.DataGridView.CellDoubleClick += Dgw_CellDoubleClick;
                 palCntrlMb.DataGridView.DataSourceChanged += Dgw_DataSourceChanged;
 
                 palCntrlPt.BtnLoad.Click += BtnLoad_Click;
+                palCntrlPt.DataGridView.CellDoubleClick += Dgw_CellDoubleClick;
                 palCntrlPt.DataGridView.DataSourceChanged += Dgw_DataSourceChanged;
 
                 palCntrlSigLay.BtnLoad.Click += BtnLoad_Click;
                 palCntrlSigLay.DataGridView.DataSourceChanged += Dgw_DataSourceChanged;
-=======
-                palCntrlMb.BtnLoad.Click += BtnLoad_Click;
-                palCntrlPt.BtnLoad.Click += BtnLoad_Click;
-                palCntrlSigLay.BtnLoad.Click += BtnLoad_Click;
-                palCntrlMb.DataGridView.CellDoubleClick += DataGridView_CellDoubleClick;
-                palCntrlPt.DataGridView.CellDoubleClick += DataGridView_CellDoubleClick;
-                palCntrlSeg.DataGridView.CellDoubleClick += DgwSegs_CellDoubleClick;
 
->>>>>>> danger_point
+
+
+
+
 #if DEBUG
                 _ps = new PaletteSet("RDD");
 #else
@@ -98,7 +96,6 @@ namespace ExpPt1
             }
         }
 
-<<<<<<< HEAD
         private void Dgw_DataSourceChanged(object sender, EventArgs e)
         {
             DataGridView dgw = (DataGridView)(sender);
@@ -118,8 +115,10 @@ namespace ExpPt1
                     dgw.Columns[i].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
                     //set width to calculated by autosize
                     dgw.Columns[i].Width = colw;
-=======
-        private void DgwSegs_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+                }
+            }
+        }
+        private void Dgw_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             DataGridView dataGrid = (DataGridView)sender;
             if (e.RowIndex != -1)
@@ -144,13 +143,10 @@ namespace ExpPt1
                 if (entities[0] != null && entities[1] != null)
                 {
                     AcadTools.ZoomToObjects(entities, 70);
->>>>>>> danger_point
                 }
             }
         }
 
-<<<<<<< HEAD
-=======
         private void DataGridView_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             DataGridView dataGrid = (DataGridView)sender;
@@ -181,7 +177,6 @@ namespace ExpPt1
         //    //distance.Dispose();
         //}
 
->>>>>>> danger_point
         private void BtnLoad_Click(object sender, EventArgs e)
         {
             Display expDispl = new Display(this.DwgPath);
