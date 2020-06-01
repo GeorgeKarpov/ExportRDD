@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.Windows;
+﻿using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.Windows;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -61,6 +62,7 @@ namespace ExpPt1
                 palCntrlSigLay.BtnLoad.Click += BtnLoad_Click;
                 palCntrlMb.DataGridView.CellDoubleClick += DataGridView_CellDoubleClick;
                 palCntrlPt.DataGridView.CellDoubleClick += DataGridView_CellDoubleClick;
+                palCntrlSeg.DataGridView.CellDoubleClick += DgwSegs_CellDoubleClick;
 
 #if DEBUG
                 _ps = new PaletteSet("RDD");
@@ -83,6 +85,35 @@ namespace ExpPt1
             }
         }
 
+        private void DgwSegs_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            DataGridView dataGrid = (DataGridView)sender;
+            if (e.RowIndex != -1)
+            {
+                Entity[] entities = new Entity[2];
+                string designation = dataGrid.Rows[e.RowIndex].Cells[2].Value.ToString();
+                string designation1 = dataGrid.Rows[e.RowIndex].Cells[3].Value.ToString();
+                Block element = Blocks
+                                .Where(x => x.Designation == designation)
+                                .FirstOrDefault();
+                if (element != null)
+                {
+                    entities[0] = element.BlkRef;
+                }
+                element = Blocks
+                          .Where(x => x.Designation == designation1)
+                          .FirstOrDefault();
+                if (element != null)
+                {
+                    entities[1] = element.BlkRef;
+                }
+                if (entities[0] != null && entities[1] != null)
+                {
+                    AcadTools.ZoomToObjects(entities, 70);
+                }
+            }
+        }
+
         private void DataGridView_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             DataGridView dataGrid = (DataGridView)sender;
@@ -95,7 +126,7 @@ namespace ExpPt1
                                 .FirstOrDefault();
                 if (element != null)
                 {
-                    AcadTools.ZoomToObjects(element.BlkRef, 70, element.BlkRef.Id);
+                    AcadTools.ZoomToObjects(element.BlkRef, 70);
                 }              
             }
         }
@@ -119,18 +150,18 @@ namespace ExpPt1
             expDispl.LoadData();
             if (expDispl.Segments != null && expDispl.Segments.Count > 0)
             {
-                DataTable sigLayout = Data.ToDataTable(expDispl.SigLayout);
+                System.Data.DataTable sigLayout = Data.ToDataTable(expDispl.SigLayout);
                 palCntrlSigLay.DataGridView.DataSource = sigLayout;
 
-                DataTable segments = Data.ToDataTable(expDispl.Segments);
+                System.Data.DataTable segments = Data.ToDataTable(expDispl.Segments);
                 palCntrlSeg.DataGridView.DataSource = segments;
                 palCntrlSeg.LblInfo.Text = "Segments count: " + segments.Rows.Count;
 
-                DataTable signals = Data.ToDataTable(expDispl.Signals);
+                System.Data.DataTable signals = Data.ToDataTable(expDispl.Signals);
                 palCntrlMb.DataGridView.DataSource = signals;
                 palCntrlMb.LblInfo.Text = "Signals count: " + signals.Rows.Count;
 
-                DataTable points = Data.ToDataTable(expDispl.Points);
+                System.Data.DataTable points = Data.ToDataTable(expDispl.Points);
                 palCntrlPt.DataGridView.DataSource = points;
                 palCntrlPt.LblInfo.Text = "Points count: " + points.Rows.Count;
             }

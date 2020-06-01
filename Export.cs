@@ -2512,8 +2512,8 @@ namespace ExpPt1
                     {
                         Line pointTip = GetPointTipLine(AcElements[0]);
                         Line pointBase = GetPointBaseLine(AcElements[0]);
-                        Point2d Tip = GetMiddlPoint2d(pointTip.GeometricExtents);
-                        Point2d Base = GetMiddlPoint2d(pointBase.GeometricExtents);
+                        Point2d Tip = AcadTools.GetMiddlPoint2d(pointTip.GeometricExtents);
+                        Point2d Base = AcadTools.GetMiddlPoint2d(pointBase.GeometricExtents);
                         Vector2d pointStraight = Tip.GetVectorTo(Base);
                         foreach (Block Dp in tmpDps)
                         {
@@ -4810,7 +4810,7 @@ namespace ExpPt1
             List<Line> lines = GetBlockLines(BlkSignal);
             Point2d cross = GetBlockCross(BlkSignal);
             Point2d fromTrackY = new Point2d(0, 0);
-            fromTrackY = GetMiddlPoint2d(lines.Where(x => x.Length > 5 &&
+            fromTrackY = AcadTools.GetMiddlPoint2d(lines.Where(x => x.Length > 5 &&
                                                 (x.StartPoint.X != cross.X) &&
                                                 (x.StartPoint.Y != cross.Y) &&
                                                 (x.EndPoint.X != cross.X) &&
@@ -7879,13 +7879,13 @@ namespace ExpPt1
         //                            (extents3.MinPoint)) * 0.5;
         //}
 
-        private Point2d GetMiddlPoint2d(Extents3d extents3)
-        {
-            Point3d point3 = extents3.MinPoint +
-                                    (extents3.MaxPoint -
-                                    (extents3.MinPoint)) * 0.5;
-            return new Point2d(point3.X, point3.Y);
-        }
+        //private Point2d GetMiddlPoint2d(Extents3d extents3)
+        //{
+        //    Point3d point3 = extents3.MinPoint +
+        //                            (extents3.MaxPoint -
+        //                            (extents3.MinPoint)) * 0.5;
+        //    return new Point2d(point3.X, point3.Y);
+        //}
 
         private bool GetNextDps(Block VertexStart, LeftRightType leftRight, DirectionType direction, List<Block> blocks,
                                TrackSegmentTmp segmentTmp, decimal AcSectLoc, ref List<Block> Dps, ref int iterLimit)
@@ -8704,8 +8704,8 @@ namespace ExpPt1
                 }
                 Line pointTip = GetPointTipLine(elements[0]);
                 Line pointBase = GetPointBaseLine(elements[0]);
-                Point2d Tip = GetMiddlPoint2d(pointTip.GeometricExtents);
-                Point2d Base = GetMiddlPoint2d(pointBase.GeometricExtents);
+                Point2d Tip = AcadTools.GetMiddlPoint2d(pointTip.GeometricExtents);
+                Point2d Base = AcadTools.GetMiddlPoint2d(pointBase.GeometricExtents);
                 Vector2d pointStraight = Tip.GetVectorTo(Base);
                 foreach (Block Dp in acSection.Dps)
                 {

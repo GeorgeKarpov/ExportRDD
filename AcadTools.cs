@@ -13,41 +13,96 @@ namespace ExpPt1
 {
     public static class AcadTools
     {
-        public static void ZoomToObjects(Entity ent, double zoomFactor, ObjectId id)
+        public static Point2d GetMiddlPoint2d(Extents3d extents3)
+        {
+            Point3d point3 = extents3.MinPoint +
+                                    (extents3.MaxPoint -
+                                    (extents3.MinPoint)) * 0.5;
+            return new Point2d(point3.X, point3.Y);
+        }
+
+        public static void ZoomToObjects(Entity ent, double zoomFactor)
         {
             Extents3d ext = ent.GeometricExtents;
-            Autodesk.AutoCAD.ApplicationServices.Document doc = 
+            Autodesk.AutoCAD.ApplicationServices.Document doc =
                 Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
             Editor ed = doc.Editor;
             ext.TransformBy(ed.CurrentUserCoordinateSystem.Inverse());
 
-            Point2d min2d = new Point2d(ext.MinPoint.X, ext.MinPoint.Y);
-            Point2d max2d = new Point2d(ext.MaxPoint.X, ext.MaxPoint.Y);
-
+            Point2d min2d = new Point2d(ext.MinPoint.X - (zoomFactor / 2), ext.MinPoint.Y);
+            Point2d max2d = new Point2d(ext.MaxPoint.X - (zoomFactor / 2), ext.MaxPoint.Y);
 
             ViewTableRecord view = new ViewTableRecord();
             if (ent.GetType() == typeof(BlockReference))
             {
-                view.CenterPoint = new Point2d(((BlockReference)ent).Position.X, ((BlockReference)ent).Position.Y);
+                view.CenterPoint = new Point2d(((BlockReference)ent).Position.X - (zoomFactor / 2), ((BlockReference)ent).Position.Y);
             }
             else
             {
                 view.CenterPoint = min2d + ((max2d - min2d) / 2.0);
-            }            
+            }
             view.Height = zoomFactor; //(max2d.Y - min2d.Y) * 10;
             view.Width = zoomFactor; // (max2d.X - min2d.X) * 10;
             try
             {
                 ed.SetCurrentView(view);
             }
-            catch 
+            catch
+            {
+                return;
+            }         
+            ObjectId[] ids = new[] { ent.Id };
+            ed.SetImpliedSelection(ids);
+        }
+
+        public static void ZoomToObjects(Entity[] entities, double zoomFactor)
+        {
+            Extents3d ext = entities[0].GeometricExtents;
+            Extents3d ext1 = entities[1].GeometricExtents;
+            Autodesk.AutoCAD.ApplicationServices.Document doc =
+                Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+            ext.TransformBy(ed.CurrentUserCoordinateSystem.Inverse());
+            ext1.TransformBy(ed.CurrentUserCoordinateSystem.Inverse());
+
+            Point2d point2d;
+            Point2d point2d1;
+            if (entities[0].GetType() == typeof(BlockReference))
+            {
+                point2d = new Point2d(((BlockReference)entities[0]).Position.X, 
+                                      ((BlockReference)entities[0]).Position.Y);
+            }
+            else
+            {
+                point2d = GetMiddlPoint2d(entities[0].GeometricExtents);
+            }
+            if (entities[1].GetType() == typeof(BlockReference))
+            {
+                point2d1 = new Point2d(((BlockReference)entities[1]).Position.X,
+                                      ((BlockReference)entities[1]).Position.Y);
+            }
+            else
+            {
+                point2d1 = GetMiddlPoint2d(entities[1].GeometricExtents);
+            }
+
+            Vector2d center = point2d.GetVectorTo(point2d1);
+            Point2d point2dCenter = point2d + center * 0.5;
+
+            ViewTableRecord view = new ViewTableRecord();
+            view.CenterPoint = point2dCenter;
+            view.Height = zoomFactor; //(max2d.Y - min2d.Y) * 10;
+            view.Width = (point2d - point2d1).Length + 20; // (max2d.X - min2d.X) * 10;
+            try
+            {
+                ed.SetCurrentView(view);
+            }
+            catch
             {
                 return;
             }
-           
-            ObjectId[] ids = new[] { id };
+            ObjectId[] ids = new[] { entities[0].Id, entities[1].Id };
             ed.SetImpliedSelection(ids);
-
         }
 
         public static List<DBPoint> GetAcadPoints(Database db)
