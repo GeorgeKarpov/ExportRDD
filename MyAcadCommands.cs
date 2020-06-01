@@ -1,4 +1,6 @@
-﻿using Autodesk.AutoCAD.Runtime;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Runtime;
+using System.Runtime.CompilerServices;
 
 [assembly: CommandClass(typeof(ExpPt1.MyAcadCommands))]
 
@@ -7,6 +9,8 @@ namespace ExpPt1
     public static class MyAcadCommands
     {
         public static string DwgPath { get; set; }
+
+        public static DocumentCollection Docs { get; set; }
         public static Palette Pl { get; set; }
         //static ExpPt1.Export exportTmp;
         [CommandMethod("ExportRDD")]
@@ -22,7 +26,7 @@ namespace ExpPt1
         {
             if (Pl == null)
             {
-                Pl = new Palette(DwgPath);
+                Pl = new Palette(DwgPath, Docs);
             }
             else
             {

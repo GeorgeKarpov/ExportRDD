@@ -1,4 +1,6 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.Internal;
 using Autodesk.AutoCAD.Windows;
 using System;
 using System.Collections.Generic;
@@ -19,11 +21,13 @@ namespace ExpPt1
         private static ElCntrl palCntrlPt = null;
         private static ErrCntrl errCntrl = null;
         public string DwgPath { get; set; }
+        DocumentCollection Docs { get; set; }
         public List<Block> Blocks { get; set; }
 
-        public Palette(string dwgPath)
+        public Palette(string dwgPath, DocumentCollection docs)
         {
             DwgPath = dwgPath;
+            Docs = docs;
             Reload();
 
         }
@@ -179,6 +183,10 @@ namespace ExpPt1
 
         private void BtnLoad_Click(object sender, EventArgs e)
         {
+            if (Docs.Count == 0)
+            {
+                return;
+            }
             Display expDispl = new Display(this.DwgPath);
             expDispl.LoadData();
             if (expDispl.Segments != null && expDispl.Segments.Count > 0)

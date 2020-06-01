@@ -16,14 +16,24 @@ namespace ExpPt1
         public void Initialize()
         {
             MyAcadCommands.DwgPath = AcadApp.DocumentManager.CurrentDocument.Name;
+            MyAcadCommands.Docs = AcadApp.DocumentManager;
             MyAcadCommands.AddPalette();
             AcadApp.DocumentManager.DocumentActivated += new DocumentCollectionEventHandler(DocColDocAct);
             AcadApp.DocumentManager.DocumentCreated += new DocumentCollectionEventHandler(DocColDocAct);
+            AcadApp.DocumentManager.DocumentDestroyed += DocumentManager_DocumentDestroyed;
 
             AppDomain.CurrentDomain.FirstChanceException += CurrentDomain_FirstChanceException;
             AppDomain currentDomain = AppDomain.CurrentDomain;
             currentDomain.UnhandledException += new UnhandledExceptionEventHandler(MyHandler);
             Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
+        }
+
+        private void DocumentManager_DocumentDestroyed(object sender, DocumentDestroyedEventArgs e)
+        {
+            if (((DocumentCollection)sender).Count == 1)
+            {
+                MyAcadCommands.Pl.Reset();
+            }
         }
 
         private void CurrentDomain_FirstChanceException(object sender, System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs e)
