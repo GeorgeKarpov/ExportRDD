@@ -88,7 +88,7 @@ public static class ErrLogger
             using (StreamWriter streamWriter = new StreamWriter(Dir + "\\" + warnFileName, append: true))
             {
                 streamWriter.WriteLine(DateTime.Now.ToString("HH:mm:ss") + " -- " + 
-                                       string.Format("{1} | {0} {2} | {3}", message, Par1, Par2, GetCaller()));
+                                       string.Format("{1} | {0} | {2} | {3}", message, Par1, Par2, GetCaller()));
                 streamWriter.Close();
             }
         }       
@@ -127,7 +127,7 @@ public static class ErrLogger
                 break;
 
             // Get class name and method of the current stack frame
-            result = string.Format("{0}.{1} Line {2}", declaringType.FullName, methodBase.Name, stackFrame.GetFileLineNumber());
+            result = string.Format("{0}.{1} Line {2}", declaringType.Name, methodBase.Name, stackFrame.GetFileLineNumber());
 
             // Here, we're at the first method outside of SimpleLog class. 
             // This is the method that called the log method. We're done unless it is 

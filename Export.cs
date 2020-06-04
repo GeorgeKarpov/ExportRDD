@@ -8378,7 +8378,9 @@ namespace ExpPt1
             //ErrLogger.filePath = Path.GetDirectoryName(db.Filename) + @"\KmpErrors.log";
             //ErrLogger.Start();
             var test = blocks
-                      .Where(x => x.Location > 0 && x.IsOnCurrentArea)
+                      .Where(x => x.Location > 0 && 
+                                  x.IsOnCurrentArea && 
+                                  x.XsdName != "FoulingPoint")
                       .GroupBy(x => new { x.X, x.TrackSegId })
                       .Where(x => x.Count() > 1)
                       .ToList();
