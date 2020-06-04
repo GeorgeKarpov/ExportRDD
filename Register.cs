@@ -1,4 +1,4 @@
-﻿using Win = Microsoft.Win32;
+using Win = Microsoft.Win32;
 using System.Reflection;
 using Autodesk.AutoCAD.DatabaseServices;
 

@@ -222,7 +222,7 @@ namespace ExpPt1
                 }
                 names[0] = names[0].ToLower();
                 names[1] = names[1].ToLower();
-                if (PadZeros && !names[2].All(x => char.IsLetter(x)))
+                if (PadZeros)
                 {
                     names[2] = NamelowCase ?
                         names[2].ToLower().PadLeft(NameLength, '0') :
@@ -248,7 +248,7 @@ namespace ExpPt1
                 }
                 names[0] = names[0].ToLower();
                 //names[1] = names[1].ToLower();
-                if (PadZeros && !names[1].All(x => char.IsLetter(x)))
+                if (PadZeros)
                 {
                     names[1] = NamelowCase ?
                         names[1].ToLower().PadLeft(NameLength, '0') :
@@ -274,7 +274,7 @@ namespace ExpPt1
                 {
                     NameLength = Name.Length < 3 ? 3 : Name.Length;
                 }
-                if (PadZeros && !Name.All(x => char.IsLetter(x)))
+                if (PadZeros)
                 {
                     Name = NamelowCase ? Name.ToLower().PadLeft(NameLength, '0') : Name.ToUpper().PadLeft(NameLength, '0');
                 }
@@ -356,26 +356,5 @@ namespace ExpPt1
         public double MaxY;
         public Polyline PsaPolyLine;
         public int Order;
-    }
-
-    public class SspAct
-    {
-        public decimal speed;
-        public decimal kmStart;
-        public decimal kmEnd;
-        public decimal kmGap;
-    }
-
-    public class LxActivation
-    {
-        public string id;
-        public decimal km;
-    }
-
-    public class ActivationsSet
-    {
-        public List<LxActivation> lxActivations;
-        public bool point;
-        public string segDeviationId;
     }
 }

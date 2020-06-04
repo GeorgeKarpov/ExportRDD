@@ -19,7 +19,7 @@ namespace ReadWord
                 document =
                 application.Documents.Open(path);
             }
-            catch 
+            catch
             {
                 application.Quit();
                 error = true;
@@ -46,21 +46,24 @@ namespace ReadWord
                                       .Replace("v", "").Replace("\r\a", "");
                     found1 = true;
                 }
-                
+
                 if (range.Cells[i].RowIndex == 11 && range.Cells[i].ColumnIndex == 3)
                 {
-                    bool datconv = DateTime.TryParse(range.Cells[i].Range.Text
+                    DateTime docDate = DateTime.MinValue;
+                    string s = range.Cells[i].Range.Text
                                     .Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)[0]
-                                    .Trim().Replace("\r\a", ""), out DateTime docDate);
+                                    .Trim().Replace("\r\a", "");
+                    ExpPt1.Calc.StringToDate(s, out docDate, out bool datconv, false);
                     if (!datconv)
                     {
                         for (int j = 1; j <= range.Cells.Count; j++)
                         {
                             if (range.Cells[j].RowIndex == 11 && range.Cells[j].ColumnIndex == 2)
                             {
-                                datconv = DateTime.TryParse(range.Cells[j].Range.Text
+                                s = range.Cells[j].Range.Text
                                     .Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)[0]
-                                    .Trim().Replace("\r\a", ""), out docDate);
+                                    .Trim().Replace("\r\a", "");
+                                ExpPt1.Calc.StringToDate(s, out docDate, out datconv);
                                 if (!datconv)
                                 {
                                     error = true;
@@ -86,7 +89,7 @@ namespace ReadWord
                                         .Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)[1]
                                         .Trim().Replace("\r\a", "");
                         found2 = true;
-                    }   
+                    }
                 }
 
                 if (found1 && found2)

@@ -6,8 +6,9 @@ public static class ErrLogger
     public static string filePath;
     public static bool error;
 
-    public static void Start()
+    public static void Start(string filePath)
     {
+        ErrLogger.filePath = filePath;
         using (StreamWriter streamWriter = new StreamWriter(filePath))
         {
             streamWriter.WriteLine("# File: " + filePath);
@@ -41,8 +42,9 @@ public static class Logger
 {
     public static string filePath;
 
-    public static void Start()
+    public static void Start(string filePath)
     {
+        Logger.filePath = filePath;
         using (StreamWriter streamWriter = new StreamWriter(filePath))
         {
             streamWriter.WriteLine("# File: " + filePath);

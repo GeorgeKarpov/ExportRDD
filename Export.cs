@@ -20,96 +20,90 @@ using System.Threading.Tasks;
 using LXactSection = LevelCrossingsLevelCrossingLevelCrossingTracksLevelCrossingTrackActivationSectionsActivationSection;
 using System.Xml.Linq;
 
-//[assembly: CommandClass(typeof(ExpPt1.Export))]
-
 namespace ExpPt1
 {
-    /// <summary>
-    /// Exports PT1 data into RDD xml file.
-    /// </summary>
     public class Export : IDisposable
     {
-        DocumentCollection acDocMgr;
-        Database db;
-        public Document acDoc;
-        private string assemblyPath;
-        private string dwgPath;
-        private string dwgDir;
-        private string dwgFileName;
-        string docId = "";
-        string docVrs = "";
+        private string docId = "";
+        private string docVrs = "";
         public string stationID = "";
-        string Version = "";
-        string DocID = "";
-        string stationName = "";
-        string ZeroLevelLine = "";
+        private string Version = "";
+        private string DocID = "";
+        private string stationName = "";
+        private string ZeroLevelLine = "";
+        private List<CompoundRoutesCompoundRoute> cmproutes = new List<CompoundRoutesCompoundRoute>();
+        protected DocumentCollection acDocMgr;
+        protected Database db;
+        public Document acDoc;
+        protected string assemblyPath;
+        protected string dwgPath;
+        protected string dwgDir;
+        protected string dwgFileName;
         private string orderRddFileName;
-        private List<RailwayLine> RailwayLines;
+        protected List<RailwayLine> RailwayLines;
         private bool copyLevel;
-        Dictionary<string, string> BlocksToGet;
-        TStatus Status;
-        private Dictionary<string, bool> checkData;
-        Dictionary<string, string> Segments;
-        XmlWriterSettings settings;
-        List<LinesLine> lines;
-        List<TrackSegmentTmp> TrackSegmentsTmp;
-        List<TrackSegmentsTrackSegment> trcksegments;
-        List<TrustedArea> TrustedAreas;
-        List<TrackLine> TracksLines;
-        //List<string> logs;
-        //private static List<string> errorslogs;
-        List<string> ExportList = new List<string>
-            {
-                "<Track Segment ID>\t"+
-                "<Km start>\t"+
-                "<Km end>"
-            };
-        List<string> ExportCigClosure;
-        List<string> ExportPoints;
-
-        ReadExcel.Excel excel;
-        Dictionary<string, string> loadFiles;
-        List<TFileDescr> Documents;
-        BlockProperties blckProp;
-        List<CompoundRoutesCompoundRoute> cmproutes = new List<CompoundRoutesCompoundRoute>();
-        Dictionary<string, ReadExcel.XlsLxActivation> LxsActivations;
+        protected Dictionary<string, string> BlocksToGet;
+        protected TStatus Status;
+        protected Dictionary<string, bool> checkData;
+        private XmlWriterSettings settings;
+        private List<LinesLine> lines;
+        protected List<TrackSegmentTmp> TrackSegmentsTmp;
+        protected List<TrackSegmentsTrackSegment> trcksegments;
+        protected List<TrustedArea> TrustedAreas;
+        protected List<TrackLine> TracksLines;
+        protected List<string> ExportCigClosure;
+        private List<string> ExportPoints;
+        protected ReadExcel.Excel excel;
+        private Dictionary<string, string> loadFiles;
+        private List<TFileDescr> Documents;
+        protected BlockProperties blckProp;
+        private List<AcSection> acSections;
+        private Dictionary<string, ReadExcel.XlsLxActivation> LxsActivations;
+        protected List<Block> blocks;
+        protected bool blocksErr;
+        private FrmStation frmStation;
+        protected List<PointsPoint> points;
+        protected List<SignalsSignal> signals;
+        protected List<SpeedProfilesSpeedProfile> speedProfiles;
+        private List<AxleCounterSectionsAxleCounterSection> acsections;
 
         public Export(string dwgPath)
         {
-            //AppDomain.CurrentDomain.FirstChanceException += CurrentDomain_FirstChanceException;
-            assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            acDocMgr = AcadApp.DocumentManager;
-            acDoc = acDocMgr.MdiActiveDocument;
-            db = acDoc.Database;
+            this.assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            this.acDocMgr = AcadApp.DocumentManager;
+            this.acDoc = this.acDocMgr.MdiActiveDocument;
+            this.db = this.acDoc.Database;
             this.dwgPath = dwgPath;
             this.dwgDir = Path.GetDirectoryName(dwgPath);
             this.dwgFileName = Path.GetFileNameWithoutExtension(dwgPath);
-            settings = new XmlWriterSettings
+            this.settings = new XmlWriterSettings()
             {
                 IndentChars = "\t",
                 Indent = true
             };
-            RailwayLines = new List<RailwayLine>();
-            BlocksToGet = new Dictionary<string, string>();
-            Status = new TStatus { };
-            //errorslogs = new List<string>();
-            File.Delete(dwgDir + @"\Error.log");
-            File.Delete(dwgDir + @"\Report.log");
-            ErrLogger.filePath = dwgDir + @"\Error.log";
-            Logger.filePath = dwgDir + @"\Report.log";
-            ErrLogger.Start();
-            Logger.Start();
+            this.RailwayLines = new List<RailwayLine>();
+            this.BlocksToGet = new Dictionary<string, string>();
+            this.Status = new TStatus();
+            if (this.GetType() == typeof(Display))
+            {
+                File.Delete(this.dwgDir + "\\Disp_error.log");
+                File.Delete(this.dwgDir + "\\Disp_report.log");
+                ErrLogger.Start(this.dwgDir + "\\Disp_error.log");
+                Logger.Start(this.dwgDir + "\\Disp_report.log");
+            }
+            else
+            {
+                File.Delete(this.dwgDir + "\\Error.log");
+                File.Delete(this.dwgDir + "\\Report.log");
+                ErrLogger.Start(this.dwgDir + "\\Error.log");
+                Logger.Start(this.dwgDir + "\\Report.log");
+            }
+            this.ReadBlocksDefinitions();
+            this.blocksErr = false;
+            this.blocks = this.GetBlocks(ref this.blocksErr);
+            this.acSections = new List<AcSection>();
         }
 
-        private void CurrentDomain_FirstChanceException(object sender, System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs e)
-        {
-            ErrLogger.Log(e.Exception.Message);
-            ErrLogger.Log("Program terminated");
-        }
-
-        /// <summary>
-        /// Replace static platform blocks with dynamics
-        /// </summary>
         [CommandMethod("ReplacePlatorms")]
         public void ReplacePlatforms()
         {
@@ -126,7 +120,7 @@ namespace ExpPt1
                         AcadApp.ShowAlertDialog("File '" + blockFileName + "' doesn't exist");
                         return;
                     }
-                    CopyBlockFromFile(@"C:\3.TRDD\DynamicBlocks\Blks_Dynamic.dwg", "Platform_Dynamic");
+                    CopyBlockFromFile(this.assemblyPath + Constants.cfgFolder +  @"\Blks_Dynamic.dwg", "Platform_Dynamic");
 
                     BlockReference blkRefInserted =
                         (BlockReference)tr.GetObject(InsertBlock("Platform_Dynamic",
@@ -147,13 +141,17 @@ namespace ExpPt1
                                          block.BlkRef.GeometricExtents.MinPoint.X);
                         }
                     }
+                    if (LayerExists("KMP"))
+                    {
+                        block.BlkRef.Layer = "KMP";
+                    }
+
                     Erase.Erase();
                     tr.Commit();
                 }
             }
         }
 
-        
         public void ExportBlocks()
         {
             SaveFileDialog saveFile = new SaveFileDialog("Export Blocks", null, "dat", "ExportBlocks",
@@ -212,305 +210,30 @@ namespace ExpPt1
             File.WriteAllLines(saveFile.Filename, attributes);
         }
 
-        //[CommandMethod("VerifyKmps")]
-        //public void CheckKmps()
-        //{
-        //    List<Line> KmpLines = new List<Line>();
-        //    List<MText> KmpTexts = new List<MText>();
-        //    bool error = false;
-        //    List<Block> Blocks = GetBlocks(ref error);
-        //    //logs = new List<string>();
-        //    Block BlkSigLayout = Blocks.Where(x => x.XsdName == "SignallingLayout").Select(x => x).First();
-
-        //    if (BlkSigLayout.Attributes["1-ST.NAVN"].Value.Split('(').Length > 1)
-        //    {
-        //        stationID = BlkSigLayout.Attributes["1-ST.NAVN"].Value.Split('(')[1].TrimEnd(')').ToLower();
-        //    }
-
-        //    using (Transaction trans = db.TransactionManager.StartTransaction())
-        //    {
-        //        var Linesids = GetObjectsOfType(db, RXObject.GetClass(typeof(Line)));
-        //        foreach (ObjectId ObjId in Linesids)
-        //        {
-        //            Line line = (Line)trans.GetObject(ObjId, OpenMode.ForRead);
-        //            if (line.Layer.Contains("_Kilometrering_tekst"))
-        //            {
-        //                KmpLines.Add(line);
-        //            }
-        //        }
-        //        var MTxtids = GetObjectsOfType(db, RXObject.GetClass(typeof(MText)));
-        //        foreach (ObjectId ObjId in MTxtids)
-        //        {
-        //            MText mtext = (MText)trans.GetObject(ObjId, OpenMode.ForRead);
-        //            if (mtext.Layer.Contains("_Kilometrering_tekst"))
-        //            {
-        //                KmpTexts.Add(mtext);
-        //            }
-        //        }
-        //        trans.Commit();
-        //    }
-        //    List<Block> BlkElements = Blocks
-        //                                .Where(x => (x.XsdName == "Signal" ||
-        //                                            x.XsdName == "Point" ||
-        //                                            x.XsdName == "DetectionPoint" ||
-        //                                            x.XsdName == "BaliseGroup" ||
-        //                                            x.XsdName == "Fouling Point" ||
-        //                                            x.XsdName == "LevelCrossing") &&
-        //                                            x.Attributes["KMP"].Visible == false)
-        //                                .OrderBy(x => x.X)
-        //                                .ToList();
-        //    foreach (Block element in BlkElements)
-        //    {
-
-        //        List<MText> texts = KmpTexts
-        //                     .Where(x => (Calc.RndXY(x.Location.X) <= element.X + 10 &&
-        //                                  Calc.RndXY(x.Location.X) >= element.X - 10))
-        //                     .ToList();
-        //        if (texts != null && texts.Count > 0)
-        //        {
-        //            bool textMatch = false;
-        //            foreach (MText looptext in texts)
-        //            {
-        //                if (looptext.Text.Trim(new Char[] { '(', ')' }) == element.Attributes["KMP"].Value)
-        //                {
-        //                    textMatch = true;
-        //                    break;
-        //                }
-        //            }
-        //            if (!textMatch)
-        //            {
-        //                MText Nexttext = KmpTexts
-        //                     .Where(x => (Calc.RndXY(x.Location.X) <= element.X + 10 &&
-        //                                  Calc.RndXY(x.Location.X) >= element.X - 10) &&
-        //                                 (Calc.RndXY(x.Location.Y) <= element.Y + 15 &&
-        //                                  Calc.RndXY(x.Location.Y) >= element.Y - 15)
-        //                            )
-        //                     .FirstOrDefault();
-        //                if (Nexttext != null)
-        //                {
-        //                    if (Nexttext.Text.Trim(new Char[] { '(', ')' }) != element.Attributes["KMP"].Value)
-        //                    {
-        //                        Logger.Log("Displayed " + Nexttext.Text.Trim(new Char[] { '(', ')' }) +
-        //                            ", Attribute " + element.Attributes["KMP"].Value + " " +  blckProp.GetElemDesignation(element));
-        //                    }
-        //                }
-        //                else
-        //                {
-        //                    NumberFormatInfo fmt = new NumberFormatInfo
-        //                    {
-        //                        NegativeSign = "-"
-        //                    };
-        //                    MText closest1 = texts.Aggregate((x, y) => Math.Abs(x.Location.X - element.X) < Math.Abs(y.Location.X - element.X) ? x : y);
-        //                    double number =
-        //                        Double.Parse(Regex.Replace(element.Attributes["KMP"].Value, @"\s+", ""), fmt);
-        //                    MText closest2 =
-        //                        texts.Aggregate((x, y) => Math.Abs(Convert.ToDouble(x.Text.Trim(new Char[] { '(', ')' })) - number)
-        //                        < Math.Abs(Convert.ToDouble(y.Text.Trim(new Char[] { '(', ')' })) - number) ? x : y);
-        //                    string log = "";
-        //                    if (closest1.Text.Trim(new Char[] { '(', ')' }) !=
-        //                        closest2.Text.Trim(new Char[] { '(', ')' }))
-        //                    {
-        //                        log = closest1.Text.Trim(new Char[] { '(', ')' }) + " or " +
-        //                            closest2.Text.Trim(new Char[] { '(', ')' });
-        //                    }
-        //                    else
-        //                    {
-        //                        log = closest1.Text.Trim(new Char[] { '(', ')' });
-        //                    }
-        //                    //Logger.Log("Displayed " + log +
-        //                    //", Attribute " + element.Attributes["KMP"].Value,
-        //                    //blckProp.GetElemDesignation(element));
-        //                }
-        //            }
-        //        }
-        //        else
-        //        {
-        //            MText text = KmpTexts
-        //                     .Where(x => (Calc.RndXY(x.Location.X) <= element.X + 10 &&
-        //                                  Calc.RndXY(x.Location.X) >= element.X - 10) &&
-        //                                 (Calc.RndXY(x.Location.Y) <= element.Y + 15 &&
-        //                                  Calc.RndXY(x.Location.Y) >= element.Y - 15)
-        //                            )
-        //                     .FirstOrDefault();
-        //            if (text != null)
-        //            {
-        //                if (text.Text.Trim(new Char[] { '(', ')' }) != element.Attributes["KMP"].Value)
-        //                {
-        //                    Logger.Log("Displayed " + text.Text.Trim(new Char[] { '(', ')' }) +
-        //                        ", Attribute " + element.Attributes["KMP"].Value,
-        //                        blckProp.GetElemDesignation(element));
-        //                }
-        //            }
-        //            else
-        //            {
-        //                Logger.Log("Displayed text not found", blckProp.GetElemDesignation(element));
-        //            }
-        //        }
-        //    }
-        //    //File.WriteAllLines(Path.GetDirectoryName(db.Filename) + "//" +
-        //    //                  Path.GetFileNameWithoutExtension(db.Filename) + "_" +
-        //    //                  DateTime.Now.ToShortDateString() + ".log", logs);
-        //}
-
         [CommandMethod("CheckIntersSections")]
         public void TestIntersection()
         {
-            using (Transaction acTrans = db.TransactionManager.StartTransaction())
+            using (Transaction transaction = this.db.TransactionManager.StartTransaction())
             {
-                PromptSelectionResult acSSPrompt = acDoc.Editor.GetSelection();
-                if (acSSPrompt.Status == PromptStatus.OK)
+                PromptSelectionResult selection = this.acDoc.Editor.GetSelection();
+                if (selection.Status != PromptStatus.Cancel)
+                    return;
+                SelectionSet selectionSet = selection.Value;
+                if (selectionSet.Count != 2)
                 {
-                    SelectionSet acSSet = acSSPrompt.Value;
-                    if (acSSet.Count != 2)
-                    {
-                        AcadApp.ShowAlertDialog("Two objects must be selected.");
-                        return;
-                    }
-                    Entity acEnt1 = acTrans.GetObject(acSSet[0].ObjectId,
-                                                                OpenMode.ForRead) as Entity;
-                    Entity acEnt2 = acTrans.GetObject(acSSet[1].ObjectId,
-                                                                OpenMode.ForRead) as Entity;
-                    if (ObjectsIntersects(acEnt1, acEnt2, Intersect.OnBothOperands))
-                    {
-                        AcadApp.ShowAlertDialog("Intersect!");
-                    }
+                    Application.ShowAlertDialog("Two objects must be selected.");
+                }
+                else
+                {
+                    if (this.ObjectsIntersects(transaction.GetObject(selectionSet[0].ObjectId, (OpenMode)0) as Entity, transaction.GetObject(selectionSet[1].ObjectId, (OpenMode)0) as Entity, (Intersect)0, false))
+                        Application.ShowAlertDialog("Intersect!");
                     else
-                    {
-                        AcadApp.ShowAlertDialog("Not Intersect!");
-                    }
-                    acTrans.Commit();
+                        Application.ShowAlertDialog("Not Intersect!");
+                    transaction.Commit();
                 }
             }
         }
 
-        [CommandMethod("ResetCompRoutes")]
-        public void ResetCompoundRoutes()
-        {
-            cmproutes.Clear();
-        }
-
-        
-        [CommandMethod("SaveCompRoutes")]
-        public void SaveCompoundRoutes()
-        {
-            CompoundRoutes compoundrts = new CompoundRoutes { CompoundRoute = cmproutes.ToArray() };
-            //bool blocksErr = false;
-            //List<Block> Blocks = GetBlocks(ref blocksErr);
-            //string stationID = GetStationId(Blocks);
-            string saveTo = Path.GetDirectoryName(dwgPath) + "//" +
-                          stationID.ToUpper() + "_CR.xml";
-
-            XmlSerializer serializer = new XmlSerializer(typeof(CompoundRoutes));
-            using (StreamWriter stream = new StreamWriter(saveTo))
-            {
-                XmlWriter writer = XmlWriter.Create(stream, settings);
-                serializer.Serialize(writer, compoundrts);
-                writer.WriteEndDocument();
-                writer.Flush();
-            }
-        }
-
-        [CommandMethod("CreateCompRoutes", CommandFlags.UsePickSet)]
-        public void CreateCompoundRoutes()
-        {
-            BlockReference block;
-            List<string> sigNames = new List<string>();
-            ReadBlocksDefinitions();
-            bool blocksErr = false;
-            List<Block> Blocks = GetBlocks(ref blocksErr);
-            //SelectionSet alreadySel = acDoc.Editor.GetSelection().Value;
-            using (Transaction acTrans = db.TransactionManager.StartTransaction())
-            {
-                PromptSelectionResult acSSPrompt = acDoc.Editor.GetSelection();
-                if (acSSPrompt.Status == PromptStatus.OK)
-                {
-                    SelectionSet acSSet = acSSPrompt.Value;
-                    if (acSSet.Count > 9)
-                    {
-                        AcadApp.ShowAlertDialog("Routes count more then 8 not supported.\n" + (acSSet.Count - 1) + " selected");
-                        return;
-                    }
-                    for (int j =0; j < acSSet.Count; j++)
-                    {
-                        block = (BlockReference)acTrans.GetObject(acSSet[j].ObjectId,
-                                                                OpenMode.ForRead);
-                        sigNames.Add(GetAttributes(block)["NAME"].Value);
-                    }                 
-                }
-                else
-                {
-                    acTrans.Commit();
-                    return;
-                }
-                acTrans.Commit();
-            }
-            List<Block> signals = Blocks
-                                  .Where(x => x.XsdName == "Signal" && 
-                                              sigNames.Contains(x.Attributes["NAME"].Value))
-                                  .OrderBy(x => x.Location)
-                                  .ToList();
-            if (signals[0].Attributes["DIRECTION"].Value.ToLower() == "down")
-            {
-                signals = signals.OrderByDescending(x => x.Location).ToList();
-                if (signals.Any(x => x.Attributes["DIRECTION"].Value.ToLower() == "up"))
-                {
-                    AcadApp.ShowAlertDialog("All signals must be in the same direction.");
-                    return;
-                }
-            }
-            else if (signals[0].Attributes["DIRECTION"].Value.ToLower() == "up")
-            {
-                if (signals.Any(x => x.Attributes["DIRECTION"].Value.ToLower() == "down"))
-                {
-                    AcadApp.ShowAlertDialog("All signals must be in the same direction.");
-                    return;
-                }
-            }
-            string stationID = GetStationId(Blocks);
-            BlockProperties blockProperties = new BlockProperties(stationID);
-            for (int j = 2; j < signals.Count; j++)
-            {
-                string crDesign = blockProperties.GetElemDesignation(signals[0]) + "_" +
-                                blockProperties.GetElemDesignation(signals[j]);
-                if (cmproutes.Any(x => x.Designation == crDesign))
-                {
-                    continue;
-                }
-                List<CompoundRoutesCompoundRouteRouteIDsRouteID> routeIDs = new List<CompoundRoutesCompoundRouteRouteIDsRouteID>();
-                for (int r = 0; r <j; r++)
-                {
-                    routeIDs.Add(new CompoundRoutesCompoundRouteRouteIDsRouteID {
-                                Value = blockProperties.GetElemDesignation(signals[r])  +"_" +
-                                blockProperties.GetElemDesignation(signals[r + 1])
-                    });
-                }
-
-                CompoundRoutesCompoundRoute compoundRoute = new CompoundRoutesCompoundRoute
-                {
-                    Designation = crDesign,
-                    Status = Status,
-                    Start = blockProperties.GetElemDesignation(signals[0]),
-                    Destination = blockProperties.GetElemDesignation(signals[j]),
-                    RouteIDs = new CompoundRoutesCompoundRouteRouteIDs { RouteID = routeIDs.ToArray() }
-                };
-                if (cmproutes.Any(x => x.Start == compoundRoute.Start && x.Destination == compoundRoute.Destination))
-                {
-                    compoundRoute.Default = YesNoType.no;
-                }
-                else
-                {
-                    compoundRoute.Default = YesNoType.yes;
-                }
-                cmproutes.Add(compoundRoute);
-            }
-        }
-
-        /// <summary>
-        /// Copy attributes from one block to another. 
-        /// </summary>
-        /// <param name="fromBlkRef"></param>
-        /// <param name="toBlkRef"></param>
-        /// <param name="acTrans"></param>
         private void CopyAtributtes(BlockReference fromBlkRef, BlockReference toBlkRef, Transaction acTrans)
         {
             AttributeCollection attsOld = fromBlkRef.AttributeCollection;
@@ -537,29 +260,9 @@ namespace ExpPt1
                 {
                     dicAttNew[tag.ToUpper()].TextString = attRef.TextString;
                 }
-
             }
         }
 
-        private void EditAtributte(BlockReference toBlkRef, string tag, string value)
-        {
-            AttributeCollection attsNew = toBlkRef.AttributeCollection;
-            using (Transaction tr = db.TransactionManager.StartTransaction())
-            {
-                foreach (ObjectId arId in attsNew)
-                {
-                    AttributeReference attRef =
-                        (AttributeReference)tr.GetObject(arId, OpenMode.ForWrite);
-                    if (attRef.Tag == tag)
-                    {
-                        attRef.TextString = value;
-                    }
-                }
-                tr.Commit();
-            }
-        }
-
-       
         public void CopyAtributtesOnDrw()
         {
             using (Transaction acTrans = db.TransactionManager.StartTransaction())
@@ -606,23 +309,20 @@ namespace ExpPt1
                     acTrans.Commit();
                 }
             }
-           
+
         }
 
-        /// <summary>
-        /// Exports Rdd data into xml file.
-        /// </summary>
         [CommandMethod("ExportRDD")]
         public void ExportRdd()
         {
             TFileDescr siglayout = new TFileDescr();
             List<StationsAndStopsStationsAndStop> stationsandstops = new List<StationsAndStopsStationsAndStop>();
             List<DetectionPointsDetectionPoint> detpoints = new List<DetectionPointsDetectionPoint>();
-            List<SignalsSignal> signals = new List<SignalsSignal>();
+            signals = new List<SignalsSignal>();
             List<ConnectorsConnector> connectors = new List<ConnectorsConnector>();
-            List<PointsPoint> points = new List<PointsPoint>();
+            points = new List<PointsPoint>();
             List<BaliseGroupsBaliseGroup> balises = new List<BaliseGroupsBaliseGroup>();
-            List<AxleCounterSectionsAxleCounterSection> acsections = new List<AxleCounterSectionsAxleCounterSection>();
+            acsections = new List<AxleCounterSectionsAxleCounterSection>();
             List<TrackSectionsTrackSection> tsections = new List<TrackSectionsTrackSection>();
             List<EndOfTracksEndOfTrack> endoftracks = new List<EndOfTracksEndOfTrack>();
             List<StaffPassengerCrossingsStaffPassengerCrossing> staffpassengercrossings =
@@ -631,16 +331,14 @@ namespace ExpPt1
                 new List<LevelCrossingsLevelCrossing>();
             List<EmergencyStopGroupsEmergencyStopGroup> emergencystopgroups =
                 new List<EmergencyStopGroupsEmergencyStopGroup>();
-            List<SpeedProfilesSpeedProfile> speedprofiles = new List<SpeedProfilesSpeedProfile>();
+            speedProfiles = new List<SpeedProfilesSpeedProfile>();
             List<RoutesRoute> routes = new List<RoutesRoute>();
-            //List<CompoundRoutesCompoundRoute> cmproutes = new List<CompoundRoutesCompoundRoute>();
             List<TrustedAreasTrustedArea> trustedareas = new List<TrustedAreasTrustedArea>();
             List<PlatformsPlatform> platforms = new List<PlatformsPlatform>();
             List<BlockInterfacesBlockInterface> blockInterfaces = new List<BlockInterfacesBlockInterface>();
             List<PermanentShuntingAreasPermanentShuntingArea> permanentshuntareas =
                 new List<PermanentShuntingAreasPermanentShuntingArea>();
             List<Track> Tracks;
-            //List<Stop> Stops;
 
             TracksLines = new List<TrackLine>();
             List<Line> TrustedAreaLines = new List<Line>();
@@ -651,9 +349,6 @@ namespace ExpPt1
             trcksegments = new List<TrackSegmentsTrackSegment>();
             Documents = new List<TFileDescr>();
 
-            Segments = new Dictionary<string, string>();
-            //logs = new List<string>();
-            //errorslogs = new List<string>();
             ExportCigClosure = new List<string>
             {
                 "<Signal ID>\t"+
@@ -691,30 +386,25 @@ namespace ExpPt1
                             .ToDictionary(x => x.Split('\t')[0], x => x.Split('\t')[1]);
             }
 
-
-            ReadBlocksDefinitions();
-            bool blocksErr = false;
-            List<Block> Blocks = GetBlocks(ref blocksErr);
             List<bool> err = new List<bool>
             {
                 blocksErr
             };
             GetDocIdVrs();
             TracksLines = GetTracksLines();
-            RailwayLines = GetRailwayLines(TracksLines, Blocks);
+            RailwayLines = GetRailwayLines(TracksLines, blocks);
             blckProp = new BlockProperties(stationID);
             excel = new ReadExcel.Excel(stationID);
             TrustedAreaLines = GetTrustedAreasLines();
             Tracks = GetTracksNames().ToList();
-            //Stops = GetStops(Blocks).ToList();
-            //Lines
-            ReadLines(Blocks, ref lines);
+
+            ReadLines(blocks, ref lines);
 
             // Signaling Layout
-            if (!ReadSigLayout(Blocks, ref siglayout))
+            if (!ReadSigLayout(blocks, ref siglayout))
             {
                 return;
-            }       
+            }
 
             err.Add(!CollectTrustedAreas(TrustedAreaLines, TracksLines));
 
@@ -724,81 +414,86 @@ namespace ExpPt1
             List<EmSG> emGs = GetEmGs().ToList();
 
             // Set Next station blocks
-            SetBlocksNextStations(Blocks);
+            SetBlocksNextStations(blocks);
+
+            SetBlocksExclude(blocks);
 
             // Assign comp routes starts and destinations
-            SetSignalsStartDestCompRoutes(Blocks);
+            SetSignalsStartDestCompRoutes(blocks);
 
             // Segments
-            err.Add(!GetSegments(Blocks, TracksLines, Tracks, pSAs));
+            err.Add(!GetSegments(blocks, TracksLines, Tracks, pSAs));
+         
 
             //Test
-            CheckAttSameKm(Blocks);
+            CheckAttSameKm(blocks);
 
             //Check blocks track segments
-            err.Add(!GetBlocksWithoutSegment(Blocks));
+            err.Add(!GetBlocksWithoutSegment(blocks));
 
 
             //StationsAndStops
-            ReadStationsStops(Blocks, ref stationsandstops, GetStops(Blocks).ToList());
+            ReadStationsStops(blocks, ref stationsandstops, GetStops(blocks).ToList());
 
             // Detection Points
-            err.Add(!ReadDps(Blocks, ref detpoints, pSAs));
+            err.Add(!ReadDps(blocks, ref detpoints, pSAs));
 
             // Signals
-            err.Add(!ReadSignals(Blocks, ref signals));
+            err.Add(!ReadSignals(blocks, ref signals));
 
             // Speed Profiles
-            ReadSps(Blocks, ref speedprofiles);
+            ReadSps(blocks, ref speedProfiles);
 
             //PSA
-            err.Add(!ReadPSAs(Blocks, pSAs, ref permanentshuntareas));
+            err.Add(!ReadPSAs(blocks, pSAs, ref permanentshuntareas));
 
             //Points
-            err.Add(!ReadPoints(Blocks, ref points, speedprofiles, pSAs, emGs));
+            err.Add(!ReadPoints(blocks, ref points, speedProfiles, pSAs, emGs));
 
             // Connectors
-            ReadConnectors(Blocks, ref connectors);
+            ReadConnectors(blocks, ref connectors);
 
             // AC Sections
-            err.Add(!ReadAcSections(Blocks, ref acsections, TracksLines));
+            err.Add(!ReadAcSections(blocks, ref acsections, TracksLines));
+
+            err.Add(!GetDetLockPoints());
 
             // Track Sections
-            err.Add(!ReadTrSections(Blocks, ref tsections, emGs));
+            err.Add(!ReadTrSections(blocks, ref tsections, emGs));
 
             // End of Tracks
-            err.Add(!ReadEOTs(Blocks, ref endoftracks));
+            err.Add(!ReadEOTs(blocks, ref endoftracks));
 
             // Balise Groups
-            err.Add(!ReadBGs(Blocks, ref balises, pSAs));
+            err.Add(!ReadBGs(blocks, ref balises, pSAs));
 
             // PWS
-            err.Add(!ReadPWs(Blocks, ref staffpassengercrossings, acsections));
+            err.Add(!ReadPWs(blocks, ref staffpassengercrossings, acsections));
 
 
             LxsActivations = excel.LoopLxActivations(dwgDir);
 
             // Level Crossings
-            err.Add(!ReadLxs(Blocks, ref levelcrossings, acsections, speedprofiles));
+            err.Add(!ReadLxs(blocks, ref levelcrossings, acsections, speedProfiles));
 
             // Emergency Stop Groups
-            ReadEms(Blocks, ref emergencystopgroups, emGs);
+            ReadEms(blocks, ref emergencystopgroups, emGs);
 
             // Routes
-            err.Add(!ReadRoutes(Blocks, ref routes, acsections, tsections));
+            err.Add(!ReadRoutes(blocks, ref routes, acsections, tsections));
 
             // Compound Routes
             //err.Add(!ReadCRoutes(Blocks, ref cmproutes, signals, routes));
-            err.Add(!GetCompoundRoutes(Blocks, routes));
+            //err.Add(!GetCompoundRoutes(blocks, routes));
 
             // Trusted Areas
-            err.Add(!ReadTrustedAreas(Blocks, ref trustedareas, TracksLines));
+            err.Add(!ReadTrustedAreas(blocks, ref trustedareas, TracksLines));
 
             // Platforms
-            err.Add(!ReadPlatforms(Blocks, ref platforms));
+            err.Add(!ReadPlatforms(blocks, ref platforms));
 
             // Block Interfaces
-            err.Add(!ReadBlockinterfaces(Blocks, ref blockInterfaces));
+            err.Add(!ReadBlockinterfaces(blocks, ref blockInterfaces));
 
 
             RailwayDesignData RDD = new RailwayDesignData
@@ -855,9 +550,9 @@ namespace ExpPt1
                 {
                     EmergencyStopGroup = emergencystopgroups.ToArray()
                 },
-                SpeedProfiles = (speedprofiles.Count == 0) ? null : new SpeedProfiles
+                SpeedProfiles = (speedProfiles.Count == 0) ? null : new SpeedProfiles
                 {
-                    SpeedProfile = speedprofiles.ToArray()
+                    SpeedProfile = speedProfiles.ToArray()
                 },
                 Routes = (routes.Count == 0) ? null : new Routes
                 {
@@ -888,7 +583,15 @@ namespace ExpPt1
                           Version + ".xml";
             }
 
-            
+            if (!File.Exists(orderRddFileName))
+            {
+                err.Add(true);
+                ErrLogger.Log("Order Rdd not found: '" + orderRddFileName + "'");
+            }
+            else
+            {
+                RDD = rddOrder.OrderRdd(RDD, rddXmlIO.GetRdd(orderRddFileName), true, copyLevel);
+            }
 
             if (checkData["checkBoxRdd"])
             {
@@ -905,16 +608,8 @@ namespace ExpPt1
                 }
             }
 
-            if (!File.Exists(orderRddFileName))
-            {
-                err.Add(true);
-                ErrLogger.Log("Order Rdd not found: '" + orderRddFileName + "'");
-            }
-            else
-            {
-                rddOrder.OrderRdd(RDD, rddXmlIO.GetRdd(orderRddFileName), true, copyLevel);
-            }
-            
+
+
 
             if (checkData["checkBoxR5"])
             {
@@ -923,31 +618,35 @@ namespace ExpPt1
                 RddR5.RailwayDesignData rddR5 = rddXmlIO.ReadXmlFromMemoryR5(stream);
                 //RddR5.RailwayDesignData rddR5 = rddXmlIO.GetRddR5(saveTo);
                 rddXmlIO.WriteRddXml(rddR5, saveTo,
-                    new List<string> { "Created with ExpPt1 v" + Assembly.GetExecutingAssembly().GetName().Version.ToString(3) 
+                    new List<string> { "Created with ExpPt1 v" + Assembly.GetExecutingAssembly().GetName().Version.ToString(3)
                                         + " (Thales Latvia) - " + DateTime.Now });
             }
             else
             {
-                rddXmlIO.WriteRddXml(RDD, saveTo, 
+                rddXmlIO.WriteRddXml(RDD, saveTo,
                     new List<string> { "Created with ExpPt1 v" + Assembly.GetExecutingAssembly().GetName().Version.ToString(3)
                                         + " (Thales Latvia) - " + DateTime.Now });
             }
             try
             {
-                WriteData.WriteDistToExcel(RDD.MetaData, Path.GetDirectoryName(saveTo) + "//" +
+                WriteData.ReportExcel(RDD.MetaData, Path.GetDirectoryName(saveTo) + "//" +
                               Path.GetFileNameWithoutExtension(saveTo) + "_Report.xlsx");
             }
             catch (System.Exception e)
             {
                 AcadApp.ShowAlertDialog(e.Message);
             }
-           
+            if (RDD.SpeedProfiles != null && RDD.SpeedProfiles.SpeedProfile != null)
+            {
+                Verify verify = new Verify();
+                verify.CheckSSPsSegments(RDD, TrackSegmentsTmp);
+            }
+            
+            //File.WriteAllLines(Path.GetDirectoryName(saveTo) + "//" +
+            //                   Path.GetFileNameWithoutExtension(saveTo) + "_Signals.txt", ExportCigClosure);
+            //File.WriteAllLines(Path.GetDirectoryName(saveTo) + "//" +
+            //                   Path.GetFileNameWithoutExtension(saveTo) + "_Points.txt", ExportPoints);
 
-            File.WriteAllLines(Path.GetDirectoryName(saveTo) + "//" +
-                               Path.GetFileNameWithoutExtension(saveTo) + "_Signals.txt", ExportCigClosure);
-            File.WriteAllLines(Path.GetDirectoryName(saveTo) + "//" +
-                               Path.GetFileNameWithoutExtension(saveTo) + "_Points.txt", ExportPoints);
-           
             if (err.Contains(true) || ErrLogger.error)
             {
                 //File.WriteAllLines(Path.GetDirectoryName(saveTo) + "//" +
@@ -967,10 +666,7 @@ namespace ExpPt1
             }
         }
 
-        /// <summary>
-        /// Gets DocId and DocVrs from document's title block.
-        /// </summary>
-        private void GetDocIdVrs()
+        protected void GetDocIdVrs()
         {
             using (Transaction trans = db.TransactionManager.StartTransaction())
             {
@@ -980,7 +676,7 @@ namespace ExpPt1
                     var mtext = (MText)trans.GetObject(ObjId, OpenMode.ForRead);
                     if (mtext.Text.Contains("Internt Thales tegningsnr"))
                     {
-                        docId = mtext.Text.Split(':')[1].Trim().Split(new char[0],StringSplitOptions.RemoveEmptyEntries)[0];
+                        docId = mtext.Text.Split(':')[1].Trim().Split(new char[0], StringSplitOptions.RemoveEmptyEntries)[0];
                         docVrs = mtext.Text.Split(':')[1].Trim()
                             .Split(new Char[] { ' ', ',', '.', ':', '\n', '\t', '/', 'v', 'V' },
                                        StringSplitOptions.RemoveEmptyEntries).Last();
@@ -1004,10 +700,7 @@ namespace ExpPt1
             }
         }
 
-        /// <summary>
-        /// Gets tracks lines.
-        /// </summary>
-        private List<TrackLine> GetTracksLines()
+        protected List<TrackLine> GetTracksLines()
         {
             List<TrackLine> TracksLines = new List<TrackLine>();
             using (Transaction trans = db.TransactionManager.StartTransaction())
@@ -1087,11 +780,7 @@ namespace ExpPt1
             }
         }
 
-        /// <summary>
-        /// Gets names of tracks
-        /// </summary>
-        /// <returns></returns>
-        private IEnumerable<Track> GetTracksNames()
+        protected IEnumerable<Track> GetTracksNames()
         {
             using (Transaction trans = db.TransactionManager.StartTransaction())
             {
@@ -1127,11 +816,7 @@ namespace ExpPt1
             }
         }
 
-        /// <summary>
-        /// Gets PSA polyline
-        /// </summary>
-        /// <returns></returns>
-        private IEnumerable<PSA> GetPsas()
+        protected IEnumerable<PSA> GetPsas()
         {
             List<PSA> psas = new List<PSA>();
             using (Transaction trans = db.TransactionManager.StartTransaction())
@@ -1153,7 +838,7 @@ namespace ExpPt1
                             .Where(x => mtext.GeometricExtents.MinPoint.X >= x.GeometricExtents.MinPoint.X &&
                                         mtext.GeometricExtents.MinPoint.X <= x.GeometricExtents.MaxPoint.X &&
                                         mtext.GeometricExtents.MinPoint.Y >= x.GeometricExtents.MinPoint.Y &&
-                                        mtext.GeometricExtents.MinPoint.Y <= x.GeometricExtents.MaxPoint.Y && 
+                                        mtext.GeometricExtents.MinPoint.Y <= x.GeometricExtents.MaxPoint.Y &&
                                         x.Layer == "KMP")
                              .FirstOrDefault();
                         if (polylinePsa != null)
@@ -1201,11 +886,7 @@ namespace ExpPt1
             }
         }
 
-        /// <summary>
-        /// Gets Emgs from drawing
-        /// </summary>
-        /// <returns></returns>
-        private IEnumerable<EmSG> GetEmGs()
+        protected IEnumerable<EmSG> GetEmGs()
         {
 
             using (Transaction trans = db.TransactionManager.StartTransaction())
@@ -1250,11 +931,6 @@ namespace ExpPt1
             }
         }
 
-        /// <summary>
-        /// Finds stations and stops on drawing.
-        /// </summary>
-        /// <param name="blocks"></param>
-        /// <returns></returns>
         private IEnumerable<StationStop> GetStops(List<Block> blocks)
         {
 
@@ -1400,12 +1076,7 @@ namespace ExpPt1
             }
         }
 
-        /// <summary>
-        /// Gets Railway lines from drawing
-        /// </summary>
-        /// <param name="trackLines"></param>
-        /// <returns></returns>
-        private List<RailwayLine> GetRailwayLines(List<TrackLine> trackLines, List<Block> blocks)
+        protected List<RailwayLine> GetRailwayLines(List<TrackLine> trackLines, List<Block> blocks)
         {
             List<RailwayLine> railwayLines = new List<RailwayLine>();
             RailwayLine DefaultRailwayLine = new RailwayLine();
@@ -1560,11 +1231,6 @@ namespace ExpPt1
             return railwayLines.OrderBy(x => x.designation).ToList();
         }
 
-        /// <summary>
-        /// Get Station Id from drawing
-        /// </summary>
-        /// <param name="blocks"></param>
-        /// <returns></returns>
         private string GetStationId(List<Block> blocks)
         {
             List<Block> BlkSigLayouts = blocks.Where(x => x.XsdName == "SignallingLayout")
@@ -1591,10 +1257,7 @@ namespace ExpPt1
             return null;
         }
 
-        /// <summary>
-        /// Gets Trusted Areas lines.
-        /// </summary>
-        private List<Line> GetTrustedAreasLines()
+        protected List<Line> GetTrustedAreasLines()
         {
             List<Line> TrustedAreaLines = new List<Line>();
             using (Transaction trans = db.TransactionManager.StartTransaction())
@@ -1632,11 +1295,7 @@ namespace ExpPt1
             }
         }
 
-        /// <summary>
-        /// Gets blocks defined in BlkMap.dat config from drawing.
-        /// </summary>
-        /// <returns>found blocks</returns>
-        private List<Block> GetBlocks(ref bool error)
+        protected List<Block> GetBlocks(ref bool error)
         {
             List<Block> Blocks = new List<Block>();
             blckProp = new BlockProperties("");
@@ -1695,7 +1354,7 @@ namespace ExpPt1
                                 Rotation = (int)(blkRef.Rotation * (180 / Math.PI)),
                                 KindOf = BlocksToGet[btr.Name].Split('\t')[3],
                                 Attributes = Attributes,
-                                IsOnCurrentArea = false,
+                                IsOnCurrentArea = true,
                                 Visible = !(Attributes.Any(x => x.Value.Name == "NAME" &&
                                                                x.Value.Visible == false))
                             };
@@ -1711,14 +1370,14 @@ namespace ExpPt1
                             {
                                 Logger.Log(blkRef.Name + ": BlockName property - " + e.Message);
                             }
-                            
+
                             //if (block.XsdName == "Point" &&
                             //    block.Attributes["NAME"].Value.Contains("SN") &&
                             //    block.KindOf != "hhtDerailer")
                             //{
                             //    block.KindOf = "hhtPoint";
                             //}
-                            if (block.XsdName != "FoulingPoint" && block.Attributes.Any(x => x.Key.Contains("KMP"))) 
+                            if (block.XsdName != "FoulingPoint" && block.Attributes.Any(x => x.Key.Contains("KMP")))
                             {
                                 string[] attKeys = block.Attributes
                                                .Where(x => x.Key.Contains("KMP"))
@@ -1740,7 +1399,7 @@ namespace ExpPt1
                                             error = true;
                                             ErrLogger.Log(blckProp.GetElemDesignation(block) +
                                                 ": Can not convert '" + attKeys[0] + "' to decimal");
-                                        }                                     
+                                        }
                                     }
                                     block.Location = loc;
                                 }
@@ -1814,7 +1473,7 @@ namespace ExpPt1
                                 {
                                     if (location2 == "")
                                     {
-                                        loc2= 0;
+                                        loc2 = 0;
                                     }
                                     else
                                     {
@@ -1835,11 +1494,6 @@ namespace ExpPt1
             return Blocks;
         }
 
-        /// <summary>
-        /// Gets blocks by name from drawing.
-        /// </summary>
-        /// <param name="BlockName"></param>
-        /// <returns></returns>
         private List<Block> GetBlocks(string BlockName, Database db)
         {
             List<Block> Blocks = new List<Block>();
@@ -1898,7 +1552,7 @@ namespace ExpPt1
                                 Rotation = (int)(blkRef.Rotation * (180 / Math.PI)),
                                 KindOf = BlocksToGet[btr.Name].Split('\t')[3],
                                 Attributes = Attributes,
-                                IsOnCurrentArea = false,
+                                IsOnCurrentArea = true,
                                 Visible = !(Attributes.Any(x => x.Value.Name == "NAME" &&
                                                                x.Value.Visible == false) ||
                                           !blkRef.BlockName.Contains("MODEL_SPACE"))
@@ -1933,11 +1587,6 @@ namespace ExpPt1
             return Blocks;
         }
 
-        /// <summary>
-        /// Gets block attributes.
-        /// </summary>
-        /// <param name="blkRef"></param>
-        /// <returns></returns>
         private Dictionary<string, Attribute> GetAttributes(BlockReference blkRef)
         {
             Dictionary<string, Attribute> map = new Dictionary<string, Attribute>();
@@ -1976,10 +1625,7 @@ namespace ExpPt1
             return map;
         }
 
-        /// <summary>
-        /// Reads Signalling Layout
-        /// </summary>
-        private bool ReadSigLayout(List<Block> blocks, ref TFileDescr siglayout)
+        protected bool ReadSigLayout(List<Block> blocks, ref TFileDescr siglayout, bool display = false)
         {
             Block BlkSigLayout = blocks.Where(x => x.XsdName == "SignallingLayout").Select(x => x).First();
             string tmpCreator = BlkSigLayout.Attributes
@@ -1991,21 +1637,25 @@ namespace ExpPt1
                 siglayout.creator = tmpCreator
                     .Split(new char[] { ' ', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries)[1].Trim();
             }
-            siglayout.date =
-                    Convert.ToDateTime(
-                        Regex.
-                        Split(BlkSigLayout.Attributes["UDGAVE"].Value, @"\s{1,}")[1]);
+            string inputDate = Regex.Split(BlkSigLayout.Attributes["UDGAVE"].Value, @"\s{1,}")[1];
+            
+            siglayout.date = Calc.StringToDate(inputDate, out DateTime date, out bool flag); 
             siglayout.title = BlkSigLayout.Attributes["2-TEGN.NAVN"].Value + " - " +
                               BlkSigLayout.Attributes["1-ST.NAVN"].Value;
-            siglayout.version = docVrs;
+            //siglayout.title += " (rev. " + Regex.Split(BlkSigLayout.Attributes["UDGAVE"].Value, @"\s{1,}")[0] + ")";
+            siglayout.version = docVrs; //+ " (rev. " + Regex.Split(BlkSigLayout.Attributes["UDGAVE"].Value, @"\s{1,}")[0] + ")"; 
             siglayout.docID = docId.ToUpper();
+            if (display)
+            {
+                return true;
+            }
 
             char[] split = new char[] { '-', '(' };
             stationName =
                 BlkSigLayout.Attributes["1-ST.NAVN"].Value.Split(split)[0].TrimEnd(')').Trim();
             TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
             stationName = textInfo.ToTitleCase(stationName.ToLower());
-            FrmStation frmStation = new FrmStation
+            frmStation = new FrmStation
             {
                 StationId = stationID,
                 StationName = stationName
@@ -2040,38 +1690,21 @@ namespace ExpPt1
             return true;
         }
 
-        /// <summary>
-        /// Reads blocks of lines
-        /// </summary>
-        /// <param name="blocks"></param>
-        /// <param name="lines"></param>
-        private void ReadLines(List<Block> blocks, ref List<LinesLine> lines)
+        protected void ReadLines(List<Block> blocks, ref List<LinesLine> lines)
         {
-            //LinesLine line = new LinesLine
-            //{
-            //    Designation = stationID,
-            //    LongName = stationName,
-            //    Status = Status
-            //};
-
-            foreach (RailwayLine railwayline in RailwayLines)
-            {
-                lines.Add(new LinesLine
+            foreach (RailwayLine railwayLine in this.RailwayLines)
+                lines.Add(new LinesLine()
                 {
-                    Designation = railwayline.designation,
-                    BeginKM = railwayline.start,
-                    EndKM = railwayline.end,
-                    Direction = railwayline.direction,
-                    Status = Status
+                    Designation = railwayLine.designation,
+                    BeginKM = railwayLine.start,
+                    EndKM = railwayLine.end,
+                    Direction = railwayLine.direction,
+                    Status = this.Status
                 });
-            }
         }
 
-        /// <summary>
-        /// Reads blocks of Stations and Stops
-        /// </summary>
         private void ReadStationsStops(List<Block> blocks, ref List<StationsAndStopsStationsAndStop> stationsAndStops,
-            List<StationStop> Stops)
+             List<StationStop> Stops)
         {
             StationStop station = Stops.Where(x => x.Id == stationID).FirstOrDefault();
             if (station != null)
@@ -2142,10 +1775,7 @@ namespace ExpPt1
                                .ToList();
         }
 
-        /// <summary>
-        /// Reads blocks of signals
-        /// </summary>
-        private bool ReadSignals(List<Block> blocks, ref List<SignalsSignal> signalsSignal)
+        protected bool ReadSignals(List<Block> blocks, ref List<SignalsSignal> signalsSignal)
         {
             bool error = false;
             List<Block> BlkSignals = blocks
@@ -2227,7 +1857,13 @@ namespace ExpPt1
                 {
                     GetSigClosure(BlkSignal, signal, blocks);
                 }
-                                
+
+                if (this.GetType() == typeof(Display))
+                {
+                    signalsSignal.Add(signal);
+                    continue;
+                }
+
                 if (CesLocs == null)
                 {
                     continue;
@@ -2289,8 +1925,8 @@ namespace ExpPt1
                 }
                 else
                 {
-                    if (signal.KindOfSignal == TKindOfSignal.eotmb || 
-                        signal.KindOfSignal == TKindOfSignal.L2EntrySignal || 
+                    if (signal.KindOfSignal == TKindOfSignal.eotmb ||
+                        signal.KindOfSignal == TKindOfSignal.L2EntrySignal ||
                         signal.KindOfSignal == TKindOfSignal.L2ExitSignal || cesLoc.Ac == "N/A")
                     {
                         signal.DangerPointDistance = 0;
@@ -2332,22 +1968,26 @@ namespace ExpPt1
                 // DK2.1 Danger point distance by DMT
                 signal.DangerPointDistanceSpecified = false;
                 signal.DangerPointID = null;
-                
-
                 signalsSignal.Add(signal);
             }
+
+            if (this.GetType() == typeof(Display))
+            {
+                return !error;
+            }
+
             Regex spstSig = new Regex("^(spst-[a-zæøåÆØÅ]{2,3}-)S([0-9]{1,3})");
             List<ReadExcel.XlsRoute> checkSpsts = xlsRoutes.Where(x => spstSig.IsMatch(x.Start)).ToList();
             foreach (ReadExcel.XlsRoute route in checkSpsts)
             {
                 Block spstBlock = blocks
-                                  .Where(x => x.XsdName == "EndOfTrack" && 
+                                  .Where(x => x.XsdName == "EndOfTrack" &&
                                               x.Designation == spstSig.Replace(route.Start, "$1$2"))
                                   .FirstOrDefault();
                 if (spstBlock == null)
                 {
                     error = true;
-                    ErrLogger.Log("Can not find EOT for route '"+ route.Start + "_" + route.Dest  +"'");
+                    ErrLogger.Log("Can not find EOT for route '" + route.Start + "_" + route.Dest + "'");
                     continue;
                 }
                 if (signalsSignal.Where(x => x.Designation == route.Start).Count() > 0)
@@ -2369,7 +2009,7 @@ namespace ExpPt1
                     ShiftCESLocation = 0,
                     TrackPosition = LeftRightOthersType.others
                 };
-                DirectionType directionEot = GetEotDurection(spstBlock, blocks, ref error);
+                DirectionType directionEot = GetEotDirection(spstBlock, blocks, ref error);
                 if (directionEot == DirectionType.up)
                 {
                     signalVirtualEot.Direction = DirectionType.down;
@@ -2387,10 +2027,7 @@ namespace ExpPt1
             return !error;
         }
 
-        /// <summary>
-        /// Reads blocks of points
-        /// </summary>
-        private bool ReadPoints(List<Block> blocks, ref List<PointsPoint> pointsPoints,
+        protected bool ReadPoints(List<Block> blocks, ref List<PointsPoint> pointsPoints,
             List<SpeedProfilesSpeedProfile> speedProfiles, List<PSA> pSAs, List<EmSG> emGs)
         {
             bool error = false;
@@ -2401,18 +2038,6 @@ namespace ExpPt1
                                                    x.Visible == true))
                                       .ToList();
             TFileDescr document;
-
-            List<ReadExcel.DetLock> Tracks = new List<ReadExcel.DetLock>();
-            if (checkData["checkBoxDL"])
-            {
-                document = new TFileDescr();
-                Tracks = excel.DetectorLockings(loadFiles["lblxlsDetLock"], ref document, ref error);
-                Documents.Add(document);
-            }
-            else
-            {
-                Logger.Log("Track for detector locking data skipped\tTrack for detector locking table");
-            }
 
             List<ReadExcel.FlankProtection> FlankProtection = new List<ReadExcel.FlankProtection>();
             if (checkData["checkBoxFP"])
@@ -2457,24 +2082,24 @@ namespace ExpPt1
                         Location = Convert.ToDecimal(BlkPoint.Attributes["KMP"].Value).ToString()
                     });
                     Logger.Log(blckProp.GetElemDesignation(BlkPoint) + ": Fouling point not found");
-                    ExportPoints.Add(stationName + "\t" +  
-                                     BlkPoint.Attributes["NAME"].Value + "\t" +
-                                     Convert.ToInt32(Convert.ToDecimal(BlkPoint.Attributes["KMP"].Value) * 1000) + "\t" +
-                                     Convert.ToInt32(Convert.ToDecimal(BlkPoint.Attributes["KMP"].Value) * 1000) + "\t" +
-                                     Convert.ToInt32(Convert.ToDecimal(BlkPoint.Attributes["KMP"].Value) * 1000));
+                    //ExportPoints.Add(stationName + "\t" +
+                    //                 BlkPoint.Attributes["NAME"].Value + "\t" +
+                    //                 Convert.ToInt32(Convert.ToDecimal(BlkPoint.Attributes["KMP"].Value) * 1000) + "\t" +
+                    //                 Convert.ToInt32(Convert.ToDecimal(BlkPoint.Attributes["KMP"].Value) * 1000) + "\t" +
+                    //                 Convert.ToInt32(Convert.ToDecimal(BlkPoint.Attributes["KMP"].Value) * 1000));
                 }
                 else
                 {
 
-                    if(!decimal.TryParse(BlkPoint.Attributes["KMP"].Value, out decimal locTip))
+                    if (!decimal.TryParse(BlkPoint.Attributes["KMP"].Value, out decimal locTip))
                     {
                         locTip = 0;
                     }
-                    if(!decimal.TryParse(BlkPoint.Attributes["KMP_CONTACT_2"].Value, out decimal locRight))
+                    if (!decimal.TryParse(BlkPoint.Attributes["KMP_CONTACT_2"].Value, out decimal locRight))
                     {
                         locRight = Convert.ToDecimal(BlkPoint.Attributes["KMP"].Value);
                     }
-                    if(!decimal.TryParse(BlkPoint.Attributes["KMP_CONTACT_3"].Value, out decimal locLeft))
+                    if (!decimal.TryParse(BlkPoint.Attributes["KMP_CONTACT_3"].Value, out decimal locLeft))
                     {
                         locLeft = Convert.ToDecimal(BlkPoint.Attributes["KMP"].Value);
                     }
@@ -2506,11 +2131,11 @@ namespace ExpPt1
                         FoulingPointLocation =
                             GetFoulPointLocation(FoulPoints, BlkPoint, ConnectionBranchType.left)
                     });
-                    ExportPoints.Add(stationName + "\t" +
-                                     BlkPoint.Attributes["NAME"].Value + "\t" +
-                                     Convert.ToInt32(locTip * 1000) + "\t" +
-                                     Convert.ToInt32(locRight *1000) + "\t" +
-                                     Convert.ToInt32(locLeft * 1000));
+                    //ExportPoints.Add(stationName + "\t" +
+                    //                 BlkPoint.Attributes["NAME"].Value + "\t" +
+                    //                 Convert.ToInt32(locTip * 1000) + "\t" +
+                    //                 Convert.ToInt32(locRight * 1000) + "\t" +
+                    //                 Convert.ToInt32(locLeft * 1000));
                 }
 
                 List<PointsPointPointMachinesPointMachine> pointMachines =
@@ -2584,129 +2209,7 @@ namespace ExpPt1
                 {
                     point.PointPosIndicator = YesNoType.yes;
                 }
-                List<PointsPointTracksForDetectorLockingTrackforDetectorLocking> pointsTracksForDetectorLocking =
-                new List<PointsPointTracksForDetectorLockingTrackforDetectorLocking>();
-
-                List<ReadExcel.DetLock> tracks = Tracks
-                                                 .Where(x => x.Pt == BlkPoint.Attributes["NAME"].Value)
-                                                 .ToList();
-                foreach (ReadExcel.DetLock trk in tracks)
-                {
-
-                    foreach (var adj in trk.Adjacents)
-                    {
-                        if (adj == null)
-                        {
-                            continue;
-                        }
-                        string[] points = adj.Pt.Split(new string[] { "\r\n", ";", ",", "\n", "\t", " " },
-                                                                            StringSplitOptions.RemoveEmptyEntries);
-                        if (points.Length > 0)
-                        {
-                            foreach(string pt in points)
-                            {
-                                Block pointBlock = blocks
-                                               .Where(x => (x.XsdName == "Point" &&
-                                                              x.Attributes["NAME"].Value == pt))
-                                               .FirstOrDefault();
-                                if (pointBlock != null)
-                                {
-                                    PointsPointTracksForDetectorLockingTrackforDetectorLocking detlock =
-                                         new PointsPointTracksForDetectorLockingTrackforDetectorLocking { Value = null };
-                                    detlock.Value = blckProp.GetElemDesignation(pointBlock);
-                                    pointsTracksForDetectorLocking.Add(detlock);
-                                }
-                                else
-                                {
-                                    ErrLogger.Log("Point: '" + blckProp.GetElemDesignation(BlkPoint) +
-                                        "'. Point for detector locking '" + trk.Pt + "' not found.");
-                                    error = true;
-                                    continue;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            string[] tdts = adj.Tdt.Split(new string[] { "\r\n", ";", ",", "\n", "\t", " " },
-                                                                            StringSplitOptions.RemoveEmptyEntries);
-                            foreach (string tdt in tdts)
-                            {
-                                Block tmptrack = blocks
-                                               .Where(x => (x.XsdName == "AxleCounterSection" ||
-                                                                  x.XsdName == "TrackSection") &&
-                                                                  x.Attributes["NAME"].Value == tdt)
-                                               .FirstOrDefault();
-                                if (tmptrack == null)
-                                {
-                                    ErrLogger.Log("Point: '" + blckProp.GetElemDesignation(BlkPoint) + "'. Track for detector locking '" + tdt + "' not found.");
-                                    error = true;
-                                    continue;
-                                }
-                                PointsPointTracksForDetectorLockingTrackforDetectorLocking detlock =
-                                     new PointsPointTracksForDetectorLockingTrackforDetectorLocking { Value = null };
-                                detlock.Value = blckProp.GetElemDesignation(tmptrack);
-                                pointsTracksForDetectorLocking.Add(detlock);
-                            }
-                        }
-                        //foreach (string splitTrk in adj.Split(new string[] { "\r\n", ";", ",", "\n", "\t", " " },
-                        //                                                    StringSplitOptions.RemoveEmptyEntries))
-                        //{
-                        //    Block tmptrack = blocks
-                        //                       .Where(x => (x.XsdName == "AxleCounterSection" ||
-                        //                                          x.XsdName == "TrackSection") &&
-                        //                                          x.Attributes["NAME"].Value == splitTrk)
-                        //                        .FirstOrDefault();
-                        //    if (tmptrack == null)
-                        //    {
-                        //        ErrLogger.Log("Point: '" + blckProp.GetElemDesignation(BlkPoint) + "'. Track for detector locking '" + splitTrk + "' not found.");
-                        //        error = true;
-                        //        continue;
-                        //    }
-                        //    PointsPointTracksForDetectorLockingTrackforDetectorLocking detlock =
-                        //        new PointsPointTracksForDetectorLockingTrackforDetectorLocking { Value = null };
-                        //    if (trk.TipPt.Any(x => x != null))
-                        //    {
-                        //        //foreach (string ptDt in trk.TdtPt.Where(x => x != null).SelectMany(x => x.Split(new string[] { "\r\n", ";", ",", "\n", "\t", " " },
-                        //        //                                            StringSplitOptions.RemoveEmptyEntries)))
-                        //        //{
-                        //        //    Block pointBlock = blocks
-                        //        //                   .Where(x => (x.XsdName == "Point" &&
-                        //        //                                  x.Attributes["NAME"].Value == ptDt))
-                        //        //                   .FirstOrDefault();
-                        //        //    if (pointBlock != null)
-                        //        //    {
-                        //        //        detlock.Value = blckProp.GetElemDesignation(pointBlock);
-                        //        //        pointsTracksForDetectorLocking.Add(detlock);
-                        //        //    }
-                        //        //    else
-                        //        //    {
-                        //        //        ErrLogger.Log("Point: '" + blckProp.GetElemDesignation(BlkPoint) +
-                        //        //            "'. Point for detector locking '" + trk.TdtPt + "' not found.");
-                        //        //        error = true;
-                        //        //        continue;
-                        //        //    }
-                        //        //}
-                        //    }
-                        //    else
-                        //    {
-                        //        detlock.Value = blckProp.GetElemDesignation(tmptrack);
-                        //        pointsTracksForDetectorLocking.Add(detlock);
-                        //    }
-                        //    //if (detlock.Value != null)
-                        //    //{
-                        //    //    pointsTracksForDetectorLocking.Add(detlock);
-                        //    //}
-                        //}
-                    }
-                }
-
-                if (pointsTracksForDetectorLocking.Count > 0)
-                {
-                    point.TracksForDetectorLocking = new PointsPointTracksForDetectorLocking
-                    {
-                        TrackforDetectorLocking = pointsTracksForDetectorLocking.ToArray()
-                    };
-                }
+                
 
                 point.FlankProtectionAbandonmentLeftSpecified = true;
                 point.FlankProtectionAbandonmentRightSpecified = true;
@@ -2788,9 +2291,6 @@ namespace ExpPt1
             return !error;
         }
 
-        /// <summary>
-        /// Reads blocks of detection points
-        /// </summary>
         private bool ReadDps(List<Block> blocks, ref List<DetectionPointsDetectionPoint> detPointsDetPoints,
             List<PSA> pSAs)
         {
@@ -2802,15 +2302,6 @@ namespace ExpPt1
                                                  x.Visible == true)
                                     .OrderBy(x => blckProp.GetElemDesignation(x))
                                     .ToList();
-
-            //List<BlockRef> BlkDPCheck = blocks
-            //                            .Where(x => x.XsdName == "DetectionPoint" &&
-            //                                        (x.IsOnCurrentArea == false))
-            //                            .ToList();
-            //foreach (var check in BlkDPCheck)
-            //{
-            //    Logger.Log("DetectionPoint without TrackSegment", blckProp.GetElemDesignation(check));
-            //}
             foreach (Block BlkDP in BlkDPs)
             {
                 DetectionPointsDetectionPoint detpoint = new DetectionPointsDetectionPoint
@@ -2853,9 +2344,6 @@ namespace ExpPt1
             return !error;
         }
 
-        /// <summary>
-        /// Reads blocks of connectors
-        /// </summary>
         private void ReadConnectors(List<Block> blocks, ref List<ConnectorsConnector> connectorsConnectors)
         {
             List<Block> BlkConnectors = blocks
@@ -2893,11 +2381,8 @@ namespace ExpPt1
             }
         }
 
-        /// <summary>
-        /// Reads blocks of AC sections
-        /// </summary>
         private bool ReadAcSections(List<Block> blocks,
-                                ref List<AxleCounterSectionsAxleCounterSection> axleCounterSections, List<TrackLine> trackLines)
+                               ref List<AxleCounterSectionsAxleCounterSection> axleCounterSections, List<TrackLine> trackLines)
         {
             bool error = false;
             List<Block> BlkAcSections = blocks
@@ -2907,60 +2392,36 @@ namespace ExpPt1
                                                         x.Visible == true)
                                            .OrderBy(x => blckProp.GetElemDesignation(x))
                                            .ToList();
+
             //List<BlockRef> BlkEOTs = blocks.Where(x => (x.XsdName == "EndOfTrack") &&
             //                                          x.IsOnCurrentArea == true
             //                                    )
             //                             .ToList();
 
+            //TEst ac new
+            if (frmStation.AutoAC)
+            {
+                AssignDpsToTrckSections();
+            }
+
             List<Block> BlkDPs = null;
             foreach (Block BlkAcSection in BlkAcSections)
             {
+
                 Regex dpAttsPatt = new Regex(@"^DP{1}\d+");
                 Regex patternDP = new Regex("^at-[0-9]{3}|^[0-9]{3}|^at-" + stationID.ToLower() + "-[0-9]{3}");
                 string[] DPs = null;
-                //string[] DPsEot = null;
-
-                //if (BlkAcSection.BlockName == "AXlecounter_Section_EOT")
-                //{
-                //    dpAttsPatt = new Regex(@"^DP{1}\d+");
-                //    patternDP = new Regex("^at-[0-9]{3}|^[0-9]{3}|^at-" + stationID.ToLower() + "-[0-9]{3}");
-                //    Regex dpAttsPattEot = new Regex(@"^EOT{1}\d+");
-                //    Regex patternDPEot = new Regex("^spst-[0-9]{3}|^[0-9]{3}|^spst-" + stationID.ToLower() + "-[0-9]{3}");
-                //    DPs = BlkAcSection.Attributes
-                //          .Where(x => dpAttsPatt.IsMatch(x.Value.Name) &&
-                //                       patternDP.IsMatch(x.Value.Value) &&
-                //                       !String.IsNullOrEmpty(x.Value.Value.ToString()))
-                //          .Select(x => ("at-" + stationID.ToLower() + "-" + x.Value.Value.Split('-').Last())
-                //          .Trim())
-                //          .ToArray();
-                //    DPsEot = BlkAcSection.Attributes
-                //          .Where(x => dpAttsPattEot.IsMatch(x.Value.Name) &&
-                //                       patternDPEot.IsMatch(x.Value.Value) &&
-                //                       !String.IsNullOrEmpty(x.Value.Value.ToString()))
-                //          .Select(x => ("spst-" + stationID.ToLower() + "-" + x.Value.Value.Split('-').Last())
-                //          .Trim())
-                //          .ToArray();
-                //    DPs = DPs.Union(DPsEot).ToArray();
-                //    BlkDPs = blocks
-                //             .Where(x => x.XsdName == "DetectionPoint" || 
-                //                               x.XsdName == "EndOfTrack"                                                 )
-                //             .ToList();
-                //}
-                //else
-                //{
-                    DPs = BlkAcSection.Attributes
-                          .Where(x => dpAttsPatt.IsMatch(x.Value.Name) &&
-                                       patternDP.IsMatch(x.Value.Value) &&
-                                       !String.IsNullOrEmpty(x.Value.Value.ToString()))
-                          //.Select(x => (x.Value.Value)
-                          .Select(x => ("at-" + stationID.ToLower() + "-" + x.Value.Value.Split('-').Last())
-                          .Trim())
-                          .ToArray();
-                    BlkDPs = blocks
-                             .Where(x => x.XsdName == "DetectionPoint")
-                             .ToList();
-                //}
-                
+                DPs = BlkAcSection.Attributes
+                         .Where(x => dpAttsPatt.IsMatch(x.Value.Name) &&
+                                      patternDP.IsMatch(x.Value.Value) &&
+                                      !String.IsNullOrEmpty(x.Value.Value.ToString()))
+                         //.Select(x => (x.Value.Value)
+                         .Select(x => ("at-" + stationID.ToLower() + "-" + x.Value.Value.Split('-').Last())
+                         .Trim())
+                         .ToArray();
+                BlkDPs = blocks
+                         .Where(x => x.XsdName == "DetectionPoint")
+                         .ToList();
                 string[] DPsForeign = BlkAcSection.Attributes
                              .Where(x => (dpAttsPatt.IsMatch(x.Value.Name) &&
                                           Regex.IsMatch(x.Value.Value, "^at-[a-zæøåÆØÅ]{2,3}-[0-9]{3}") &&
@@ -2969,25 +2430,24 @@ namespace ExpPt1
                              .ToArray();
                 DPs = DPs.Union(DPsForeign).ToArray();
 
-                List<AxleCounterSectionsAxleCounterSectionDetectionPointsDetectionPoint> AcDps =
-                    new List<AxleCounterSectionsAxleCounterSectionDetectionPointsDetectionPoint>();
+                //List<AxleCounterSectionsAxleCounterSectionDetectionPointsDetectionPoint> AcDps =
+                //    new List<AxleCounterSectionsAxleCounterSectionDetectionPointsDetectionPoint>();
                 List<AxleCounterSectionsAxleCounterSectionElementsElement> elements =
                     new List<AxleCounterSectionsAxleCounterSectionElementsElement>();
                 List<Block> tmpDps = null;
-                if (checkData.ContainsKey("checkBoxAc") && checkData["checkBoxAc"])
-                {
-                    tmpDps = GetDpsOfAC(BlkAcSection, trackLines, blocks);
-                }
-                else
-                {
-                    tmpDps = BlkDPs
-                                            .Where(x => DPs.ToList()
-                                            .Contains(blckProp.GetElemDesignation(x)))
-                                            .OrderBy(x => x.Attributes["NAME"].Value)
-                                            .Distinct()
-                                            .ToList();
-                }
-
+                //if (checkData.ContainsKey("checkBoxAc") && checkData["checkBoxAc"])
+                //{
+                //    tmpDps = GetDpsOfAC(BlkAcSection, trackLines, blocks);
+                //}
+                //else
+                //{
+                tmpDps = BlkDPs
+                                        .Where(x => DPs.ToList()
+                                        .Contains(blckProp.GetElemDesignation(x)))
+                                        .OrderBy(x => x.Attributes["NAME"].Value)
+                                        .Distinct()
+                                        .ToList();
+                //}
 
                 List<Block> AcElements = TrackSegmentsTmp
                     .Where(x => x.BlocksOnSegments
@@ -3062,75 +2522,141 @@ namespace ExpPt1
                             Value = blckProp.GetElemDesignation(element)
                         });
                     }
-                    if (AcElements.Count == 0)
+                }
+
+
+                //foreach (Block BlkDp in tmpDps)
+                //{
+                //    AcDps.Add(new AxleCounterSectionsAxleCounterSectionDetectionPointsDetectionPoint
+                //    {
+                //        Value = blckProp.GetElemDesignation(BlkDp)
+                //    });
+                //}
+                AcSection section = this.acSections
+                                     .FirstOrDefault(x => x.Designation == blckProp.GetElemDesignation(BlkAcSection));
+                AxleCounterSectionsAxleCounterSection acSection;
+                if (section == null)
+                {
+                    if (frmStation.AutoAC)
+                    {
+                        ErrLogger.Log("AC Section " + blckProp.GetElemDesignation(BlkAcSection) +
+                            ". Unable to initialize, AC created from attributes");
+                        error = true;
+                    }
+                    if (tmpDps.Count != DPs.Length)
+                    {
+                        ErrLogger.Log("AC Section " + blckProp.GetElemDesignation(BlkAcSection) +
+                            ".Inconsistent count of Detection points found " + tmpDps.Count + "<>" + DPs.Length);
+                        error = true;
+                    }
+                    else if (tmpDps.Count == 0)
+                    {
+                        ErrLogger.Log("AC Section " + blckProp.GetElemDesignation(BlkAcSection) +
+                            ".Detection points not found");
+                        error = true;
+                    }
+                    else if (DPs.Count() > 0)
+                    {
+                        List<string> AttDps = DPs.OrderBy(x => x).ToList();
+                        List<string> BlkDps = tmpDps.OrderBy(x => blckProp.GetElemDesignation(x)).Select(x => blckProp.GetElemDesignation(x)).ToList();
+                        for (int j = 0; j < AttDps.Count; j++)
+                        {
+                            if (AttDps[j] != BlkDps[j])
+                            {
+                                ErrLogger.Log("AC Section '" + blckProp.GetElemDesignation(BlkAcSection) +
+                                        "'. Detectionpoints not match '" + AttDps[j] + "'<>'" + BlkDps[j] + "'");
+                                error = true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ErrLogger.Log("AC Section " + blckProp.GetElemDesignation(BlkAcSection) +
+                            "Detection points not found in attributes");
+                        error = true;
+                    }
+                    if (BlkAcSection.XsdName == "AxleCounterSection" && AcElements.Count == 0)
                     {
                         ErrLogger.Log("AC Section " + blckProp.GetElemDesignation(BlkAcSection) +
                             ".No Elements found for Ac section");
                         error = true;
                         //Logger.Log("No Elements found for Ac section", blckProp.GetElemDesignation(BlkAcSection));
                     }
-                }
-
-                if (tmpDps.Count != DPs.Length)
-                {
-                    ErrLogger.Log("AC Section " + blckProp.GetElemDesignation(BlkAcSection) +
-                        ".Inconsistent count of Detection points found " + tmpDps.Count + "<>" + DPs.Length);
-                    error = true;
-                }
-                else if (tmpDps.Count == 0)
-                {
-                    ErrLogger.Log("AC Section " + blckProp.GetElemDesignation(BlkAcSection) +
-                        ".Detection points not found");
-                    error = true;
-                }
-                else if (DPs.Count() > 0)
-                {
-                    List<string> AttDps = DPs.OrderBy(x => x).ToList();
-                    List<string> BlkDps = tmpDps.OrderBy(x => blckProp.GetElemDesignation(x)).Select(x => blckProp.GetElemDesignation(x)).ToList();
-                    for (int j = 0; j < AttDps.Count; j++)
+                    acSection = new AxleCounterSectionsAxleCounterSection
                     {
-                        if (AttDps[j] != BlkDps[j])
+                        Designation = blckProp.GetElemDesignation(BlkAcSection),
+                        Status = Status,
+                        DetectionPoints = new AxleCounterSectionsAxleCounterSectionDetectionPoints
                         {
-                            ErrLogger.Log("AC Section '" + blckProp.GetElemDesignation(BlkAcSection) +
-                                    "'. Detectionpoints not match '" + AttDps[j] + "'<>'" + BlkDps[j] + "'");
-                            error = true;
-                        }
-                    }
+                            DetectionPoint = tmpDps
+                                             .Select(x => new AxleCounterSectionsAxleCounterSectionDetectionPointsDetectionPoint
+                                             {
+                                                 Value = blckProp.GetElemDesignation(x)
+                                             })
+                                             .ToArray()
+                        },
+                        Elements = new AxleCounterSectionsAxleCounterSectionElements { Element = elements.ToArray() }
+                    };
+                    axleCounterSections.Add(acSection);
                 }
                 else
                 {
-                    ErrLogger.Log("AC Section " + blckProp.GetElemDesignation(BlkAcSection) +
-                        "Detection points not found in attributes");
-                    error = true;
-                }
-                foreach (Block BlkDp in tmpDps)
-                {
-                    AcDps.Add(new AxleCounterSectionsAxleCounterSectionDetectionPointsDetectionPoint
+                    acSection = new AxleCounterSectionsAxleCounterSection
                     {
-                        Value = blckProp.GetElemDesignation(BlkDp)
-                    });
-                }
-
-                AxleCounterSectionsAxleCounterSection acSection = new AxleCounterSectionsAxleCounterSection
-                {
-                    Designation = blckProp.GetElemDesignation(BlkAcSection),
-                    Status = Status,
-                    DetectionPoints = new AxleCounterSectionsAxleCounterSectionDetectionPoints
+                        Designation = blckProp.GetElemDesignation(BlkAcSection),
+                        Status = Status,
+                        DetectionPoints = new AxleCounterSectionsAxleCounterSectionDetectionPoints
+                        {
+                            DetectionPoint = section.Dps
+                                             .Where(x => x.XsdName != "EndOfTrack")
+                                             .Select(x => new AxleCounterSectionsAxleCounterSectionDetectionPointsDetectionPoint
+                                             {
+                                                 Value = x.Designation
+                                             })
+                                             .ToArray()
+                        },
+                        //Elements = new AxleCounterSectionsAxleCounterSectionElements
+                        //{
+                        //    Element = section.Elements
+                        //              .Select(x => new AxleCounterSectionsAxleCounterSectionElementsElement
+                        //              {
+                        //                  Value = x
+                        //              })
+                        //              .ToArray()
+                        //}
+                    };
+                    if (section.Elements != null && section.Elements.Count > 0)
                     {
-                        DetectionPoint = AcDps.ToArray()
-                    },
-                    Elements = new AxleCounterSectionsAxleCounterSectionElements { Element = elements.ToArray() }
-                };
-                axleCounterSections.Add(acSection);
+                        acSection.Elements = new AxleCounterSectionsAxleCounterSectionElements
+                        {
+                            Element = section.Elements
+                                      .Select(x => new AxleCounterSectionsAxleCounterSectionElementsElement
+                                      {
+                                          Value = x
+                                      })
+                                      .ToArray()
+                        };
+                    }
+                    else
+                    {
+                        ErrLogger.Log("AC Section " + acSection.Designation +
+                            ".No Elements found for Ac section");
+                        error = true;
+                    }
+                    if (!DPs.OrderBy(x => x).SequenceEqual(section.Dps.Select(x => x.Designation).OrderBy(x => x)))
+                    {
+                        ErrLogger.Log("AC Section " + blckProp.GetElemDesignation(BlkAcSection) +
+                            ". Calculated dps not equal to attributes");
+                        error = true;
+                    }
+                    axleCounterSections.Add(acSection);
+                }
             }
             return !error;
         }
 
-        /// <summary>
-        /// Reads blocks of track sections
-        /// </summary>
         private bool ReadTrSections(List<Block> blocks,
-                                ref List<TrackSectionsTrackSection> TrackSections, List<EmSG> emGs)
+                               ref List<TrackSectionsTrackSection> TrackSections, List<EmSG> emGs)
         {
             bool error = false;
             List<Block> BlkTrckSections = blocks
@@ -3267,11 +2793,8 @@ namespace ExpPt1
             return !error;
         }
 
-        /// <summary>
-        /// Reads blocks of end of tracks
-        /// </summary>
         private bool ReadEOTs(List<Block> blocks,
-                                ref List<EndOfTracksEndOfTrack> endOfTracks)
+                                 ref List<EndOfTracksEndOfTrack> endOfTracks)
         {
             bool error = false;
             List<Block> BlkEndOfTracks = blocks
@@ -3289,209 +2812,134 @@ namespace ExpPt1
                     Status = Status,
                     LineID = BlkEndOfTrack.LineID,
                     //Direction = (DirectionType)
-                    
+
                     KindOfEOT = GetKindOfEOT(BlkEndOfTrack),
                     Location = BlkEndOfTrack.Attributes["KMP"].Value,
                 };
-                EndOfTrack.Direction = GetEotDurection(BlkEndOfTrack, blocks, ref error);
+                EndOfTrack.Direction = GetEotDirection(BlkEndOfTrack, blocks, ref error);
                 endOfTracks.Add(EndOfTrack);
             }
             return !error;
         }
 
-        /// <summary>
-        /// Reads blocks of balise groups
-        /// </summary>
-        private bool ReadBGs(List<Block> blocks, ref List<BaliseGroupsBaliseGroup> baliseGroups,
-            List<PSA> pSAs)
+        private bool ReadBGs(
+          List<Block> blocks,
+          ref List<BaliseGroupsBaliseGroup> baliseGroups,
+          List<PSA> pSAs)
         {
-            bool error = false;
-            List<BaliseGroupsBaliseGroup> baliseGroupsExcel = new List<BaliseGroupsBaliseGroup>();
-            BaliseGroupsBaliseGroup BaliseGroupExcel = new BaliseGroupsBaliseGroup();
-
-            if (!checkData["checkBoxBG"])
-            {
+            bool flag = false;
+            List<BaliseGroupsBaliseGroup> source = new List<BaliseGroupsBaliseGroup>();
+            BaliseGroupsBaliseGroup groupsBaliseGroup1 = new BaliseGroupsBaliseGroup();
+            if (!this.checkData["checkBoxBG"])
                 Logger.Log("Balise Group data skipped\tBalise Group table");
-                //error = true;
-                //return !error;
-            }
-            List<Block> BlkBalisGrps = blocks
-                                          .Where(x => (x.XsdName == "BaliseGroup" &&
-                                                       x.IsOnNextStation == false &&
-                                                       x.Visible == true))
-                                          .OrderBy(x => x.Attributes["KMP"].Value)
-                                          .ToList();
-            List<Block> BlkBalisCheck = blocks
-                            .Where(x => x.XsdName == "BaliseGroup" &&
-                                        x.IsOnCurrentArea == false)
-                            .ToList();
-            foreach (var check in BlkBalisCheck)
+            List<Block> list1 = blocks.Where((Func<Block, bool>)(x => x.XsdName == "BaliseGroup" && !x.IsOnNextStation && x.Visible)).OrderBy((Func<Block, string>)(x => x.Attributes["KMP"].Value)).ToList();
+            foreach (Block Block in blocks.Where((Func<Block, bool>)(x => x.XsdName == "BaliseGroup" && x.TrackSegId == null)).ToList())
             {
-                ErrLogger.Log(blckProp.GetElemDesignation(check) + " Balise without TrackSegment");
-                error = true;
+                ErrLogger.Log(this.blckProp.GetElemDesignation(Block, false, true) + " Balise without TrackSegment");
+                flag = true;
             }
-            TFileDescr document = new TFileDescr();
-            if (checkData["checkBoxBG"])
+            TFileDescr document1 = new TFileDescr();
+            if (this.checkData["checkBoxBG"])
             {
-                baliseGroupsExcel =
-                excel.BaliseGroups(loadFiles["lblxlsBgs"], ref document);
-                Documents.Add(document);
+                source = this.excel.BaliseGroups(this.loadFiles["lblxlsBgs"], ref document1);
+                this.Documents.Add(document1);
             }
-
-            List<BaliseGroupsBaliseGroup> baliseGroupsExcelNeighbor = null;
-            if (checkData["checkBoxBGN"])
+            if (this.checkData["checkBoxBGN"])
             {
-                document = new TFileDescr();
-                baliseGroupsExcelNeighbor =
-                excel.BaliseGroups(loadFiles["lblxlsBgsN"], ref document);
-                Documents.Add(document);
+                TFileDescr document2 = new TFileDescr();
+                this.excel.BaliseGroups(this.loadFiles["lblxlsBgsN"], ref document2);
+                this.Documents.Add(document2);
             }
-
-            foreach (Block BlkBalisGrp in BlkBalisGrps)
+            foreach (Block block in list1)
             {
-                List<TrackSegmentTmp> tmpSegments = TrackSegmentsTmp
-                    .Where(s => s.BlocksOnSegments
-                    .Any(x => x.Designation.Equals(blckProp.GetElemDesignation(BlkBalisGrp)))).ToList();
-                Enum.TryParse(BlkBalisGrp.Attributes["ORIENT"].Value.ToString().ToLower(), out UpDownSingleType orient);
-                Enum.TryParse(BlkBalisGrp.Attributes["DIRECTION"].Value.ToString().ToLower(), out NominalReverseBothType direction);
-                string remarks = null;
-                List<Attribute> attributes = BlkBalisGrp.Attributes
-                        .Where(x => x.Value.Value.ToString() == "yes").Select(x => x.Value).ToList();
-                string LineId = BlkBalisGrp.LineID; // BaliseGroupExcel.LineID
-
-                if (orient == UpDownSingleType.single &&
-                    attributes.Any(x => x.Name == "BG-POSITION" && x.Value == "yes"))
+                Block BlkBalisGrp = block;
+                List<TrackSegmentTmp> list2 = this.TrackSegmentsTmp.Where((Func<TrackSegmentTmp, bool>)(s => s.BlocksOnSegments.Any((Func<Block, bool>)(x => x.Designation.Equals(this.blckProp.GetElemDesignation(BlkBalisGrp, false, true)))))).ToList();
+                NominalReverseBothType result1;
+                if (!Enum.TryParse(BlkBalisGrp.Attributes["DIRECTION"].Value.ToString().ToLower(), out result1))
                 {
-                    var KindOfBGs = new BaliseGroupsBaliseGroupBaliseGroupTypesKindOfBG[]
-                            {
-                                new BaliseGroupsBaliseGroupBaliseGroupTypesKindOfBG
-                                {
-                                    direction = direction,
-                                    Value = KindOfBG.Positioningbalisegroup
-                                }
-                            };
-                    BaliseGroupExcel = baliseGroupsExcel
-                                       .Where(x => x.Designation == blckProp.GetElemDesignation(BlkBalisGrp))
-                                       .FirstOrDefault();
-                    if (BaliseGroupExcel != null /*&& BaliseGroupExcel.BaliseGroupTypes.KindOfBG.Count() > 1*/)
+                    ErrLogger.Log("Unable to parse DIRECTION attribute value " + this.blckProp.GetElemDesignation(BlkBalisGrp, false, true));
+                    flag = true;
+                }
+                string str1 = (string)null;
+                BlkBalisGrp.Attributes.Where((Func<KeyValuePair<string, Attribute>, bool>)(x => x.Value.Value.ToString() == "yes")).Select((Func<KeyValuePair<string, Attribute>, Attribute>)(x => x.Value)).ToList();
+                string lineId = BlkBalisGrp.LineID;
+                BaliseGroupsBaliseGroup groupsBaliseGroup2 = source.Where((Func<BaliseGroupsBaliseGroup, bool>)(x => x.Designation == this.blckProp.GetElemDesignation(BlkBalisGrp, false, true))).FirstOrDefault();
+                BaliseGroupsBaliseGroupBaliseGroupTypesKindOfBG[] groupTypesKindOfBgArray = new BaliseGroupsBaliseGroupBaliseGroupTypesKindOfBG[1]
+                {
+          new BaliseGroupsBaliseGroupBaliseGroupTypesKindOfBG()
+          {
+            direction = result1,
+            Value = KindOfBG.Positioningbalisegroup
+          }
+                };
+                UpDownSingleType result2;
+                if (groupsBaliseGroup2 != null)
+                {
+                    BaliseGroupsBaliseGroupBaliseGroupTypesKindOfBG[] kindOfBg = groupsBaliseGroup2.BaliseGroupTypes.KindOfBG;
+                    result2 = groupsBaliseGroup2.Orientation;
+                    lineId = groupsBaliseGroup2.LineID;
+                }
+                else
+                {
+                    groupsBaliseGroup2 = new BaliseGroupsBaliseGroup()
                     {
-                        KindOfBGs = BaliseGroupExcel.BaliseGroupTypes.KindOfBG;
-                        orient = BaliseGroupExcel.Orientation;
-                    }
-                    else if (BaliseGroupExcel != null && BaliseGroupExcel.BaliseGroupTypes.KindOfBG.Count() == 1)
-                    {
-                        if (BaliseGroupExcel.Orientation != orient)
+                        BaliseGroupTypes = new BaliseGroupsBaliseGroupBaliseGroupTypes()
                         {
-                            orient = BaliseGroupExcel.Orientation;
-                            //remarks = "orientation from BG excel table";
-                        }
-                    }
-                    BaliseGroupExcel = new BaliseGroupsBaliseGroup
-                    {
-                        BaliseGroupTypes = new BaliseGroupsBaliseGroupBaliseGroupTypes
-                        {
-                            KindOfBG = KindOfBGs
+                            KindOfBG = groupTypesKindOfBgArray
                         }
                     };
-                }
-                else
-                {
-                    BaliseGroupExcel = baliseGroupsExcel
-                                       .Where(x => x.Designation == blckProp.GetElemDesignation(BlkBalisGrp))
-                                       .FirstOrDefault();
-                    if (BaliseGroupExcel == null)
+                    if (!Enum.TryParse(BlkBalisGrp.Attributes["ORIENT"].Value.ToString().ToLower(), out result2))
                     {
-                        if (checkData["checkBoxBGN"])
-                        {
-                            BaliseGroupExcel = baliseGroupsExcelNeighbor
-                                         .Where(x => x.Designation == blckProp.GetElemDesignation(BlkBalisGrp))
-                                         .FirstOrDefault();
-                        }
-                        if (BaliseGroupExcel == null)
-                        {
-                            error = true;
-                            ErrLogger.Log("Balise group not found in BG table '" +
-                                blckProp.GetElemDesignation(BlkBalisGrp) + "' km: " + BlkBalisGrp.Location);
-                            continue;
-                        }
+                        ErrLogger.Log("Unable to parse ORIENT attribute value " + this.blckProp.GetElemDesignation(BlkBalisGrp, false, true));
+                        flag = true;
                     }
-                    orient = BaliseGroupExcel.Orientation;
-                    LineId = BaliseGroupExcel.LineID;
                 }
-                BaliseGroupsBaliseGroup baliseGroup = new BaliseGroupsBaliseGroup
+                BaliseGroupsBaliseGroup groupsBaliseGroup3 = new BaliseGroupsBaliseGroup()
                 {
-                    Designation = blckProp.GetElemDesignation(BlkBalisGrp, true),
-                    Status = Status,
-                    BaliseGroupTypes = BaliseGroupExcel.BaliseGroupTypes,
-                    LineID = LineId,
+                    Designation = this.blckProp.GetElemDesignation(BlkBalisGrp, true, true),
+                    Status = this.Status,
+                    BaliseGroupTypes = groupsBaliseGroup2.BaliseGroupTypes,
+                    LineID = lineId,
                     Location = BlkBalisGrp.Attributes["KMP"].Value,
-                    Orientation = orient,
-                    Remarks = remarks
+                    Orientation = result2,
+                    Remarks = str1
                 };
-                if (BlkBalisGrp.Attributes.ContainsKey("DUPLICATED") &&
-                    BlkBalisGrp.Attributes["DUPLICATED"].Value != "" &&
-                    !BaliseGroupExcel.BaliseGroupTypes.KindOfBG.Any(x => x.duplicatedSpecified == true))
+                if (list2.Count == 1)
+                    groupsBaliseGroup3.TrackSegmentID = list2[0].Designation;
+                else if (groupsBaliseGroup2.TrackSegmentID != null && list2.Count == 0)
                 {
-                    BaliseGroupsBaliseGroupBaliseGroupTypesKindOfBG tmpKindOf =
-                    baliseGroup.BaliseGroupTypes.KindOfBG
-                                                .Where(x => x.Value == KindOfBG.Positioningbalisegroup)
-                                                .FirstOrDefault();
-                    if (tmpKindOf != null)
-                    {
-                        tmpKindOf.duplicatedSpecified = true;
-                        tmpKindOf.duplicated = YesNoType.yes;
-                    }
-                }
-                if (tmpSegments.Count == 1)
-                {
-                    baliseGroup.TrackSegmentID = tmpSegments[0].Designation;
-                }
-                else if (BaliseGroupExcel.TrackSegmentID != null && tmpSegments.Count == 0)
-                {
-                    string[] seg = BaliseGroupExcel.TrackSegmentID.Split('-');
-                    seg[seg.Length - 1] = seg[seg.Length - 1].ToUpper();
-                    seg[seg.Length - 2] = seg[seg.Length - 2].ToUpper();
-                    baliseGroup.TrackSegmentID = string.Join("-", seg);
+                    string[] strArray = groupsBaliseGroup2.TrackSegmentID.Split('-');
+                    strArray[strArray.Length - 1] = strArray[strArray.Length - 1].ToUpper();
+                    strArray[strArray.Length - 2] = strArray[strArray.Length - 2].ToUpper();
+                    groupsBaliseGroup3.TrackSegmentID = string.Join("-", strArray);
                     ErrLogger.Log(BlkBalisGrp.Designation + " TrackSegmentId taken from table");
-                    error = true;
+                    flag = true;
                 }
-                else if (tmpSegments.Count == 0)
+                else if (list2.Count == 0)
                 {
-                    baliseGroup.TrackSegmentID = "";
-                    ErrLogger.Log(blckProp.GetElemDesignation(BlkBalisGrp) + " TrackSegmentId not found");
-                    error = true;
+                    groupsBaliseGroup3.TrackSegmentID = "";
+                    ErrLogger.Log(this.blckProp.GetElemDesignation(BlkBalisGrp, false, true) + " TrackSegmentId not found");
+                    flag = true;
                 }
                 else
                 {
-                    string segments = "";
-                    foreach (var seg in tmpSegments)
-                    {
-                        segments += seg.Designation + "; ";
-                    }
-                    baliseGroup.TrackSegmentID = "";
-                    ErrLogger.Log(blckProp.GetElemDesignation(BlkBalisGrp) + " To many Segments found " + segments);
-                    error = true;
+                    string str2 = "";
+                    foreach (TrackSegmentTmp trackSegmentTmp in list2)
+                        str2 = str2 + trackSegmentTmp.Designation + "; ";
+                    groupsBaliseGroup3.TrackSegmentID = "";
+                    ErrLogger.Log(this.blckProp.GetElemDesignation(BlkBalisGrp, false, true) + " To many Segments found " + str2);
+                    flag = true;
                 }
-                PSA SegPsa = pSAs
-                                             .Where(x => BlkBalisGrp.X >= x.MinX - 1 &&
-                                                         BlkBalisGrp.X <= x.MaxX + 1 &&
-                                                         BlkBalisGrp.Y >= x.MinY - 1 &&
-                                                         BlkBalisGrp.Y <= x.MaxY + 1)
-                                              .FirstOrDefault();
-                if (SegPsa != null)
-                {
-                    baliseGroup.InsidePSA = SegPsa.Name.ToLower();
-                }
-                baliseGroups.Add(baliseGroup);
+                PSA psa = pSAs.Where((Func<PSA, bool>)(x => BlkBalisGrp.X >= x.MinX - 1.0 && BlkBalisGrp.X <= x.MaxX + 1.0 && BlkBalisGrp.Y >= x.MinY - 1.0 && BlkBalisGrp.Y <= x.MaxY + 1.0)).FirstOrDefault();
+                if (psa != null)
+                    groupsBaliseGroup3.InsidePSA = psa.Name.ToLower();
+                baliseGroups.Add(groupsBaliseGroup3);
             }
-            return !error;
+            return !flag;
         }
 
-        /// <summary>
-        /// Reads blocks passenger-staff crossings
-        /// </summary>
         private bool ReadPWs(List<Block> blocks,
-            ref List<StaffPassengerCrossingsStaffPassengerCrossing> pWss, List<AxleCounterSectionsAxleCounterSection> acsections)
+           ref List<StaffPassengerCrossingsStaffPassengerCrossing> pWss, List<AxleCounterSectionsAxleCounterSection> acsections)
         {
             bool error = false;
             List<Block> BlkSxs = blocks
@@ -3584,7 +3032,7 @@ namespace ExpPt1
                             }
                             foreach (var act in ActivOnSeg)
                             {
-                                foreach(var pwsAct in act.ActivationDelays.ActivationDelay)
+                                foreach (var pwsAct in act.ActivationDelays.ActivationDelay)
                                 {
                                     if (pwsAct.ActivationDelayTime == 1)
                                     {
@@ -3602,7 +3050,7 @@ namespace ExpPt1
                                     MaxLineSpeedAtActivationSection = act.MaxLineSpeedAtActivationSection,
                                     MaxLineSpeedAtActivationSectionSpecified = act.MaxLineSpeedAtActivationSectionSpecified,
                                     RouteChain = act.RouteChain
-                                });                               
+                                });
                             }
                         }
                         string TrackDesign = "";
@@ -3644,19 +3092,20 @@ namespace ExpPt1
                             {
                                 ActivationSection = activationSections.ToArray()
                             },
-                           
+
                             SpeedIfUnprotectedUp = ifUp,
                             SpeedIfUnprotectedUpSpecified = ifUpSpec,
                             SpeedIfUnprotectedDown = ifDown,
                             SpeedIfUnprotectedDownSpecified = ifDownSpec,
-                            TSRStartInRearOfAreaUp = tsrStartUp,
-                            TSRStartInRearOfAreaUpSpecified = tsrStartUpSpec,
-                            TSRStartInRearOfAreaDown = tsrStartDown,
-                            TSRStartInRearOfAreaDownSpecified = tsrStartDownSpec,
-                            TSRExtensionBeyondAreaUp = tsrExtUp,
-                            TSRExtensionBeyondAreaUpSpecified = tsrExtUpSpec,
-                            TSRExtensionBeyondAreaDown = tsrExtDown,
-                            TSRExtensionBeyondAreaDownSpecified = tsrExtDownSpec
+                            // not requested by BDK yet
+                            //TSRStartInRearOfAreaUp = tsrStartUp,
+                            //TSRStartInRearOfAreaUpSpecified = tsrStartUpSpec,
+                            //TSRStartInRearOfAreaDown = tsrStartDown,
+                            //TSRStartInRearOfAreaDownSpecified = tsrStartDownSpec,
+                            //TSRExtensionBeyondAreaUp = tsrExtUp,
+                            //TSRExtensionBeyondAreaUpSpecified = tsrExtUpSpec,
+                            //TSRExtensionBeyondAreaDown = tsrExtDown,
+                            //TSRExtensionBeyondAreaDownSpecified = tsrExtDownSpec
                         };
                         decimal endLca = 0;
                         if (tmpSegments.Count > 1)
@@ -3693,7 +3142,7 @@ namespace ExpPt1
                                 ErrLogger.Log(blckProp.GetElemDesignation(BlkPws, true, false) + ": beginLca+lengthLca not equal to endLca " + pwsTrack.Designation);
                                 error = true;
                             }
-                            pwsTrack.LengthSPCA = length; 
+                            pwsTrack.LengthSPCA = length;
                         }
                         else
                         {
@@ -3718,7 +3167,7 @@ namespace ExpPt1
                             }
                             pwsTrack.BeginSPCA = string.Format("{0:0.000}", beginLca);
 
-                            if (!decimal.TryParse(BlkPws.Attributes["LENGTH_1"].Value.Replace(',','.'), out decimal length))
+                            if (!decimal.TryParse(BlkPws.Attributes["LENGTH_1"].Value.Replace(',', '.'), out decimal length))
                             {
                                 error = true;
                                 ErrLogger.Log(staffPassengerCrossing.Designation + ": Unable to parse 'LENGTH_1' attribute to decimal");
@@ -3729,7 +3178,7 @@ namespace ExpPt1
                                 ErrLogger.Log(blckProp.GetElemDesignation(BlkPws, true, false) + ": beginLca+lengthLca not equal to endLca " + pwsTrack.Designation);
                                 error = true;
                             }
-                            pwsTrack.LengthSPCA = length; 
+                            pwsTrack.LengthSPCA = length;
                         }
                         if (!decimal.TryParse(BlkPws.Attributes["KMP"].Value, out decimal location))
                         {
@@ -3909,14 +3358,15 @@ namespace ExpPt1
                                 SpeedIfUnprotectedUpSpecified = ifUpSpec,
                                 SpeedIfUnprotectedDown = ifDown,
                                 SpeedIfUnprotectedDownSpecified = ifDownSpec,
-                                TSRStartInRearOfAreaUp = tsrStartUp,
-                                TSRStartInRearOfAreaUpSpecified = tsrStartUpSpec,
-                                TSRStartInRearOfAreaDown = tsrStartDown,
-                                TSRStartInRearOfAreaDownSpecified = tsrStartDownSpec,
-                                TSRExtensionBeyondAreaUp = tsrExtUp,
-                                TSRExtensionBeyondAreaUpSpecified = tsrExtUpSpec,
-                                TSRExtensionBeyondAreaDown = tsrExtDown,
-                                TSRExtensionBeyondAreaDownSpecified = tsrExtDownSpec
+                                // not requested by BDK yet
+                                //TSRStartInRearOfAreaUp = tsrStartUp,
+                                //TSRStartInRearOfAreaUpSpecified = tsrStartUpSpec,
+                                //TSRStartInRearOfAreaDown = tsrStartDown,
+                                //TSRStartInRearOfAreaDownSpecified = tsrStartDownSpec,
+                                //TSRExtensionBeyondAreaUp = tsrExtUp,
+                                //TSRExtensionBeyondAreaUpSpecified = tsrExtUpSpec,
+                                //TSRExtensionBeyondAreaDown = tsrExtDown,
+                                //TSRExtensionBeyondAreaDownSpecified = tsrExtDownSpec
                             };
                         decimal length = 0;
                         decimal endLca = 0;
@@ -4017,11 +3467,6 @@ namespace ExpPt1
             return !error;
         }
 
-
-
-        /// <summary>
-        /// Reads blocks of level crossings
-        /// </summary>
         private bool ReadLxs(List<Block> blocks,
             ref List<LevelCrossingsLevelCrossing> crossings, List<AxleCounterSectionsAxleCounterSection> acsections,
                 List<SpeedProfilesSpeedProfile> speedProfiles)
@@ -4058,7 +3503,7 @@ namespace ExpPt1
                     error = true;
                 }
 
-                
+
                 LevelCrossingsLevelCrossing crossing =
                     new LevelCrossingsLevelCrossing
                     {
@@ -4129,7 +3574,7 @@ namespace ExpPt1
 
                             }
                         }
-                        
+
                         string TrackDesign = "";
                         if (tmpSegments.Count == 1)
                         {
@@ -4205,7 +3650,7 @@ namespace ExpPt1
                                 error = true;
                             }
                             crossingTrack.BeginLCA =
-                                string.Format("{0:0.000}", beginLca);                         
+                                string.Format("{0:0.000}", beginLca);
 
                             Attribute LcaLenght = BlkLx.Attributes
                                 .Select(x => x.Value)
@@ -4213,7 +3658,7 @@ namespace ExpPt1
                                 .FirstOrDefault();
                             if (LcaLenght != null)
                             {
-                                if(!decimal.TryParse(LcaLenght.Value.Replace(',','.'), out lengthLca))
+                                if (!decimal.TryParse(LcaLenght.Value.Replace(',', '.'), out lengthLca))
                                 {
                                     ErrLogger.Log("Unable to parse LENGHT_LCA_TSEG" + trksegcount.ToString() + " " + blckProp.GetElemDesignation(BlkLx, true, false));
                                     error = true;
@@ -4303,7 +3748,7 @@ namespace ExpPt1
                     {
                         string remark = string.Join(" ", LxsActivations[BlkLx.Attributes["NAME"].Value].Remarks.ToArray());
                         crossing.Remarks = string.IsNullOrEmpty(remark) ? null : remark;
-                    }             
+                    }
                 }
                 else
                 {
@@ -4572,25 +4017,8 @@ namespace ExpPt1
             return !error;
         }
 
-        static async Task<int> GetLxActsAsync(string stationId, string DwgName)
-        {
-            ReadExcel.Excel excel = new ReadExcel.Excel(stationId);
-            await Task.Run(() =>
-            {
-                for (int i = 0; i < 1000000; i++)
-                {
-                    
-                }
-            });
-            //await Task.Run(() => for (int j = 0; j < 1000000; j++) { }; ); // excel.LoopLxActivations(DwgName)
-            return 1;
-        }
-
-        /// <summary>
-        /// Reads emergency stops data
-        /// </summary>
         private void ReadEms(List<Block> blocks,
-            ref List<EmergencyStopGroupsEmergencyStopGroup> emergencystopgroups, List<EmSG> emSGs)
+             ref List<EmergencyStopGroupsEmergencyStopGroup> emergencystopgroups, List<EmSG> emSGs)
         {
             if (!checkData["checkBoxEmSt"])
             {
@@ -4659,111 +4087,23 @@ namespace ExpPt1
             }
         }
 
-        /// <summary>
-        /// Reads speed profile data
-        /// </summary>
-        private bool ReadSps(List<Block> blocks,
-            ref List<SpeedProfilesSpeedProfile> speedprofiles)
+        private bool ReadSps(List<Block> blocks, ref List<SpeedProfilesSpeedProfile> speedprofiles)
         {
             bool error = false;
-            if (!checkData["checkBoxSpProf"])
+            if (!this.checkData["checkBoxSpProf"])
             {
                 Logger.Log("Speed profiles data skipped");
                 return !error;
             }
-
-            TFileDescr document =
-                new TFileDescr();
-
-            speedprofiles =
-                excel.SpeedProfiles(loadFiles["lblxlsSpProf"], ref document, stationID, ref error);
-            Documents.Add(document);
-            //foreach (ReadExcel.SpeedProfile SpProf in SpeedProfiles)
-            //{
-            //    List<SpeedProfilesSpeedProfileTrainTypesTrainTyp> typesTrainTyps =
-            //        new List<SpeedProfilesSpeedProfileTrainTypesTrainTyp>();
-            //    object item = null; //= new SpeedProfilesSpeedProfileTrainTypesTrainTypTrainCategory
-            //                        //{
-            //                        //    CategoryType = (KindOfTrainCategory)SpProf.TrainCat,
-            //                        //    ReplaceCDAndBasicLimit = YesNoType.no
-            //                        //};
-
-
-            //    if (SpProf.TrainCat != null)
-            //    {
-            //        item = new SpeedProfilesSpeedProfileTrainTypesTrainTypTrainCategory
-            //        {
-            //            CategoryType = (KindOfTrainCategory)SpProf.TrainCat,
-            //            ReplaceCDAndBasicLimit = YesNoType.no
-            //        };
-            //    }
-
-            //    if (SpProf.CD != null)
-            //    {
-            //        item = SpProf.CD;
-            //    }
-
-            //    if (SpProf.CD != null)
-            //    {
-            //        typesTrainTyps.Add(new SpeedProfilesSpeedProfileTrainTypesTrainTyp
-            //        {
-            //            SpeedLimit = Convert.ToDecimal(SpProf.TrackSegments[0].SpeedLimit),
-            //            Item = item
-            //        });
-            //    }
-
-            //    if (SpProf.AxLoad != null)
-            //    {
-            //        typesTrainTyps.Add(new SpeedProfilesSpeedProfileTrainTypesTrainTyp
-            //        {
-            //            SpeedLimit = Convert.ToDecimal(SpProf.AxLoad),
-            //            Item = "C2"
-            //        });
-            //    }
-            //    foreach (var seg in SpProf.TrackSegments)
-            //    {
-            //        if (!TrackSegmentsTmp.Any(x => x.Designation == seg.TrckSg))
-            //        {
-            //            Logger.Log("Track Segment '" + seg.TrckSg + "' doesn't exist: Speed Profile " + SpProf.Designation);
-            //        }
-            //    }
-            //    SpeedProfilesSpeedProfile speedProfile = new SpeedProfilesSpeedProfile
-            //    {
-            //        Designation = SpProf.Designation,
-            //        SpeedMax = Convert.ToDecimal(SpProf.TrackSegments[0].SpeedMax),
-            //        DirectionAll = SpProf.TrackSegments[0].Direction,
-            //        TrainTypes = typesTrainTyps.Count == 0 ? null :
-            //        new SpeedProfilesSpeedProfileTrainTypes { TrainTyp = typesTrainTyps.ToArray() },
-            //        Remarks = SpProf.TrackSegments[0].Remarks.Count() > 3 ? SpProf.TrackSegments[0].Remarks : null
-            //    };
-            //    List<TrackSegmentType> trackSegmentType = SpProf.TrackSegments.Select(x => new TrackSegmentType
-            //    {
-            //        OperationalKM1 = x.Okm1,
-            //        OperationalKM2 = x.Okm2,
-            //        Value = x.TrckSg
-            //    }).ToList();
-
-            //    speedProfile.TrackSegments = new SpeedProfilesSpeedProfileTrackSegments
-            //    {
-            //        TrackSegment = trackSegmentType.ToArray()
-            //    };
-            //    speedprofiles.Add(speedProfile);
-            //}
-            
+            TFileDescr document = new TFileDescr();
+            speedprofiles = this.excel.SpeedProfiles(this.loadFiles["lblxlsSpProf"], ref document, this.stationID, ref error);
+            this.Documents.Add(document);
             return !error;
         }
 
-        /// <summary>
-        /// Reads routes data
-        /// </summary>
-        /// <param name="blocks"></param>
-        /// <param name="routes"></param>
-        /// <param name="acsections"></param>
-        /// <param name="tsections"></param>
-        /// <returns></returns>
         private bool ReadRoutes(List<Block> blocks,
-            ref List<RoutesRoute> routes, List<AxleCounterSectionsAxleCounterSection> acsections,
-            List<TrackSectionsTrackSection> tsections)
+             ref List<RoutesRoute> routes, List<AxleCounterSectionsAxleCounterSection> acsections,
+             List<TrackSectionsTrackSection> tsections)
         {
             bool error = false;
             if (!checkData["checkBoxRts"])
@@ -4796,7 +4136,7 @@ namespace ExpPt1
                     Destination = route.Dest,
                     Default = route.Default,
                     SdLastElementID = route.SdLast,
-                    SafetyDistance = route.SafeDist.ToLower() == "integrated" ? null : route.SafeDist,
+                    SafetyDistance = route.SafeDist ?? null,
                 };
                 List<RoutesRouteStartAreaGroupStartArea> areas = new List<RoutesRouteStartAreaGroupStartArea>();
                 route.StartAreas.Sort();
@@ -4865,51 +4205,42 @@ namespace ExpPt1
                         ActivateCrossingElement = crossingElements.ToArray()
                     };
                 }
-                List<RoutesRoutePointGroupPoint> groupPoints = null;
-                if (route.Points != null && route.Points.Count() != 0)
-                {
-                    groupPoints = new List<RoutesRoutePointGroupPoint>();
-                    foreach (ReadExcel.XlsPoint point in route.Points.Where(x => x.Designation != null))
-                    {
-                        groupPoints.Add(new RoutesRoutePointGroupPoint
-                        {
-                            Value = blckProp.GetElemDesignation(blocks
-                                                       .Where(x => x.XsdName == "Point" &&
-                                                              x.Attributes["NAME"].Value == point.Designation)
-                                                       .FirstOrDefault()),
-                            RequiredPosition = point.ReqPosition
-                        });
-                    }
-                }
+
+                List<RoutesRoutePointGroupPoint> groupPoints = new List<RoutesRoutePointGroupPoint>();
                 if (route.PointsGrps.Count() != 0)
                 {
-                    if (groupPoints == null)
+                    foreach (ReadExcel.XlsPoint xlsPoint in route.PointsGrps.Where(x => x.Designation != null))
                     {
-                        groupPoints = new List<RoutesRoutePointGroupPoint>();
-                    }
-                    List<ReadExcel.XlsPoint> grpPoints = route.PointsGrps
-                                .Where(p => !route.PointsGrps.Any(p2 => p2.Designation == p.Designation))
-                                .ToList();
-                    foreach (ReadExcel.XlsPoint point in grpPoints)
-                    {
-                        groupPoints.Add(new RoutesRoutePointGroupPoint
+                        ReadExcel.XlsPoint point = xlsPoint;
+                        Block pointBlk = blocks
+                                         .Where(x => x.XsdName == "Point" &&
+                                                     x.Attributes["NAME"].Value == point.Designation)
+                                         .FirstOrDefault();
+                        string pointDesignation = point.Designation;
+                        if (pointBlk != null)
                         {
-                            Value = blckProp.GetElemDesignation(blocks
-                                                       .Where(x => x.XsdName == "Point" &&
-                                                              x.Attributes["NAME"].Value == point.Designation)
-                                                       .FirstOrDefault()),
+                            pointDesignation = this.blckProp.GetElemDesignation(pointBlk, false, true);
+                        }
+                        else
+                        {
+                            ErrLogger.Log("Route '" + Route.Designation +
+                                "' - point '" + point.Designation + "' not found in points");
+                            ErrLogger.error = true;
+                        }
+                        groupPoints.Add(new RoutesRoutePointGroupPoint()
+                        {
+                            Value = pointDesignation,
                             RequiredPosition = point.ReqPosition
                         });
                     }
                 }
                 if (groupPoints != null && groupPoints.Count > 0)
-                {
-                    Route.PointGroup = new RoutesRoutePointGroup { Point = groupPoints.ToArray() };
-                }
+                    Route.PointGroup = new RoutesRoutePointGroup()
+                    {
+                        Point = groupPoints.ToArray()
+                    };
                 else
-                {
-                    Route.PointGroup = null;
-                }
+                    Route.PointGroup = (RoutesRoutePointGroup)null;
                 routes.Add(Route);
             }
             List<RoutesRoute> dubplicatesRoutes = routes.GroupBy(s => s.Designation)
@@ -4933,77 +4264,7 @@ namespace ExpPt1
             return !error;
         }
 
-        /// <summary>
-        /// Reads compound routes data
-        /// </summary>
-        private bool ReadCRoutes(List<Block> blocks,
-            ref List<CompoundRoutesCompoundRoute> cmproutes, List<SignalsSignal> signals, List<RoutesRoute> routes)
-        {
-            bool error = false;
-            //List<Block> startMbs = blocks.Where(x => x.Start_Cr).ToList();
-            //Dictionary<string, string> checkRoutes = new Dictionary<string, string>();
-            //foreach (Block startMb in startMbs)
-            //{
-            //    SignalsSignal startSig = signals.Where(x => x.Designation == startMb.Designation).SingleOrDefault();
-            //    List<Block> destMbs = blocks.Where(x => x.Dest_Cr && x.Location > startMb.Location).ToList();
-            //    List<SignalsSignal> destSignals = signals
-            //                                      .Where(x => destMbs.Select(d => d.Designation).Contains(x.Designation) &&
-            //                                                  x.Direction == startSig.Direction)
-            //                                                  .OrderBy(x => x.Location)
-            //                                                  .ToList();
-            //    foreach (SignalsSignal destSig in destSignals)
-            //    {
-            //        cmproutes.AddRange(GetCompRoutes(startSig, destSig, routes, signals, ref checkRoutes, ref error));
-            //    }
-            //}
 
-            if (!checkData["checkBoxCmRts"])
-            {
-                Logger.Log("Compound Routes data skipped");
-                return true;
-            }
-
-            TFileDescr document =
-               new TFileDescr();
-            List<ReadExcel.XlsCmpRoute> xlsCmpRoutes =
-                excel.CompoundRoutes(loadFiles["lblxlsCmpRoutes"], ref document);
-            if (xlsCmpRoutes == null || xlsCmpRoutes.Count == 0)
-            {
-                return false;
-            }
-            Documents.Add(document);
-            foreach (ReadExcel.XlsCmpRoute cmpxlsroute in xlsCmpRoutes)
-            {
-
-                List<CompoundRoutesCompoundRouteRouteIDsRouteID> rtIds =
-                    new List<CompoundRoutesCompoundRouteRouteIDsRouteID>();
-                foreach (string rtId in cmpxlsroute.Routes)
-                {
-                    rtIds.Add(new CompoundRoutesCompoundRouteRouteIDsRouteID
-                    {
-                        Value = rtId
-                    });
-                }
-                CompoundRoutesCompoundRoute cmproute = new CompoundRoutesCompoundRoute
-                {
-                    Designation = cmpxlsroute.Designation,
-                    Status = Status,
-                    Start = cmpxlsroute.Start,
-                    Destination = cmpxlsroute.Dest,
-                    Default = YesNoType.yes,
-                    RouteIDs = new CompoundRoutesCompoundRouteRouteIDs
-                    {
-                        RouteID = rtIds.ToArray()
-                    }
-                };
-                cmproutes.Add(cmproute);
-            }
-            return !error;
-        }
-
-        /// <summary>
-        /// Reads blocks of trusted areas
-        /// </summary>
         private bool ReadTrustedAreas(List<Block> blocks,
             ref List<TrustedAreasTrustedArea> trustedAreas, List<TrackLine> trackLines)
         {
@@ -5121,9 +4382,6 @@ namespace ExpPt1
             return !error;
         }
 
-        /// <summary>
-        /// Reads blocks of platforms
-        /// </summary>
         private bool ReadPlatforms(List<Block> blocks,
            ref List<PlatformsPlatform> platforms)
         {
@@ -5158,12 +4416,12 @@ namespace ExpPt1
                 {
                     if (plCount > 1)
                     {
-                        a = a + a1++;
+                        a += a1++;
                     }
-                    platforms.Add(PlatformsCalc(Blkplatform,ref errors, a));
+                    platforms.Add(PlatformsCalc(Blkplatform, ref errors, a));
                 }
             }
-                       
+
             //var duplPlatfs = platforms.GroupBy(x => x.Designation)
             //  .Where(g => g.Count() > 1)
             //  .SelectMany(y => y)
@@ -5177,7 +4435,7 @@ namespace ExpPt1
             return !errors;
         }
 
-        private PlatformsPlatform PlatformsCalc(Block Blkplatform,  ref bool errors, string a)
+        private PlatformsPlatform PlatformsCalc(Block Blkplatform, ref bool errors, string a)
         {
             List<Platform> platformsFromFile = ReadPlatforms(Blkplatform.StName);
             List<TrackSegmentTmp> trackSegments = TrackSegmentsTmp
@@ -5310,15 +4568,23 @@ namespace ExpPt1
                 //Regex.Replace(Blkplatform.Attributes["PLATFORM_1"].Value, "[^0-9]", ""),
                 Designation = "pr-" + Blkplatform.StId + "-" + Blkplatform.PlatformTrack.ToString() + a, //.Replace("0",""),
                 Status = Status,
-                TrainRunningDirection =
-                    (UpDownBothType)Enum.Parse(typeof(UpDownBothType),
-                        Blkplatform.Attributes["DIRECTION_PLAT"].Value),
                 TrackSegments = new PlatformsPlatformTrackSegments
                 {
                     TrackSegment = segmentTypes.ToArray()
                 },
-                Remarks = "Extracted from SL. Not found in 'Banedanmarks Netredegørelse 2018 Bilag 3.6A Perronlængder og - højder'"
+                Remarks = "Default Platform Height. Not found in 'Banedanmarks Netredegørelse 2018 Bilag 3.6A Perronlængder og - højder'"
             };
+
+            UpDownBothType direction;
+            if (Enum.TryParse(Blkplatform.Attributes["DIRECTION_PLAT"].Value, out direction))
+            {
+                platformsPlatform.TrainRunningDirection = direction;
+            }
+            else
+            {
+                errors = true;
+                ErrLogger.Log("Platform: " + platformsPlatform.Designation + "Cannot parse direction from attributes");
+            }
 
             if (Enum.TryParse(Blkplatform.Attributes["POSITION_PLAT"].Value,
                           out LeftRightType ParsePosition))
@@ -5351,13 +4617,6 @@ namespace ExpPt1
             return platformsPlatform;
         }
 
-        /// <summary>
-        /// Reads blocks of permanent shunting areas
-        /// </summary>
-        /// <param name="blocks"></param>
-        /// <param name="pSAs"></param>
-        /// <param name="areas"></param>
-        /// <returns></returns>
         private bool ReadPSAs(List<Block> blocks, List<PSA> pSAs,
            ref List<PermanentShuntingAreasPermanentShuntingArea> areas)
         {
@@ -5416,9 +4675,8 @@ namespace ExpPt1
             return !errors;
         }
 
-
         private bool ReadBlockinterfaces(List<Block> blocks,
-           ref List<BlockInterfacesBlockInterface> blockInterfaces)
+          ref List<BlockInterfacesBlockInterface> blockInterfaces)
         {
             bool errors = false;
             List<Block> BlkBis = blocks
@@ -5443,11 +4701,7 @@ namespace ExpPt1
             }
             return !errors;
         }
-        /// <summary>
-        /// Gets PlatformHeightType Enum
-        /// </summary>
-        /// <param name="number"></param>
-        /// <returns></returns>
+
         private PlatformHeightType PlatformHeight(int number)
         {
             List<int> list = new List<int>
@@ -5521,15 +4775,12 @@ namespace ExpPt1
             return cross;
         }
 
-        /// <summary>
-        /// Gets signal direction from block geometry.
-        /// </summary>
         private LeftRightOthersType GetSignalTrackPosition(Block BlkSignal, ref bool error)
         {
             List<Line> lines = GetBlockLines(BlkSignal);
             Point2d cross = GetBlockCross(BlkSignal);
             Point2d fromTrackY = new Point2d(0, 0);
-            fromTrackY = GetMiddlPoint2d(lines.Where(x => x.Length > 5 && 
+            fromTrackY = GetMiddlPoint2d(lines.Where(x => x.Length > 5 &&
                                                 (x.StartPoint.X != cross.X) &&
                                                 (x.StartPoint.Y != cross.Y) &&
                                                 (x.EndPoint.X != cross.X) &&
@@ -5541,8 +4792,8 @@ namespace ExpPt1
             if (BlkSignal.Attributes.ContainsKey("EOTMB") && BlkSignal.Attributes["EOTMB"].Value.Equals("yes"))
             {
                 return LeftRightOthersType.others;
-            }   
-            else if ((fromTrackY.Y > cross.Y && fromTrackY.X > cross.X) || 
+            }
+            else if ((fromTrackY.Y > cross.Y && fromTrackY.X > cross.X) ||
                      (fromTrackY.Y < cross.Y && fromTrackY.X < cross.X))
             {
                 return LeftRightOthersType.left;
@@ -5557,14 +4808,14 @@ namespace ExpPt1
                 ErrLogger.Log("Unable to find track position of signal " + blckProp.GetElemDesignation(BlkSignal));
                 error = true;
             }
-            
+
             return LeftRightOthersType.others;
         }
 
         private DirectionType GetSignalDirection(Block BlkSignal, ref bool error)
         {
             DirectionType sigDir;
-            
+
             List<Line> lines = GetBlockLines(BlkSignal);
             Point2d cross = GetBlockCross(BlkSignal);
 
@@ -5619,12 +4870,9 @@ namespace ExpPt1
             return sigDir;
         }
 
-        /// <summary>
-        /// Gets danger point related to mb.
-        /// </summary>
         private void GetDangerPoint(Block BlkSignal, ref SignalsSignal signal,
-                                    List<Block> blocks, List<ReadExcel.XlsRoute> routes, ref bool error,
-                                    ref List<string> overPts, ref Block blockTdt)
+                                     List<Block> blocks, List<ReadExcel.XlsRoute> routes, ref bool error,
+                                     ref List<string> overPts, ref Block blockTdt)
         {
             if (signal.TrackPosition == LeftRightOthersType.others)
             {
@@ -5768,7 +5016,7 @@ namespace ExpPt1
                                     if (nextSegment.Vertex2.Designation.Contains(overpt.Split('-').First()))
                                     {
                                         TmpNextSegment = TrackSegmentsTmp
-                                                 .Where(x => x.Vertex1 == nextSegment.Vertex2 )
+                                                 .Where(x => x.Vertex1 == nextSegment.Vertex2)
                                                  .FirstOrDefault();
                                         VertexType overPtVertex = trcksegments
                                                                   .Where(x => x.Vertex2.vertexID == nextSegment.Vertex2.Designation &&
@@ -5887,17 +5135,8 @@ namespace ExpPt1
             }
         }
 
-        /// <summary>
-        /// Finds next axle counter(danger point) for Signal
-        /// </summary>
-        /// <param name="Ac"></param>
-        /// <param name="signal"></param>
-        /// <param name="startSeg"></param>
-        /// <param name="blocks"></param>
-        /// <param name="blockTdt"></param>
-        /// <returns></returns>
         private bool FindNextAc(ref Block Ac, SignalsSignal signal,
-                                TrackSegmentTmp startSeg, List<Block> blocks, Block blockTdt = null)
+                                 TrackSegmentTmp startSeg, List<Block> blocks, Block blockTdt = null)
         {
             List<Block> tmpDps = null;
             Block AcLast = null;
@@ -6181,8 +5420,8 @@ namespace ExpPt1
                                   .FirstOrDefault();
                         }
                         //List<TrackSegmentTmp> test = TrackSegmentsTmp
-                                 //.Where(x => x.Vertex2 == NextTmp.Vertex1)
-                                 //.ToList();
+                        //.Where(x => x.Vertex2 == NextTmp.Vertex1)
+                        //.ToList();
                         if (NextSeg != null)
                         {
                             if (NextSeg.Vertex2.XsdName == "Point")
@@ -6220,7 +5459,7 @@ namespace ExpPt1
                                 }
                                 else
                                 {
-                                    
+
                                     if (TrackSegmentsTmp.Where(x => x.Vertex2 == NextTmp.Vertex1).Count() < 2)
                                     {
                                         ErrLogger.Log("Cannot find CES Bg for " + signal.Designation);
@@ -6239,7 +5478,7 @@ namespace ExpPt1
                                                 .FirstOrDefault();
                                         }
                                     }
-                                    
+
                                     NextSeg = TrackSegmentsTmp
                                               .Where(x => x.Vertex2 == NextTmp.Vertex1)
                                               .ElementAt(1);
@@ -6415,7 +5654,7 @@ namespace ExpPt1
             string nameBg = "not found";
             List<Block> Connectors = new List<Block>();
             List<string> closConns = new List<string>();
-            
+
             //if (Ac == null)
             //{
             //    ErrLogger.Log("Cannot find CES Ac for " + signal.Designation);
@@ -6453,7 +5692,7 @@ namespace ExpPt1
             }
             else
             {
-                
+
                 Connectors = tmpSegmentsBg
                     .SelectMany(y => y.BlocksOnSegments)
                     .Where(y => y.XsdName == "Connector" &&
@@ -6486,17 +5725,17 @@ namespace ExpPt1
                 nameBg = Bg.Attributes["NAME"].Value;
             }
             string connects = string.Join(",", closConns);
-            
+
             //decimal kmSig = Math.Round(signal.Location * 1000, 0);
-            
+
             ExportCigClosure.Add(BlkSignal.Attributes["NAME"].Value + "\t" +
                                  Math.Round(signal.Location * 1000, 0) + "\t" +
                                  nameBg + "\t" +
                                  kmBg + "\t" +
                                  nameAc + "\t" +
-                                 kmAc + '\t'+
+                                 kmAc + '\t' +
                                  connects);
-            
+
             //decimal kmBgToAc = 0;
             //decimal kmMbToAc = 0;
             //if (kmAc > 0)
@@ -6534,10 +5773,7 @@ namespace ExpPt1
             //}
         }
 
-        /// <summary>
-        /// Gets Track Segments.
-        /// </summary>
-        private bool GetSegments(List<Block> blocks, List<TrackLine> trackslines,
+        protected bool GetSegments(List<Block> blocks, List<TrackLine> trackslines,
             List<Track> tracks, List<PSA> pSAs, bool skipLevels = false)
         {
             bool error = false;
@@ -6723,8 +5959,7 @@ namespace ExpPt1
                             lineId = Vertex1.LineID
                         });
 
-                        if (!(Vertex1.IsOnCurrentArea == false && Vertex2.IsOnCurrentArea == false) &&
-                            !(Vertex1.IsOnNextStation == true || Vertex2.IsOnNextStation == true))
+                        if (!(Vertex1.IsOnNextStation == true || Vertex2.IsOnNextStation == true))
                         {
 
                             TrackSegmentsTrackSegment trcksegement = new TrackSegmentsTrackSegment
@@ -6763,7 +5998,7 @@ namespace ExpPt1
                             string Okm2 = "";
                             if (Vertex1.XsdName == "Connector" && Vertex1.Location != Vertex1.Location2)
                             {
-                                Okm1 =  Vertex1.Location.ToString() + "," + Vertex1.Location2.ToString();
+                                Okm1 = Vertex1.Location.ToString() + "," + Vertex1.Location2.ToString();
                             }
                             else
                             {
@@ -6777,7 +6012,7 @@ namespace ExpPt1
                             {
                                 Okm2 = Vertex2.Location.ToString();
                             }
-                            ExportList.Add(trcksegement.Designation + "\t" + Okm1 + "\t" + Okm2);
+                            //ExportList.Add(trcksegement.Designation + "\t" + Okm1 + "\t" + Okm2);
                         }
 
                         if (Vertex2.XsdName == "EndOfTrack")
@@ -6808,10 +6043,6 @@ namespace ExpPt1
             return !error;
         }
 
-        /// <summary>
-        /// Calculates track segments levels.
-        /// </summary>
-        /// <returns></returns>
         private bool CalcTrackSegsLevels()
         {
             //var tst = TrackSegmentsTmp
@@ -6904,9 +6135,6 @@ namespace ExpPt1
             return true;
         }
 
-        /// <summary>
-        /// Checks two objects intersections.
-        /// </summary>
         private bool ObjectsIntersects(Entity Ent1, Entity Ent2, Intersect intersect, bool checkWholeBlock = false)
         {
             Point3dCollection intersections;
@@ -6974,12 +6202,6 @@ namespace ExpPt1
             }
         }
 
-        /// <summary>
-        /// Checks two lines have same start/end points.
-        /// </summary>
-        /// <param name="line1"></param>
-        /// <param name="line2"></param>
-        /// <returns></returns>
         private bool LinesHasSamePoint(Line line1, Line line2)
         {
             if (line1.StartPoint.X == line2.StartPoint.X &&
@@ -7005,9 +6227,6 @@ namespace ExpPt1
             return false;
         }
 
-        /// <summary>
-        /// Finds next intersected track line.
-        /// </summary>
         private TrackLine GetNextIntersectedTrackLine(TrackLine branch, List<TrackLine> trackslines)
         {
             List<TrackLine> tmpLines = trackslines
@@ -7033,9 +6252,6 @@ namespace ExpPt1
             return null;
         }
 
-        /// <summary>
-        /// Finds next non-intersected track line (Equation of a Line).
-        /// </summary>
         private TrackLine GetNextNonIntersectedTrackLine(TrackLine branch, List<TrackLine> trackslines)
         {
             TrackLine tmpLine;
@@ -7092,9 +6308,6 @@ namespace ExpPt1
             return null;
         }
 
-        /// <summary>
-        /// Finds blocks belonging to Track Segment.
-        /// </summary>
         private IEnumerable<Block> GetBlocksBelongToTrackSegment(TrackLine line, List<Block> blocks,
                                         double xStartedFrom, double xTo, bool toLineEnd)
         {
@@ -7141,15 +6354,7 @@ namespace ExpPt1
                 if (ObjectsIntersects(line.line, blockRef.BlkRef, Intersect.OnBothOperands))
                 {
                     blockRef.Designation = blckProp.GetElemDesignation(blockRef);
-                    if ((blockRef.Attributes["NAME"].Value.Split('_').Last().Equals("start") ||
-                         blockRef.Attributes["NAME"].Value.Split('_').Last().Equals("end")))
-                    {
-                        blockRef.IsOnCurrentArea = false;
-                    }
-                    else
-                    {
-                        blockRef.IsOnCurrentArea = true;
-                    }
+                    
                     blockRef.LineID = RailwayLines.Where(x => x.color == line.color)
                                                              .Select(y => y.designation)
                                                              .FirstOrDefault();
@@ -7160,9 +6365,6 @@ namespace ExpPt1
 
         }
 
-        /// <summary>
-        /// Finds lines of Trusted Areas belonging to Track Segment.
-        /// </summary>
         private IEnumerable<Line> GetTrustedLinesBelongToTrackSegment(TrackLine line, List<Block> blocks,
                                         double xStartedFrom, double xTo, bool toLineEnd)
         {
@@ -7195,9 +6397,6 @@ namespace ExpPt1
             }
         }
 
-        /// <summary>
-        /// Gets next track segment node(vertex) 
-        /// </summary>
         private Block GetNextNode(List<Block> blocks, List<TrackLine> trackslines,
                                      TrackLine branch, double XstartedFrom, ref Line lastLine,
                                      ref List<Block> blocksOnSegement, ref List<Line> trustLinesOnSegment,
@@ -7306,11 +6505,6 @@ namespace ExpPt1
             return null;
         }
 
-        /// <summary>
-        /// Gets Point's tip line
-        /// </summary>
-        /// <param name="BlkPoint"></param>
-        /// <returns></returns>
         private Line GetPointTipLine(Block BlkPoint)
         {
             DBObjectCollection entset = new DBObjectCollection();
@@ -7970,30 +7164,9 @@ namespace ExpPt1
         }
 
         /// <summary>
-        /// Adds line to logs list.
-        /// </summary>
-        //public void Logger.Log(string Line, string Element)
-        //{
-        //    logs.Add(DateTime.Now + "\tItem: " + Element + "\t" + Line);
-        //}
-
-        public int TestUnit(int a, int b)
-        {
-            return a + b;
-        }
-
-        /// <summary>
-        /// Adds line to errors logs list.
-        /// </summary>
-        //public static void ErrLogger.Log(string Line)
-        //{
-        //    errorslogs.Add(DateTime.Now + "\t" + Line);
-        //}
-
-        /// <summary>
         /// Finds Trusted Areas.
         /// </summary>
-        private bool CollectTrustedAreas(List<Line> TrustedLines, List<TrackLine> trackLines)
+        protected bool CollectTrustedAreas(List<Line> TrustedLines, List<TrackLine> trackLines)
         {
             bool error = false;
             List<Line> SkipLines = new List<Line>();
@@ -8072,12 +7245,9 @@ namespace ExpPt1
             }
         }
 
-        /// <summary>
-        /// Reads blocks config from file.
-        /// </summary>
-        private void ReadBlocksDefinitions()
+        protected void ReadBlocksDefinitions()
         {
-            foreach (string line in File.ReadAllLines(assemblyPath + "//BlkMap.dat")
+            foreach (string line in File.ReadAllLines(assemblyPath + Constants.cfgFolder + "//BlkMap.dat")
                                         .Where(arg => !string.IsNullOrWhiteSpace(arg) &&
                                           arg[0] != '#'))
             {
@@ -8088,13 +7258,10 @@ namespace ExpPt1
             }
         }
 
-        /// <summary>
-        /// Reads lines definitions from file.
-        /// </summary>
         private Dictionary<string, string> ReadLinesDefinitions()
         {
             Dictionary<string, string> LinesDefinitions = new Dictionary<string, string>();
-            foreach (string line in File.ReadAllLines(assemblyPath + "//LinesDef.dat")
+            foreach (string line in File.ReadAllLines(assemblyPath + Constants.cfgFolder + "//LinesDef.dat")
                                         .Where(arg => !string.IsNullOrWhiteSpace(arg)))
             {
                 if (!LinesDefinitions.ContainsKey(line.Split('\t')[0]))
@@ -8105,59 +7272,41 @@ namespace ExpPt1
             return LinesDefinitions;
         }
 
-        /// <summary>
-        /// Reads Platforms from file
-        /// </summary>
-        /// <returns></returns>
         private List<Platform> ReadPlatforms(string Station)
         {
-            List<Platform> Platforms = new List<Platform>();
-
-            Platforms = File.ReadAllLines(assemblyPath + "//Platforms.dat")
-                            .Where(arg => !string.IsNullOrWhiteSpace(arg) &&
-                                          arg[0] != '#' &&
-                                          Station.ToLower() == arg.Split('\t')[1].Trim().ToLower())
-                            .Select(x => new Platform
-                            {
-                                Station = x.Split('\t')[1].Trim(),
-                                Number = Convert.ToInt32(x.Split('\t')[2].Trim()),
-                                Track = Convert.ToInt32(x.Split('\t')[3].Trim()),
-                                Length = Convert.ToInt32(x.Split('\t')[4].Trim()),
-                                Height = Convert.ToInt32(x.Split('\t')[5].Trim()) * 10
-                            })
-                            .ToList();
-            return Platforms;
+            List<Platform> platformList = new List<Platform>();
+            return ((IEnumerable<string>)File.ReadAllLines(this.assemblyPath + Constants.cfgFolder + "//Platforms.dat")).Where((Func<string, bool>)(arg =>
+            {
+                if (string.IsNullOrWhiteSpace(arg) || arg[0] == '#')
+                    return false;
+                return Station.ToLower() == arg.Split('\t')[1].Trim().ToLower();
+            })).Select((Func<string, Platform>)(x => new Platform()
+            {
+                Station = x.Split('\t')[1].Trim(),
+                Number = Convert.ToInt32(x.Split('\t')[2].Trim()),
+                Track = Convert.ToInt32(x.Split('\t')[3].Trim()),
+                Length = Convert.ToInt32(x.Split('\t')[4].Trim()),
+                Height = Convert.ToInt32(x.Split('\t')[5].Trim()) * 10
+            })).ToList();
         }
 
-        /// <summary>
-        /// Reads stations definitions from file.
-        /// </summary>
         private Dictionary<string, string> ReadStations()
         {
-            Dictionary<string, string> LinesDefinitions = new Dictionary<string, string>();
-            foreach (string line in File.ReadAllLines(assemblyPath + "//Stations.dat")
-                                        .Where(arg => !string.IsNullOrWhiteSpace(arg)))
+            Dictionary<string, string> dictionary = new Dictionary<string, string>();
+            foreach (string str in ((IEnumerable<string>)File.ReadAllLines(this.assemblyPath + Constants.cfgFolder + "//Stations.dat")).Where((Func<string, bool>)(arg => !string.IsNullOrWhiteSpace(arg) && arg[0] != '#')))
             {
-                if (!LinesDefinitions.ContainsKey(line.Split('\t')[0]))
-                {
-                    LinesDefinitions.Add(line.Split('\t')[0], line);
-                }
+                if (!dictionary.ContainsKey(str.Split('\t')[0]))
+                    dictionary.Add(str.Split('\t')[0], str);
             }
-            return LinesDefinitions;
+            return dictionary;
         }
 
         private Dictionary<string, string> ReadMainTracks()
         {
-            Dictionary<string, string> LinesDefinitions = new Dictionary<string, string>();
-            LinesDefinitions = File.ReadAllLines(assemblyPath + "//MainTracks.dat")
-                               .ToDictionary(arg => arg.Split('\t')[0], arg => arg.Split('\t')[1]);
-            return LinesDefinitions;
+            Dictionary<string, string> dictionary = new Dictionary<string, string>();
+            return ((IEnumerable<string>)File.ReadAllLines(this.assemblyPath + Constants.cfgFolder + "//MainTracks.dat")).Where((Func<string, bool>)(arg => !string.IsNullOrWhiteSpace(arg) && arg[0] != '#')).ToDictionary((Func<string, string>)(arg => arg.Split('\t')[0]), (Func<string, string>)(arg => arg.Split('\t')[1]));
         }
 
-        /// <summary>
-        /// Gets blocks without segments
-        /// </summary>
-        /// <param name="blocks"></param>
         private bool GetBlocksWithoutSegment(List<Block> blocks)
         {
             bool error = false;
@@ -8179,12 +7328,7 @@ namespace ExpPt1
             return !error;
         }
 
-
-        /// <summary>
-        /// Assign Blocks to neighbor stations
-        /// </summary>
-        /// <param name="blocks"></param>
-        private void SetBlocksNextStations(List<Block> blocks)
+        protected void SetBlocksNextStations(List<Block> blocks)
         {
             List<Block> nextStations = blocks
                                   .Where(x => x.XsdName == "NextStation")
@@ -8208,10 +7352,31 @@ namespace ExpPt1
                 }
             }
         }
-        /// <summary>
-        /// Assign start and destinations of compound routes to signals
-        /// </summary>
-        /// <param name="blocks"></param>
+
+        public void SetBlocksExclude(List<Block> blocks)
+        {
+            List<Block> nextStations = blocks
+                                  .Where(x => x.XsdName == "ExcludeBlock")
+                                  .ToList();
+            foreach (var nextStation in nextStations)
+            {
+                double minX = nextStation.BlkRef.GeometricExtents.MinPoint.X;
+                double maxX = nextStation.BlkRef.GeometricExtents.MaxPoint.X;
+                double minY = nextStation.BlkRef.GeometricExtents.MinPoint.Y;
+                double maxY = nextStation.BlkRef.GeometricExtents.MaxPoint.Y;
+                List<Block> blocksNextSt = blocks
+                                              .Where(x => x.X >= minX &&
+                                                          x.X <= maxX &&
+                                                          x.Y >= minY &&
+                                                          x.Y <= maxY)
+                                              .ToList();
+                foreach (var blk in blocksNextSt)
+                {
+                    blk.IsOnCurrentArea = false;
+                }
+            }
+        }
+
         private void SetSignalsStartDestCompRoutes(List<Block> blocks)
         {
             List<Block> startCr = blocks
@@ -8256,11 +7421,6 @@ namespace ExpPt1
             }
         }
 
-        /// <summary>
-        /// Copies block from file
-        /// </summary>
-        /// <param name="FilePath"></param>
-        /// <param name="BlockName"></param>
         private void CopyBlockFromFile(string FilePath, string BlockName)
 
         {
@@ -8292,13 +7452,6 @@ namespace ExpPt1
             }
         }
 
-        /// <summary>
-        /// Inserts new block definition
-        /// </summary>
-        /// <param name="BlockName"></param>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <returns></returns>
         private ObjectId InsertBlock(string BlockName, double x, double y)
         {
             ObjectId objectId = ObjectId.Null;
@@ -8341,13 +7494,6 @@ namespace ExpPt1
             return objectId;
         }
 
-        /// <summary>
-        /// Gets fouling point location
-        /// </summary>
-        /// <param name="FoulPoint"></param>
-        /// <param name="BlkPoint"></param>
-        /// <param name="branchType"></param>
-        /// <returns></returns>
         private string GetFoulPointLocation(Block FoulPoint, Block BlkPoint,
             ConnectionBranchType branchType)
         {
@@ -8401,11 +7547,6 @@ namespace ExpPt1
             return foulLocation;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="extents3"></param>
-        /// <returns></returns>
         private Point3d GetMiddlPoint3d(Extents3d extents3)
         {
             return extents3.MinPoint +
@@ -8413,92 +7554,12 @@ namespace ExpPt1
                                     (extents3.MinPoint)) * 0.5;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="extents3"></param>
-        /// <returns></returns>
         private Point2d GetMiddlPoint2d(Extents3d extents3)
         {
             Point3d point3 = extents3.MinPoint +
                                     (extents3.MaxPoint -
                                     (extents3.MinPoint)) * 0.5;
             return new Point2d(point3.X, point3.Y);
-        }
-
-        private List<Block> GetDpsOfAC(Block Ac, List<TrackLine> trackLines, List<Block> blocks)
-        {
-            List<Block> Dps = new List<Block>();
-            Point2d AcCenter = GetMiddlPoint2d(Ac.BlkRef.GeometricExtents);
-            Point2d upLeft = new Point2d(AcCenter.X - 5, AcCenter.Y + 5);
-            Point2d downRight = new Point2d(AcCenter.X + 5, AcCenter.Y - 5);
-            TrackLine lineRight = trackLines.Where(x => x.line.GeometricExtents.MinPoint.X >= upLeft.X &&
-                                             x.line.GeometricExtents.MinPoint.X <= downRight.X &&
-                                             x.line.GeometricExtents.MinPoint.Y <= upLeft.Y &&
-                                             x.line.GeometricExtents.MinPoint.Y >= downRight.Y &&
-                                             x.line.GeometricExtents.MaxPoint.X > AcCenter.X)
-                                             .OrderBy(x => x.line.GeometricExtents.MinPoint.X)
-                                             .FirstOrDefault();
-            TrackLine lineLeft = trackLines.Where(x => x.line.GeometricExtents.MaxPoint.X >= upLeft.X &&
-                                            x.line.GeometricExtents.MaxPoint.X <= downRight.X &&
-                                            x.line.GeometricExtents.MaxPoint.Y <= upLeft.Y &&
-                                            x.line.GeometricExtents.MaxPoint.Y >= downRight.Y &&
-                                            x.line.GeometricExtents.MaxPoint.X < AcCenter.X)
-                                            .OrderBy(x => x.line.GeometricExtents.MinPoint.X)
-                                            .FirstOrDefault();
-            if (lineLeft == null || lineRight == null)
-            {
-                ErrLogger.Log("Ac Section '" + blckProp.GetElemDesignation(Ac) + "'. Unable to find Dps");
-                return Dps;
-            }
-            Block VertexRight, VertexLeft;
-            TrackSegmentTmp segmentRight, segmentLeft;
-            if (lineRight.direction == DirectionType.up)
-            {
-                segmentRight = TrackSegmentsTmp
-                          .Where(x => x.TrackLines.Any(l => l == lineRight.line)) //&& x.Vertex1.X > AcCenter.X)
-                          .OrderBy(x => x.Vertex1.Location)
-                          .FirstOrDefault();
-                VertexRight = segmentRight.Vertex2;
-            }
-            else
-            {
-                segmentRight = TrackSegmentsTmp
-                          .Where(x => x.TrackLines.Any(l => l == lineRight.line)) //&& x.Vertex1.X > AcCenter.X)
-                          .OrderByDescending(x => x.Vertex1.Location)
-                          .FirstOrDefault();
-                VertexRight = segmentRight.Vertex1;
-            }
-
-            if (lineLeft.direction == DirectionType.up)
-            {
-                segmentLeft = TrackSegmentsTmp
-                          .Where(x => x.TrackLines.Any(l => l == lineLeft.line)) //&& x.Vertex1.X > AcCenter.X)
-                          .OrderByDescending(x => x.Vertex1.Location)
-                          .FirstOrDefault();
-                VertexLeft = segmentRight.Vertex1;
-            }
-            else
-            {
-                segmentLeft = TrackSegmentsTmp
-                          .Where(x => x.TrackLines.Any(l => l == lineLeft.line)) //&& x.Vertex1.X > AcCenter.X)
-                          .OrderBy(x => x.Vertex1.Location)
-                          .FirstOrDefault();
-                VertexLeft = segmentRight.Vertex2;
-            }
-
-            Ac.Location =
-                SetAcSectionLocation(VertexRight, VertexLeft, segmentRight, segmentLeft, lineRight.direction, lineLeft.direction, blocks,
-                                     lineRight, lineLeft);
-            int iterLimit = 0;
-            GetNextDps(VertexRight, LeftRightType.right, lineRight.direction, blocks, segmentRight, Ac.Location, ref Dps, ref iterLimit);
-            iterLimit = 0;
-            GetNextDps(VertexLeft, LeftRightType.left, lineLeft.direction, blocks, segmentLeft, Ac.Location, ref Dps, ref iterLimit);
-
-            //Dps.AddRange(GetNextDps(VertexRight, LeftRightType.right, lineRight.direction, blocks, segmentRight, Ac.Location));
-            //Dps.AddRange(GetNextDps(VertexLeft, LeftRightType.left, lineLeft.direction, blocks, segmentLeft, Ac.Location));
-
-            return Dps;
         }
 
         private bool GetNextDps(Block VertexStart, LeftRightType leftRight, DirectionType direction, List<Block> blocks,
@@ -8716,19 +7777,6 @@ namespace ExpPt1
             return (DP != null);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="VertexRight"></param>
-        /// <param name="VertexLeft"></param>
-        /// <param name="segmentRight"></param>
-        /// <param name="segmentLeft"></param>
-        /// <param name="directionR"></param>
-        /// <param name="directionL"></param>
-        /// <param name="blocks"></param>
-        /// <param name="lineRight"></param>
-        /// <param name="lineLeft"></param>
-        /// <returns></returns>
         private decimal SetAcSectionLocation(Block VertexRight, Block VertexLeft,
                                                 TrackSegmentTmp segmentRight, TrackSegmentTmp segmentLeft,
                                                 DirectionType directionR, DirectionType directionL, List<Block> blocks,
@@ -8882,386 +7930,6 @@ namespace ExpPt1
             return (right.Location + left.Location) / 2;
         }
 
-        /// <summary>
-        /// Calculates compound routes from start to destination
-        /// </summary>
-        /// <param name="startMb"></param>
-        /// <param name="destMb"></param>
-        /// <param name="routes"></param>
-        /// <param name="signals"></param>
-        /// <returns></returns>
-        //private List<CompoundRoutesCompoundRoute> GetCompRoutes(SignalsSignal startMb, SignalsSignal destMb,
-        //                                                        List<RoutesRoute> routes, List<SignalsSignal> signals,
-        //                                                        ref Dictionary<string, string> checkRoutes, ref bool error)
-        //{
-        //    List<CompoundRoutesCompoundRoute> compoundRoutes = new List<CompoundRoutesCompoundRoute>();
-        //    List<SignalsSignal> interSignals = signals
-        //                                       .Where(x => Calc.Between(x.Location, startMb.Location, destMb.Location, true) &&
-        //                                                   x.Direction == startMb.Direction)
-        //                                       .OrderBy(x => x.Location)
-        //                                       .ToList();
-        //    //interSignals.RemoveAt(0);
-        //    List<RoutesRoute> interRoutes = new List<RoutesRoute>();
-        //    string tmpStartMb = startMb.Designation;
-        //    //int rtsCount = 0;
-        //    //while (tmpStartMb != destMb.Designation && rtsCount <= Constants.maxRoutesInCmRoute)
-        //    //{
-        //    foreach (SignalsSignal startSignal in interSignals)
-        //    {
-        //        bool exitForStart = false;
-        //        foreach (SignalsSignal destSignal in interSignals)
-        //        {
-        //            bool exitForDest = false;
-        //            List<RoutesRoute> tmpRoutes = routes
-        //                                    .Where(x => x.Start == startSignal.Designation &&
-        //                                                x.Destination == destSignal.Designation &&
-        //                                                x.Default == YesNoType.yes)
-        //                                    .ToList();
-        //            foreach (var tmpRoute in tmpRoutes)
-        //            {
-        //                if (checkRoutes.ContainsKey(tmpRoute.Designation))
-        //                {
-        //                    continue;
-        //                }
-        //                interRoutes.Add(tmpRoute);
-        //                //rtsCount++;
-
-        //                tmpStartMb = tmpRoute.Destination;
-        //                if (tmpRoutes.Count > 1)
-        //                {
-        //                    checkRoutes.Add(tmpRoute.Designation, tmpRoute.Designation);
-        //                }
-        //                exitForDest = true;
-        //                if (tmpStartMb == destMb.Designation)
-        //                {
-        //                    exitForStart = true;
-        //                }
-        //                break;
-        //            }
-        //            if (exitForDest)
-        //            {
-        //                break;
-        //            }
-        //        }
-        //        if (exitForStart)
-        //        {
-        //            break;
-        //        }
-        //    }
-        //    //}
-
-        //    //interRoutes.RemoveAt(0);
-        //    for (int j = 0; j < interRoutes.Count; j++)
-        //    {
-        //        CompoundRoutesCompoundRoute compoundRoute = new CompoundRoutesCompoundRoute
-        //        {
-        //            Designation = startMb.Designation + "_" + interRoutes[j].Destination,
-        //            Status = Status
-        //        };
-        //        List<CompoundRoutesCompoundRouteRouteIDsRouteID> routesIDs = new List<CompoundRoutesCompoundRouteRouteIDsRouteID>();
-        //        for (int k = 0; k <= j; k++)
-        //        {
-        //            routesIDs.Add(new CompoundRoutesCompoundRouteRouteIDsRouteID { Value = interRoutes[k].Designation });
-        //            if (k > Constants.maxRoutesInCmRoute)
-        //            {
-        //                error = true;
-        //                ErrLogger.Log("Max routes count in compound route reached. CR:'" + compoundRoute.Designation + "'");
-        //                break;
-        //            }
-        //        }
-        //        compoundRoute.RouteIDs = new CompoundRoutesCompoundRouteRouteIDs { RouteID = routesIDs.ToArray() };
-        //        compoundRoutes.Add(compoundRoute);
-        //    }
-        //    return compoundRoutes;
-        //}
-
-        //[CommandMethod("InsertSSp")]
-        //public void InsertSSp()
-        //{
-        //    string file =
-        //        Directory.GetFiles(Path.GetDirectoryName(db.Filename), "*SSP*.xls*").FirstOrDefault();
-        //    if (file == null)
-        //    {
-        //        AcadApp.ShowAlertDialog("Speed profiles table not found!");
-        //        return;
-        //    }
-        //    errorslogs = new List<string>();
-        //    ReadBlocksDefinitions();
-        //    bool Err = false;
-        //    List<Block> Blocks = GetBlocks(ref Err);
-        //    List<bool> err = new List<bool>
-        //    {
-        //        Err
-        //    };
-        //    stationID = GetStationId(Blocks);
-        //    TracksLines = GetTracksLines();
-        //    blckProp = new BlockProperties(stationID);
-        //    List<Line> TrustedAreaLines = new List<Line>();
-        //    TrustedAreaLines = GetTrustedAreasLines();
-        //    List<Track>
-        //    Tracks = GetTracksNames().ToList();
-        //    List<PSA> pSAs = GetPsas().ToList();
-        //    TrustedAreas = new List<TrustedArea>();
-        //    TrackSegmentsTmp = new List<TrackSegmentTmp>();
-        //    trcksegments = new List<TrackSegmentsTrackSegment>();
-        //    err.Add(!CollectTrustedAreas(TrustedAreaLines, TracksLines));
-        //    err.Add(!GetSegments(Blocks, TracksLines, Tracks, pSAs, true));
-        //    TFileDescr document = new TFileDescr();
-        //    excel = new ReadExcel.Excel(stationID);
-        //    List<ReadExcel.SpeedProfile> SpeedProfiles =
-        //        excel.SpeedProfiles(file, ref document, stationID, ref Err);
-        //    int index = 0;
-        //    Dictionary<string, int> sspCols = SpeedProfiles
-        //                                .SelectMany(x => x.TrackSegments.Select(s => s.SpeedLimit))
-        //                                .Distinct()
-        //                                .OrderBy(x => Convert.ToDecimal(x))
-        //                                .Select(x => new SspColIndex { index = ++index, speed = x })
-        //                                .ToDictionary(x => x.speed, x => x.index);
-        //    for (int s = 0; s < SpeedProfiles.Count; s++)
-        //    {
-        //        for (int t = 0; t < SpeedProfiles[s].TrackSegments.Count; t++)
-        //        {
-        //            bool shiftStart = false;
-        //            bool shiftEnd = false;
-        //            decimal Okm1 = Convert.ToDecimal(SpeedProfiles[s].TrackSegments[t].Okm1);
-        //            decimal Okm2 = Convert.ToDecimal(SpeedProfiles[s].TrackSegments[t].Okm2);
-        //            string SegId = SpeedProfiles[s].TrackSegments[t].TrckSg;
-        //            TrackSegmentTmp segmentTmp = TrackSegmentsTmp
-        //                          .Where(x => x.Designation == SegId).SingleOrDefault();
-        //            TrackSegmentsTrackSegment trackSegment = trcksegments
-        //                                                     .Where(x => x.Designation == SegId)
-        //                                                     .SingleOrDefault();
-        //            Point3d start;
-        //            Point3d end;
-        //            Block sspSegStart = null;
-        //            Block sspSegEnd = null;
-        //            if (segmentTmp.Vertex1.Location == Okm1 ||
-        //                segmentTmp.Vertex1.Location2 == Okm1 ||
-        //                segmentTmp.Vertex1.Location3 == Okm1)
-        //            {
-        //                start = segmentTmp.Vertex1.BlkRef.Position;
-        //                sspSegStart = segmentTmp.Vertex1;
-        //            }
-        //            else
-        //            {
-        //                sspSegStart = Blocks
-        //                          .Where(x => x.Location == Okm1 &&
-        //                                      x.TrackSegId == SegId)
-        //                          .FirstOrDefault();
-        //                if (sspSegStart != null)
-        //                {
-        //                    start = sspSegStart.BlkRef.Position;
-        //                }
-        //                else
-        //                {
-        //                    Block max = Blocks
-        //                                  .Where(x => x.TrackSegId == SegId && x.Location > Okm1)
-        //                                  .OrderBy(x => x.Location)
-        //                                  .FirstOrDefault();
-        //                    if (max == null)
-        //                    {
-        //                        max = Blocks
-        //                                  .Where(x => x.Location > Okm2)
-        //                                  .OrderBy(x => x.Location)
-        //                                  .FirstOrDefault();
-        //                    }
-        //                    Block min = Blocks
-        //                                  .Where(x => x.TrackSegId == SegId && x.Location < Okm1)
-        //                                  .OrderByDescending(x => x.Location)
-        //                                  .FirstOrDefault();
-        //                    if (min == null)
-        //                    {
-        //                        min = Blocks
-        //                                  .Where(x => x.Location < Okm2)
-        //                                  .OrderByDescending(x => x.Location)
-        //                                  .FirstOrDefault();
-        //                    }
-        //                    double X = (max.BlkRef.Position.X + min.BlkRef.Position.X) * 0.5;
-        //                    start = new Point3d(X, max.BlkRef.Position.Y, 0);
-        //                    shiftStart = true;
-        //                }
-        //            }
-
-        //            if (segmentTmp.Vertex2.Location == Okm2 ||
-        //                segmentTmp.Vertex2.Location2 == Okm2 ||
-        //                segmentTmp.Vertex2.Location3 == Okm2)
-        //            {
-        //                end = segmentTmp.Vertex2.BlkRef.Position;
-        //                sspSegEnd = segmentTmp.Vertex2;
-        //            }
-        //            else
-        //            {
-        //                sspSegEnd = Blocks
-        //                          .Where(x => x.Location == Okm2 &&
-        //                                      x.TrackSegId == SegId)
-        //                          .FirstOrDefault();
-        //                if (sspSegEnd != null)
-        //                {
-        //                    end = sspSegEnd.BlkRef.Position;
-        //                }
-        //                else
-        //                {
-        //                    Block max = Blocks
-        //                                  .Where(x => x.TrackSegId == SegId && x.Location > Okm2)
-        //                                  .OrderBy(x => x.Location)
-        //                                  .FirstOrDefault();
-        //                    if (max == null)
-        //                    {
-        //                        max = Blocks
-        //                                  .Where(x => x.Location > Okm2)
-        //                                  .OrderBy(x => x.Location)
-        //                                  .FirstOrDefault();
-        //                    }
-        //                    Block min = Blocks
-        //                                  .Where(x => x.TrackSegId == SegId && x.Location < Okm2)
-        //                                  .OrderByDescending(x => x.Location)
-        //                                  .FirstOrDefault();
-        //                    if (min == null)
-        //                    {
-        //                        min = Blocks
-        //                                  .Where(x => x.Location < Okm2)
-        //                                  .OrderByDescending(x => x.Location)
-        //                                  .FirstOrDefault();
-        //                    }
-
-        //                    double X = (max.BlkRef.Position.X + min.BlkRef.Position.X) * 0.5;
-        //                    end = new Point3d(X, max.BlkRef.Position.Y, 0);
-        //                    shiftEnd = true;
-        //                }
-        //            }
-
-        //            List<Line> lines = segmentTmp.TrackLines
-        //                                .Where(x => x.GeometricExtents.MaxPoint.X >= start.X &&
-        //                                            x.GeometricExtents.MinPoint.X <= end.X)
-        //                               .OrderBy(x => x.GeometricExtents.MinPoint.X).ToList();
-        //            double startX = 0, startY = 0, endX = 0, endY = 0;
-        //            if (lines.Count == 0)
-        //            {
-        //                startX = start.X;
-        //                startY = start.Y;
-        //                endX = end.X;
-        //                endY = end.Y;
-        //                AddSspLine(startX, startY, endX, endY,
-        //                            SpeedProfiles[s].TrackSegments[t].SpeedLimit,
-        //                            sspCols[SpeedProfiles[s].TrackSegments[t].SpeedLimit], 2, 2);
-        //            }
-        //            for (int j = 0; j < lines.Count; j++)
-        //            {
-        //                int offsetStart = 2;
-        //                int offsetEnd = 2;
-        //                if (j == 0 && (shiftStart || sspSegStart != null))
-        //                {
-        //                    if (sspSegStart != null && sspSegStart.XsdName == "Point" &&
-        //                        ((GetPointBranch(sspSegStart) == ConnectionBranchType.right && SegId.Split('-').Last() == "R") ||
-        //                         (GetPointBranch(sspSegStart) == ConnectionBranchType.left && SegId.Split('-').Last() == "L")))
-        //                    {
-        //                        startX = lines[j].StartPoint.X;
-        //                        startY = lines[j].StartPoint.Y;
-        //                        endX = lines[j].EndPoint.X;
-        //                        endY = lines[j].EndPoint.Y;
-        //                        //offsetStart = 0;
-        //                    }
-        //                    else
-        //                    {
-        //                        startX = start.X;
-        //                        startY = start.Y;
-        //                        endX = lines[j].GeometricExtents.MaxPoint.X;
-        //                        endY = lines[j].GeometricExtents.MaxPoint.Y;
-        //                    }
-        //                }
-        //                else if (j == lines.Count - 1 && (shiftEnd || sspSegEnd != null))
-        //                {
-        //                    if (sspSegEnd != null && sspSegEnd.XsdName == "Point" &&
-        //                        ((GetPointBranch(sspSegEnd) == ConnectionBranchType.right && trackSegment.Vertex2.connection == ConnectionBranchType.right) ||
-        //                         (GetPointBranch(sspSegEnd) == ConnectionBranchType.left && trackSegment.Vertex2.connection == ConnectionBranchType.left)))
-        //                    {
-        //                        startX = lines[j].StartPoint.X;
-        //                        startY = lines[j].StartPoint.Y;
-        //                        endX = lines[j].EndPoint.X;
-        //                        endY = lines[j].EndPoint.Y;
-        //                        //offsetEnd = 0;
-        //                    }
-        //                    else
-        //                    {
-        //                        startX = lines[j].GeometricExtents.MinPoint.X;
-        //                        startY = lines[j].GeometricExtents.MinPoint.Y;
-        //                        endX = end.X;
-        //                        endY = end.Y;
-        //                    }
-        //                }
-        //                else
-        //                {
-        //                    startX = lines[j].StartPoint.X;
-        //                    startY = lines[j].StartPoint.Y;
-        //                    endX = lines[j].EndPoint.X;
-        //                    endY = lines[j].EndPoint.Y;
-        //                }
-
-        //                AddSspLine(startX, startY, endX, endY,
-        //                            SpeedProfiles[s].TrackSegments[t].SpeedLimit,
-        //                            sspCols[SpeedProfiles[s].TrackSegments[t].SpeedLimit], offsetStart, offsetEnd);
-        //            }
-        //        }
-        //    }
-        //}
-
-        private void AddSspLine(double startX, double startY, double endX, double endY, string kmpH,
-            int colorindex, int yOffsetStart, int yOffsetEnd, string layer = "speedprofile")
-        {
-            using (Transaction acTrans = db.TransactionManager.StartTransaction())
-            {
-
-                BlockTable acBlkTbl;
-                acBlkTbl = acTrans.GetObject(db.BlockTableId,
-                                                OpenMode.ForRead) as BlockTable;
-
-                BlockTableRecord acBlkTblRec;
-                acBlkTblRec = acTrans.GetObject(acBlkTbl[BlockTableRecord.ModelSpace],
-                                                OpenMode.ForWrite) as BlockTableRecord;
-                LayerTable acLyrTbl;
-                acLyrTbl = acTrans.GetObject(db.LayerTableId,
-                                             OpenMode.ForRead) as LayerTable;
-
-
-                using (Line acLine = new Line(new Point3d(startX, startY + yOffsetStart, 0),
-                                              new Point3d(endX, endY + yOffsetEnd, 0)))
-                {
-                    acBlkTblRec.AppendEntity(acLine);
-                    if (acLyrTbl.Has(layer))
-                    {
-                        acLine.Layer = layer;
-                    }
-                    else
-                    {
-                        acLine.Layer = "_Spor";
-                        acLine.LineWeight = LineWeight.LineWeight050;
-                    }
-                    acLine.ColorIndex = colorindex;
-                    acTrans.AddNewlyCreatedDBObject(acLine, true);
-                    DBText acText = new DBText();
-                    acText.SetDatabaseDefaults();
-                    acText.Position = new Point3d((acLine.StartPoint.X + acLine.EndPoint.X) * 0.5,
-                                                  ((acLine.StartPoint.Y + acLine.EndPoint.Y) * 0.5) + 1, 0); // (acLine.StartPoint.X + acLine.EndPoint.X) * 0.5;
-                    acText.Height = 2;
-                    acText.ColorIndex = colorindex;
-                    acText.TextString = kmpH;
-                    acBlkTblRec.AppendEntity(acText);
-                    acTrans.AddNewlyCreatedDBObject(acText, true);
-                }
-                acTrans.Commit();
-            }
-        }
-
-
-        /// <summary>
-        /// Checks if Signal has extended overlap
-        /// </summary>
-        /// <param name="BlkSignal"></param>
-        /// <param name="routes"></param>
-        /// <param name="blocks"></param>
-        /// <param name="overPts"></param>
-        /// <param name="blockTdt"></param>
-        /// <returns></returns>
         private bool CheckExtOverlap(Block BlkSignal, List<ReadExcel.XlsRoute> routes, List<Block> blocks, ref List<string> overPts, ref Block blockTdt)
         {
             List<ReadExcel.XlsRoute> overlapsRoutes = routes
@@ -9302,7 +7970,7 @@ namespace ExpPt1
             {
                 overPts = routes
                 .Where(x => x.Dest == blckProp.GetElemDesignation(BlkSignal) &&
-                            x.Type != KindOfRouteType.shunting && x.Overlaps.Count > 0 && 
+                            x.Type != KindOfRouteType.shunting && x.Overlaps.Count > 0 &&
                             x.SdLast != null)
                 .GroupBy(g => g.Dest)
                 .SelectMany(x => x.Select(o => o.SdLast).Where(o => regEx.IsMatch(o)))
@@ -9322,234 +7990,7 @@ namespace ExpPt1
             }
             return false;
         }
-        
 
-        private ActivationsSet ActivationLoop(LevelCrossingsLevelCrossingLevelCrossingTracksLevelCrossingTrack Tseg, List<Block> blocks,
-                                    List<SpeedProfilesSpeedProfile> speedProfiles, DirectionType trainDirection,
-                                    bool point, string segDevId)
-        {
-            decimal maxDistance = 3.000m;
-            decimal minDistance = 1.000m;
-            decimal.TryParse(Tseg.Location, out decimal kmStart);
-            decimal TsegLoc = kmStart;
-            decimal gap = 0.000m;
-            if (trainDirection == DirectionType.down)
-            {
-                kmStart += minDistance;
-            }
-            else if (trainDirection == DirectionType.up)
-            {
-                kmStart -= minDistance;
-            }
-            TrackSegmentTmp trackSegment = TrackSegmentsTmp
-                                               .Where(x => x.Designation == Tseg.TrackSegmentID)
-                                               .FirstOrDefault();
-            TrackSegmentTmp segmentTmpAc = trackSegment;
-            if (trainDirection == DirectionType.down)
-            {
-                if (segmentTmpAc.Vertex2.XsdName == "Connector")
-                {
-                    gap += Convert.ToDecimal(segmentTmpAc.Vertex2.Attributes["KMGAP"].Value) * -1 / 1000;
-                }
-            }
-            else if (trainDirection == DirectionType.up)
-            {
-                if (segmentTmpAc.Vertex1.XsdName == "Connector")
-                {
-                    gap += Convert.ToDecimal(segmentTmpAc.Vertex2.Attributes["KMGAP"].Value) * -1 / 1000;
-                }
-            }
-            List<SspAct> speedProfilesAct =
-                   new List<SspAct>();
-            List<LxActivation> lxActivations = new List<LxActivation>();
-            while (Math.Abs(TsegLoc - kmStart) < maxDistance && segmentTmpAc != null)
-            {
-                List<Block> Acs = new List<Block>();
-                List<SpeedProfilesSpeedProfile> ssps = new List<SpeedProfilesSpeedProfile>();
-                if (trainDirection == DirectionType.down)
-                {
-                    Acs = blocks
-                      .Where(x => x.XsdName == "DetectionPoint" &&
-                                  x.Location > kmStart &&
-                                  x.TrackSegId == segmentTmpAc.Designation)
-                      .OrderBy(x => x.Location)
-                      .ToList();
-                    ssps = speedProfiles
-                           .Where(x => x.TrackSegments.TrackSegment
-                                       .Any(t => t.Value == segmentTmpAc.Designation &&
-                                                 Convert.ToDecimal(t.OperationalKM2) > TsegLoc))
-                           .ToList();
-                }
-                else if (trainDirection == DirectionType.up)
-                {
-                    Acs = blocks
-                      .Where(x => x.XsdName == "DetectionPoint" &&
-                                  x.Location < kmStart &&
-                                  x.TrackSegId == segmentTmpAc.Designation)
-                      .OrderByDescending(x => x.Location)
-                      .ToList();
-                    ssps = speedProfiles
-                           .Where(x => x.TrackSegments.TrackSegment
-                                       .Any(t => t.Value == segmentTmpAc.Designation &&
-                                                 Convert.ToDecimal(t.OperationalKM1) < TsegLoc))
-                           .ToList();
-                }
-
-                foreach (var ssp in ssps)
-                {
-                    speedProfilesAct.Add(
-                        new SspAct
-                        {
-                            speed = ssp.TrainTypes.TrainTyp.Max(s => s.SpeedLimit),
-                            kmStart = ssp.TrackSegments.TrackSegment
-                                      .Where(t => t.Value == segmentTmpAc.Designation)
-                                      .Min(t => Convert.ToDecimal(t.OperationalKM1)),
-                            kmEnd = ssp.TrackSegments.TrackSegment
-                                      .Where(t => t.Value == segmentTmpAc.Designation)
-                                      .Max(t => Convert.ToDecimal(t.OperationalKM2))
-                        });
-                }
-                if (Acs.Count == 0)
-                {
-                    List<TrackSegmentTmp> segAcTmp = new List<TrackSegmentTmp>();
-                    if (trainDirection == DirectionType.down)
-                    {
-                        segmentTmpAc = TrackSegmentsTmp
-                                   .Where(x => x.Vertex1 == segmentTmpAc.Vertex2 && 
-                                               x.Designation != segDevId)
-                                   .FirstOrDefault();
-                    }
-                    else if (trainDirection == DirectionType.up)
-                    {
-                        segmentTmpAc = TrackSegmentsTmp
-                                   .Where(x => x.Vertex2 == segmentTmpAc.Vertex1 &&
-                                               x.Designation != segDevId)
-                                   .FirstOrDefault();
-                    }
-
-                    if (segmentTmpAc != null)
-                    {
-                        if (trainDirection == DirectionType.down)
-                        {
-                            segAcTmp = TrackSegmentsTmp
-                                   .Where(x => x.Vertex1 == segmentTmpAc.Vertex1)
-                                   .ToList();
-                        }
-                        else if (trainDirection == DirectionType.up)
-                        {
-                            segAcTmp = TrackSegmentsTmp
-                                   .Where(x => x.Vertex2 == segmentTmpAc.Vertex2)
-                                   .ToList();
-                        }
-                        if (segAcTmp.Count > 1)
-                        {
-                            segDevId = segAcTmp
-                                       .Where(x => x.Designation == segmentTmpAc.Designation)
-                                       .FirstOrDefault().Designation;
-                            point = true;
-                        }
-                        ssps = speedProfiles
-                               .Where(x => x.TrackSegments.TrackSegment
-                                           .Any(t => t.Value == segmentTmpAc.Designation))
-                               .ToList();
-                        foreach (var ssp in ssps)
-                        {
-                            speedProfilesAct.Add(
-                                new SspAct
-                                {
-                                    speed = ssp.TrainTypes.TrainTyp.Max(s => s.SpeedLimit),
-                                    kmStart = ssp.TrackSegments.TrackSegment
-                                              .Where(t => t.Value == segmentTmpAc.Designation)
-                                              .Min(t => Convert.ToDecimal(t.OperationalKM1)),
-                                    kmEnd = ssp.TrackSegments.TrackSegment
-                                              .Where(t => t.Value == segmentTmpAc.Designation)
-                                              .Max(t => Convert.ToDecimal(t.OperationalKM2))
-                                });
-                        }
-                    }
-                }
-                else
-                {
-                    foreach (var Ac in Acs)
-                    {
-                        lxActivations.Add(new LxActivation { id = Ac.Designation, km = Ac.Location + gap });
-                    }
-                    if (trainDirection == DirectionType.down)
-                    {
-                        ssps = speedProfiles
-                               .Where(x => x.TrackSegments.TrackSegment
-                                           .Any(t => t.Value == segmentTmpAc.Designation &&
-                                                     Convert.ToDecimal(t.OperationalKM2) <= Acs.Last().Location))
-                               .ToList();
-                    }
-                    else if (trainDirection == DirectionType.up)
-                    {
-                        ssps = speedProfiles
-                               .Where(x => x.TrackSegments.TrackSegment
-                                           .Any(t => t.Value == segmentTmpAc.Designation &&
-                                                     Convert.ToDecimal(t.OperationalKM1) <= Acs.Last().Location))
-                               .ToList();
-                    }
-                    
-                    foreach (var ssp in ssps)
-                    {
-                        speedProfilesAct.Add(
-                            new SspAct
-                            {
-                                speed = ssp.TrainTypes.TrainTyp.Max(s => s.SpeedLimit),
-                                kmStart = ssp.TrackSegments.TrackSegment
-                                          .Where(t => t.Value == segmentTmpAc.Designation)
-                                          .Min(t => Convert.ToDecimal(t.OperationalKM1)),
-                                kmEnd = ssp.TrackSegments.TrackSegment
-                                          .Where(t => t.Value == segmentTmpAc.Designation)
-                                          .Max(t => Convert.ToDecimal(t.OperationalKM2)),
-                                kmGap = gap
-                            });
-                    }
-                    kmStart = Acs.Last().Location;
-                }
-            }
-            if (trainDirection == DirectionType.down)
-            {
-                speedProfilesAct = speedProfilesAct.OrderBy(x => x.kmStart).ToList();
-            }
-            else if (trainDirection == DirectionType.up)
-            {
-                speedProfilesAct = speedProfilesAct.OrderByDescending(x => x.kmStart).ToList();
-            }
-            
-            for (int j = 1; j < speedProfilesAct.Count; j++)
-            {
-                if (speedProfilesAct[j - 1].speed == speedProfilesAct[j].speed)
-                {
-                    continue;
-                }
-                lxActivations.Add(new LxActivation
-                {
-                    id = "sc-" + speedProfilesAct[j - 1].speed + "-" + speedProfilesAct[j].speed,
-                    km = 
-                    trainDirection == DirectionType.down ? speedProfilesAct[j - 1].kmEnd : speedProfilesAct[j - 1].kmStart +
-                    gap
-                });
-            }
-            lxActivations.Add(new LxActivation { id = "LX", km = TsegLoc });
-
-            if (trainDirection == DirectionType.down)
-            {             
-                lxActivations = lxActivations.Where(x => x.km <= TsegLoc + maxDistance).OrderByDescending(x => x.km).ToList();
-            }
-            else if (trainDirection == DirectionType.up)
-            {
-                lxActivations = lxActivations.Where(x => x.km >= TsegLoc - maxDistance).OrderBy(x => x.km).ToList();
-            }         
-            return new ActivationsSet {lxActivations = lxActivations, point = point, segDeviationId = segDevId };
-        }
-
-        /// <summary>
-        /// Gets all lines from block
-        /// </summary>
-        /// <param name="BlkSignal"></param>
-        /// <returns></returns>
         private List<Line> GetBlockLines(Block BlkSignal)
         {
             DBObjectCollection entset = new DBObjectCollection();
@@ -9580,10 +8021,10 @@ namespace ExpPt1
             //ErrLogger.Start();
             var test = blocks
                       .Where(x => x.Location > 0 && x.IsOnCurrentArea)
-                      .GroupBy(x =>  new { x.X , x.TrackSegId})
+                      .GroupBy(x => new { x.X, x.TrackSegId })
                       .Where(x => x.Count() > 1)
                       .ToList();
-            foreach(var km in test)
+            foreach (var km in test)
             {
                 var block = km.First();
                 var test1 = km.Where(x => x.Location != block.Location);
@@ -9594,111 +8035,6 @@ namespace ExpPt1
             }
             //ErrLogger.Stop();
         }
-
-        public void CheckCr()
-        {
-            ErrLogger.filePath = Path.GetDirectoryName(dwgPath) + @"\CrErrors.log";
-            ErrLogger.Start();
-            RddXmlIO xmlIO = new RddXmlIO();
-            string[] filesCr =
-            Directory.GetFiles(@"C:\3.TRDD\ROL5\04.UpdateSBL\CompounRoutes", "*_CR*.xml", SearchOption.TopDirectoryOnly);
-            string[] filesRts =
-            Directory.GetFiles(@"C:\3.TRDD\ROL5\04.UpdateSBL\CompounRoutes\Source", "*.xml", SearchOption.AllDirectories);
-            List<string> crRouteIDs = new List<string>();
-            List<string> routeIDs = new List<string>();
-            foreach (var f in filesCr)
-            {
-                List<string> crts = XDocument
-                .Load(f)
-                .Root
-                .Elements("CompoundRoute")
-                .Elements("RouteIDs")
-                .Elements("RouteID")
-                .Select(r => r.Value)
-                .ToList();
-                crRouteIDs.AddRange(crts);
-            }
-            foreach (var f in filesRts)
-            {
-                List<string> rts = XDocument
-               .Load(f)
-               .Root
-               .Elements("Routes")
-               .Elements("Route")
-               .Elements("Designation")
-               .Select(r => r.Value)
-               .ToList();
-                routeIDs.AddRange(rts);
-            }
-            List<string> test = crRouteIDs.Except(routeIDs).ToList();
-            foreach(string t in test)
-            {
-                ErrLogger.Log(t);
-            }
-            ErrLogger.Stop();
-        }
-
-        //public void TestCr()
-        //{
-        //    ErrLogger.filePath = Path.GetDirectoryName(dwgPath) + @"\CrErrors.log";
-        //    ErrLogger.Start();
-        //    var Splineids = GetObjectsOfType(db, RXObject.GetClass(typeof(Spline)));
-        //    List<Spline> crSplines = new List<Spline>();
-        //    ReadBlocksDefinitions();
-        //    bool blocksErr = false;
-        //    List<Block> Blocks = GetBlocks(ref blocksErr);
-        //    using (Transaction trans = db.TransactionManager.StartTransaction())
-        //    {
-        //        foreach (ObjectId ObjId in Splineids)
-        //        {
-        //            Spline spline = (Spline)trans.GetObject(ObjId, OpenMode.ForRead);
-        //            if (spline.Layer.Contains("Compound_Route"))
-        //            {
-        //                crSplines.Add(spline);
-        //            }
-        //        }
-        //    }
-        //    string[] filesRts =
-        //    Directory.GetFiles(@"C:\3.TRDD\ROL5\04.UpdateSBL\CompounRoutes\Source", "*.xml", SearchOption.AllDirectories);
-        //    RddXmlIO rddXmlIO = new RddXmlIO();
-        //    List<RoutesRoute> routes = new List<RoutesRoute>(); 
-        //    foreach (var f in filesRts)
-        //    {
-        //        routes.AddRange(rddXmlIO.GetRdd(f).Routes.Route.ToList());
-        //    }
-        //    List<CrStartEnd> crStartEnds = new List<CrStartEnd>();  
-        //    foreach (var crSpline in crSplines.OrderBy(x => x.GeometricExtents.MinPoint.X).ThenBy(x => x.Layer))
-        //    {
-        //        List<Block> signals = Blocks
-        //                              .Where(x => SplineSignalSamePos(crSpline, x) && x.XsdName == "Signal")
-        //                              .ToList();
-        //        if (signals.Count < 2)
-        //        {
-        //            ErrLogger.Log("Spline not connected X - '" + 
-        //                           crSpline.GeometricExtents.MinPoint.X + "', Y - '" + 
-        //                           crSpline.GeometricExtents.MinPoint.Y + "'");
-        //            continue;
-        //        }
-        //        if (signals[0].Attributes["DIRECTION"].Value.ToLower() == "up")
-        //        {
-        //            signals = signals.OrderBy(x => x.Location).ToList();
-        //        }
-        //        else
-        //        {
-        //            signals = signals.OrderByDescending(x => x.Location).ToList();
-        //        }
-        //        crStartEnds.Add(new CrStartEnd
-        //        { Start = signals[0].Attributes["NAME"].Value,
-        //            End = signals[1].Attributes["NAME"].Value
-        //        });
-               
-        //        //SearchCr(signals[0].Attributes["NAME"].Value, signals[1].Attributes["NAME"].Value, "", routes);
-        //    }
-        //    CRs cRs = new CRs(routes, crStartEnds);
-        //    cmproutes = cRs.GetCompoundRoutes();
-        //    SaveCompoundRoutes();
-        //    ErrLogger.Stop();
-        //}
 
         public bool GetCompoundRoutes(List<Block> Blocks, List<RoutesRoute> routesExist)
         {
@@ -9729,7 +8065,7 @@ namespace ExpPt1
                     existingCrs.AddRange(existRdd.CompoundRoutes.CompoundRoute.ToList());
                 }
             }
-            catch(DirectoryNotFoundException e)
+            catch (DirectoryNotFoundException e)
             {
                 ErrLogger.Log(e.Message);
                 ErrLogger.error = true;
@@ -9749,7 +8085,7 @@ namespace ExpPt1
                     continue;
                 }
                 bool error = false;
-                if ( GetSignalDirection(signals[0], ref error) == DirectionType.up)
+                if (GetSignalDirection(signals[0], ref error) == DirectionType.up)
                 {
                     signals = signals.OrderBy(x => x.Location).ToList();
                 }
@@ -9780,24 +8116,7 @@ namespace ExpPt1
             else
             {
                 return false;
-            }          
-        }
-
-        public void SearchCr(string crStart, string crEnd, string crInter, List<RoutesRoute> routes)
-        {
-            List<CompoundRoutesCompoundRouteRouteIDsRouteID> cRts = new List<CompoundRoutesCompoundRouteRouteIDsRouteID>();
-            var start = routes.Where(x => x.Start == crStart).FirstOrDefault();
-            cRts.Add(new CompoundRoutesCompoundRouteRouteIDsRouteID {  Value = start.Designation});
-            List<RoutesRoute> interRts = new List<RoutesRoute> { start };
-            int rtsCount = 0;
-            do
-            {
-                interRts = routes.Where(x => x.Start == interRts[0].Destination).ToList();
-                rtsCount++;
-                cRts.Add(new CompoundRoutesCompoundRouteRouteIDsRouteID { Value = interRts[0].Designation });
             }
-            while (crEnd != interRts[0].Destination);
-            cRts.Add(new CompoundRoutesCompoundRouteRouteIDsRouteID { Value = interRts[0].Designation });
         }
 
         private KindOfPointType IsPointHtt(Block point, ref List<Block> blocks)
@@ -9827,53 +8146,415 @@ namespace ExpPt1
             }
             else
             {
-                if(!Enum.TryParse(point.KindOf, out KindOfPointType kindOfPoint))
+                if (!Enum.TryParse(point.KindOf, out KindOfPointType kindOfPoint))
                 {
                     ErrLogger.Log("Unable to parse kind of point: " + blckProp.GetElemDesignation(point));
                     ErrLogger.error = true;
                 }
                 return kindOfPoint;
-            }           
+            }
         }
 
-        private DirectionType GetEotDurection(Block BlkEndOfTrack, List<Block> blocks, ref bool error)
+        private DirectionType GetEotDirection(
+          Block BlkEndOfTrack,
+          List<Block> blocks,
+          ref bool error)
         {
-            DirectionType direction = DirectionType.up;
-            Block EotDir = blocks
-                               .Where(x => x.TrackSegId == BlkEndOfTrack.TrackSegId &&
-                                           x != BlkEndOfTrack)
-                               .FirstOrDefault();
-            if (EotDir != null)
+            DirectionType directionType = DirectionType.up;
+            Block block = this.TrackSegmentsTmp
+                         .Where(x => x.Designation == BlkEndOfTrack.TrackSegId && x.Vertex1 != BlkEndOfTrack)
+                         .Select(x => x.Vertex1).FirstOrDefault() ?? 
+                                this.TrackSegmentsTmp
+                                .Where(x => x.Designation == BlkEndOfTrack.TrackSegId && x.Vertex2 != BlkEndOfTrack)
+                                .Select(x => x.Vertex2).FirstOrDefault();
+            if (block != null)
             {
-                if (EotDir.Location < BlkEndOfTrack.Location)
-                {
-                    direction = DirectionType.up;
-                }
-                if (EotDir.Location > BlkEndOfTrack.Location)
-                {
-                    direction = DirectionType.down;
-                }
+                if (block.Location < BlkEndOfTrack.Location)
+                    directionType = DirectionType.up;
+                if (block.Location > BlkEndOfTrack.Location)
+                    directionType = DirectionType.down;
             }
             else
             {
                 ErrLogger.Log("Unable to get EOT direction for '" + BlkEndOfTrack.Designation + "'");
-                if (!Enum.TryParse(BlkEndOfTrack.Attributes["DIRECTION"].Value, out DirectionType dir))
-                {
+                DirectionType result;
+                if (!Enum.TryParse(BlkEndOfTrack.Attributes["DIRECTION"].Value, out result))
                     ErrLogger.Log("Unable to parse 'DIRECTION; attribute '" + BlkEndOfTrack.Designation + "'");
-                }
                 else
-                {
                     ErrLogger.Log("Value '" + BlkEndOfTrack.Attributes["DIRECTION"].Value + "' taken from 'DIRECTION' att.'" + BlkEndOfTrack.Designation + "'");
-                }
-                direction = dir;
+                directionType = result;
                 error = true;
             }
-            return direction;
+            return directionType;
+        }
+
+        private void AssignDpsToTrckSections()
+        {
+            List<Block> dps = this.blocks
+                           .Where(x => x.XsdName == "DetectionPoint")
+                           .OrderBy(x => Convert.ToDecimal(x.Location))
+                           .ToList();
+            List<Block> skipFirstDps = new List<Block>();
+            List<List<Block>> skipTrackings = new List<List<Block>>();
+
+            foreach (Block firstDp in dps)
+            {
+                List<Block> sectionDps = new List<Block>
+                {
+                    firstDp
+                };
+                Block eot = null;
+                skipFirstDps.Add(firstDp);
+                List<TrackSegmentTmp> segNodes = this.TrackSegmentsTmp
+                                  .Where(x => x.Designation == firstDp.TrackSegId)
+                                  .ToList();
+                //skipNodes.AddRange(segNodes);
+                if (segNodes.Count == 0)
+                {
+                    ErrLogger.Log("Start Segment(s) not found Dp - " + firstDp.Designation);
+                    ErrLogger.error = true;
+                    continue;
+                }
+                Stack<Stack<TrackSegmentTmp>> stackNodes = new Stack<Stack<TrackSegmentTmp>>();
+                stackNodes.Push(new Stack<TrackSegmentTmp>(segNodes));
+                int iterCount = 0;
+                bool exists = false;
+                List<TrackSegmentTmp> skipNodes = new List<TrackSegmentTmp>();
+                skipNodes.AddRange(segNodes);
+                List<Block> elements = new List<Block>();
+                while (stackNodes.Count > 0)
+                {
+                    Block nextDp = this.blocks
+                        .Where(x => x.XsdName == "DetectionPoint" &&
+                                    x.TrackSegId == stackNodes.Peek().Peek().Designation &&
+                                    !skipFirstDps.Contains(x) &&
+                                    x != firstDp)
+                        .OrderBy(x => Convert.ToDecimal(x.Location))
+                        .FirstOrDefault();
+                    if (nextDp != null)
+                    {
+                        //List<Block> testDp = new List<Block> { firstDp, nextDp };
+                        if (skipTrackings.Any(x => x.Contains(firstDp) && x.Contains(nextDp)))
+                        {
+                            exists = true;
+                            break;
+                        }
+                        sectionDps.Add(nextDp);
+                        if (stackNodes.Peek().Peek().Vertex2.XsdName == "EndOfTrack")
+                        {
+                            eot = stackNodes.Peek().Peek().Vertex2;
+                        }
+                        //skipDps.Add(nextDp);
+                        do
+                        {
+                            if (stackNodes.Peek().Count == 2)
+                            {
+                                stackNodes.Peek().Pop();
+                                break;
+                            }
+                            stackNodes.Pop();
+                            iterCount--;
+                        }
+                        while (stackNodes.Count > 0);
+                    }
+                    else if (stackNodes.Peek().Peek().Vertex2.XsdName == "EndOfTrack")
+                    {
+                        eot = stackNodes.Peek().Peek().Vertex2;
+                        do
+                        {
+                            if (stackNodes.Peek().Count == 2)
+                            {
+                                stackNodes.Peek().Pop();
+                                break;
+                            }
+                            stackNodes.Pop();
+                            iterCount--;
+                        }
+                        while (stackNodes.Count > 0);
+                    }
+                    else
+                    {
+                        if (stackNodes.Peek().Peek().Vertex2.XsdName == "Point" && 
+                             stackNodes.Peek().Peek().Vertex2.KindOf != "derailer")
+                        {
+                            elements.Add(stackNodes.Peek().Peek().Vertex2);
+                        }
+                        segNodes = this.TrackSegmentsTmp
+                                   .Where(x => (x.Vertex1 == stackNodes.Peek().Peek().Vertex2 ||
+                                               x.Vertex2 == stackNodes.Peek().Peek().Vertex2 /*||
+                                               x.Vertex2.Id == stackNodes.Peek().Peek().Vertex1.Id*/) &&
+                                               x != stackNodes.Peek().Peek() &&
+                                               !skipNodes.Contains(x))
+                                   .ToList();
+                        if (segNodes.Count == 0)
+                        {
+                            segNodes = this.TrackSegmentsTmp
+                                   .Where(x => x.Vertex2 == stackNodes.Peek().Peek().Vertex1 &&
+                                               x != stackNodes.Peek().Peek() &&
+                                               !skipNodes.Contains(x))
+                                               .ToList();
+                        }
+                        skipNodes.AddRange(segNodes);
+                        iterCount++;
+                        if (segNodes.Count == 0 || Constants.dpIterLimit == iterCount)
+                        {
+                            if (sectionDps.Count == 1 && skipTrackings.Any(x => x.Contains(sectionDps[0])))
+                            {
+                                exists = true;
+                                break;
+                            }
+                            if (Constants.dpIterLimit == iterCount)
+                            {
+                                ErrLogger.Log("Iteration limit reached Dp -" + firstDp.Designation);
+                            }
+                            else
+                            {
+                                ErrLogger.Log("Segment(s) for next dp not found Dp -" + firstDp.Designation);
+                            }
+                            ErrLogger.error = true;
+                            break;
+                        }
+                        else
+                        {
+                            stackNodes.Push(new Stack<TrackSegmentTmp>(segNodes));
+                        }
+                    }
+                }
+                if (exists)
+                {
+                    continue;
+                }
+                skipTrackings.Add(sectionDps);
+                if (sectionDps.Count == 1 && eot != null)
+                {
+                    sectionDps.Add(eot);
+                }
+                AcSection acSectionTmp = CreateAcSection(sectionDps, skipNodes, elements);
+                if (acSectionTmp != null)
+                {
+                    this.acSections.Add(acSectionTmp);
+                }
+            }
+        }
+
+        private AcSection CreateAcSection(List<Block> dps, List<TrackSegmentTmp> segNodes, List<Block> elements)
+        {
+            if (dps.Count < 2)
+            {
+                ErrLogger.Log("Ac section with single dp: '" + this.blckProp.GetElemDesignation(dps[0], false, true) + "'.");
+                ErrLogger.error = true;
+                return (AcSection)null;
+            }
+            AcSection acSection = new AcSection
+            {
+                Dps = dps
+            };
+            decimal min = dps.Min(x => x.Location);
+            decimal max = dps.Max(x => x.Location);
+            var segLines = segNodes.SelectMany(x => x.TrackLines).ToList();
+            var blockSection = this.blocks
+                               .FirstOrDefault(x => (x.XsdName == "AxleCounterSection" ||
+                                                    x.XsdName == "TrackSection") &&
+                                                    Calc.Between(x.X, dps[0].X, dps[1].X, true) &&
+                                                    segLines.Any(l => (l.GetClosestPointTo(x.BlkRef.Position, false) - x.BlkRef.Position).Length <= 5));
+            if (blockSection == null)
+            {
+                ErrLogger.Log("Block for AC section not found. Related Dps: " + string.Join(",", dps.Select(x => x.Designation).ToArray()));
+                ErrLogger.error = true;
+                return null;
+            }
+            acSection.Designation = this.blckProp.GetElemDesignation(blockSection); //.Split('P').Last();
+            if (blockSection.XsdName == "AxleCounterSection")
+            {
+                //List<Block> points = this.blocks
+                //                 .Where(x => x.XsdName == "Point" &&
+                //                             Calc.Between(x.Location, min, max, true) &&
+                //                             segNodes.Select(s => s.Designation).Contains(x.TrackSegId))
+                //                  .OrderBy(x => Convert.ToDouble(x.Location))
+                //                 .ToList();
+                if (elements == null || elements.Count == 0)
+                {
+                    ErrLogger.Log("No points for AC section found " + dps[0].Designation);
+                    ErrLogger.error = true;
+                    return acSection;
+                }
+                Line pointTip = GetPointTipLine(elements[0]);
+                Line pointBase = GetPointBaseLine(elements[0]);
+                Point2d Tip = GetMiddlPoint2d(pointTip.GeometricExtents);
+                Point2d Base = GetMiddlPoint2d(pointBase.GeometricExtents);
+                Vector2d pointStraight = Tip.GetVectorTo(Base);
+                foreach (Block Dp in acSection.Dps)
+                {
+                    Point2d dp =
+                    new Point2d(Dp.BlkRef.Position.X, Dp.BlkRef.Position.Y);
+                    Vector2d pointDp = dp.GetVectorTo(Base);
+                    int Angle = Calc.RadToDeg(pointStraight.GetAngleTo(pointDp));
+                    Dp.Ac_angle = Angle;
+                    if (Angle == 0)
+                    {
+                        Dp.Sort = 0;
+                    }
+                    else if (Calc.Between(Angle, 178, 180, true))
+                    {
+                        Dp.Sort = 1;
+                    }
+                    else
+                    {
+                        Dp.Sort = 2;
+                    }
+                }
+                acSection.Dps = acSection.Dps.OrderBy(x => x.Ac_angle).ToList();
+                acSection.Elements = elements.Select(x => x.Designation).ToList();
+            }
+            else
+            {
+                Point2d tdt =
+                       new Point2d(blockSection.BlkRef.Position.X, blockSection.BlkRef.Position.Y);
+                foreach (Block Dp in acSection.Dps)
+                {
+                    Point2d dp =
+                    new Point2d(Dp.BlkRef.Position.X, Dp.BlkRef.Position.Y);
+                    Dp.Sort = tdt.GetVectorTo(dp).Angle;
+                    if (Calc.Between(Calc.RadToDeg(Dp.Sort), 359, 360, true))
+                    {
+                        Dp.Sort = 0;
+                    }
+                }
+                acSection.Dps = acSection.Dps.OrderByDescending(x => x.Sort).ToList();
+                acSection.Elements = new List<string> { acSection.Designation };
+            }
+            return acSection;
+        }
+
+        private bool GetDetLockPoints()
+        {
+            bool error = false;
+            if (this.checkData["checkBoxDL"])
+            {
+                TFileDescr document = new TFileDescr();
+                List<ReadExcel.DetLock> source = this.excel.DetectorLockings(this.loadFiles["lblxlsDetLock"], ref document, ref error);
+                this.Documents.Add(document);
+                foreach (Block block in this.blocks
+                                            .Where(x => x.XsdName == "Point" && 
+                                                   x.IsOnCurrentArea && !x.IsOnNextStation && x.Visible))
+                {
+                    Block BlkPoint = block;
+                    List<PointsPointTracksForDetectorLockingTrackforDetectorLocking> trackforDetectorLockingList = 
+                        new List<PointsPointTracksForDetectorLockingTrackforDetectorLocking>();
+                    foreach (ReadExcel.DetLock detLock in source
+                                                          .Where(x => x.Pt == BlkPoint.Attributes["NAME"].Value)
+                                                          .ToList())
+                    {
+                        foreach (ReadExcel.DetLock.Adjacent adjacent in detLock.Adjacents)
+                        {
+                            List<string> pts = adjacent.Pts;
+                            foreach (string str in pts)
+                            {
+                                string point = str;
+                                Block Block = this.blocks
+                                              .Where(x => x.XsdName == "Point" && x.Attributes["NAME"].Value == point)
+                                              .FirstOrDefault();
+                                if (Block != null)
+                                {
+                                    PointsPointTracksForDetectorLockingTrackforDetectorLocking trackforDetectorLocking = 
+                                        new PointsPointTracksForDetectorLockingTrackforDetectorLocking()
+                                    {
+                                        Value = this.blckProp.GetElemDesignation(Block, false, true)
+                                    };
+                                    trackforDetectorLockingList.Add(trackforDetectorLocking);
+                                }
+                                else
+                                {
+                                    ErrLogger.Log("Point: '" + this.blckProp.GetElemDesignation(BlkPoint, false, true) + 
+                                        "'. Point for detector locking '" + detLock.Pt + "' not found.");
+                                    error = true;
+                                }
+                            }
+                            foreach (string tdt1 in adjacent.Tdts)
+                            {
+                                string tdt = tdt1;
+                                if (this.blocks
+                                        .Where(x => x.XsdName == "TrackSection" && x.Attributes["NAME"].Value == tdt)
+                                        .FirstOrDefault() != null)
+                                {
+                                    PointsPointTracksForDetectorLockingTrackforDetectorLocking trackforDetectorLocking = 
+                                        new PointsPointTracksForDetectorLockingTrackforDetectorLocking()
+                                    {
+                                        Value = "tdt-" + this.stationID + "-" + tdt
+                                    };
+                                    trackforDetectorLockingList.Add(trackforDetectorLocking);
+                                }
+                                else
+                                {
+                                    AxleCounterSectionsAxleCounterSection axleCounterSection = this.acsections
+                                                                                                    .Where(x => x.Designation == "tdt-" + this.stationID + "-" + tdt)
+                                                                                                    .FirstOrDefault();
+                                    if (axleCounterSection == null)
+                                    {
+                                        ErrLogger.Log("Detector locking Point: '" + 
+                                            this.blckProp.GetElemDesignation(BlkPoint, false, true) + "'. Section '" + tdt + 
+                                            "' not found neither in Ac sections nor in track sections.");
+                                        error = true;
+                                    }
+                                    else
+                                    {
+                                        foreach (string str in pts)
+                                        {
+                                            string checkPoint = str;
+                                            if (!axleCounterSection.Elements.Element
+                                                .Any(x => x.Value == "spsk-" + this.stationID + "-" + checkPoint))
+                                            {
+                                                ErrLogger.Log("Point: '" + this.blckProp.GetElemDesignation(checkPoint) + 
+                                                    "'. Ac section '" + tdt + "' no points found.");
+                                                error = true;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    PointsPoint pointsPoint = this.points.Where((Func<PointsPoint, bool>)(x => x.Designation == this.blckProp.GetElemDesignation(BlkPoint, false, true))).FirstOrDefault();
+                    if (pointsPoint == null)
+                    {
+                        ErrLogger.Log("Detector locking - Point: '" + this.blckProp.GetElemDesignation(BlkPoint, false, true) + "' not found in RDD points.");
+                        error = true;
+                    }
+                    else if (trackforDetectorLockingList.Count > 0)
+                        pointsPoint.TracksForDetectorLocking = new PointsPointTracksForDetectorLocking()
+                        {
+                            TrackforDetectorLocking = trackforDetectorLockingList.ToArray()
+                        };
+                }
+                return !error;
+            }
+            Logger.Log("Track for detector locking data skipped\tTrack for detector locking table");
+            return false;
+        }
+
+        private bool LayerExists(string name)
+        {
+            using (Transaction acTrans = this.db.TransactionManager.StartTransaction())
+            {
+                LayerTable acLayTbl;
+                acLayTbl = acTrans.GetObject(this.db.LayerTableId,
+                                             OpenMode.ForRead) as LayerTable;
+                foreach (ObjectId acObjId in acLayTbl)
+                {
+                    LayerTableRecord acLyrTblRec;
+                    acLyrTblRec = acTrans.GetObject(acObjId,
+                                                    OpenMode.ForRead) as LayerTableRecord;
+                    if (acLyrTblRec.Name == name)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         public void Dispose()
         {
-            AppDomain.CurrentDomain.FirstChanceException -= CurrentDomain_FirstChanceException;
             Logger.Stop();
             ErrLogger.Stop();
         }

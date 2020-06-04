@@ -1,3 +1,6 @@
+# usage: Lines definitions
+# format:
+#<Designation>	<BeginKM>	<EndKM>	<Direction[up|down]>
 24	108.500	248.400	up
 25	248.400	333.300	up
 31	55.700	202.100	up
