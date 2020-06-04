@@ -69,7 +69,7 @@ namespace ExpPt1
 
         public Export(string dwgPath)
         {
-            this.assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            this.assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);         
             this.acDocMgr = AcadApp.DocumentManager;
             this.acDoc = this.acDocMgr.MdiActiveDocument;
             this.db = this.acDoc.Database;
@@ -84,20 +84,21 @@ namespace ExpPt1
             this.RailwayLines = new List<RailwayLine>();
             this.BlocksToGet = new Dictionary<string, string>();
             this.Status = new TStatus();
-            if (this.GetType() == typeof(Display))
-            {
-                File.Delete(this.dwgDir + "\\Disp_error.log");
-                File.Delete(this.dwgDir + "\\Disp_report.log");
-                ErrLogger.Start(this.dwgDir + "\\Disp_error.log");
-                Logger.Start(this.dwgDir + "\\Disp_report.log");
-            }
-            else
-            {
-                File.Delete(this.dwgDir + "\\Error.log");
-                File.Delete(this.dwgDir + "\\Report.log");
-                ErrLogger.Start(this.dwgDir + "\\Error.log");
-                Logger.Start(this.dwgDir + "\\Report.log");
-            }
+            ErrLogger.Start(Path.GetDirectoryName(dwgPath));
+            //if (this.GetType() == typeof(Display))
+            //{
+            //    File.Delete(this.dwgDir + "\\Disp_error.log");
+            //    File.Delete(this.dwgDir + "\\Disp_report.log");
+            //    ErrLogger.Start(this.dwgDir + "\\Disp_error.log");
+            //    Logger.Start(this.dwgDir + "\\Disp_report.log");
+            //}
+            //else
+            //{
+            //    File.Delete(this.dwgDir + "\\Error.log");
+            //    File.Delete(this.dwgDir + "\\Report.log");
+            //    ErrLogger.Start(this.dwgDir + "\\Error.log");
+            //    Logger.Start(this.dwgDir + "\\Report.log");
+            //}
             this.ReadBlocksDefinitions();
             this.blocksErr = false;
             this.blocks = this.GetBlocks(ref this.blocksErr);
@@ -375,7 +376,7 @@ namespace ExpPt1
 
             if (saveFile.ShowDialog() != System.Windows.Forms.DialogResult.OK)
             {
-                ErrLogger.Log("Program canceled by user.");
+                ErrLogger.Information("Program canceled by user", "Station Dialog");
                 return;
             }
             string saveTo = saveFile.Filename;
@@ -587,7 +588,7 @@ namespace ExpPt1
             if (!File.Exists(orderRddFileName))
             {
                 err.Add(true);
-                ErrLogger.Log("Order Rdd not found: '" + orderRddFileName + "'");
+                ErrLogger.Warning("Order Rdd not found", orderRddFileName, "");
             }
             else
             {
@@ -599,7 +600,7 @@ namespace ExpPt1
                 if (!File.Exists(loadFiles["lblxlsRdd"]))
                 {
                     err.Add(true);
-                    ErrLogger.Log("Previous Rdd version not found: '" + loadFiles["lblxlsRdd"] + "'");
+                    ErrLogger.Warning("Previous Rdd version not found", loadFiles["lblxlsRdd"], "");
                 }
                 else
                 {
@@ -1369,7 +1370,7 @@ namespace ExpPt1
                             }
                             catch (Autodesk.AutoCAD.Runtime.Exception e)
                             {
-                                Logger.Log(blkRef.Name + ": BlockName property - " + e.Message);
+                                ErrLogger.Information("AutoCAD block exception - " + e.Message, blkRef.Name);
                             }
 
                             //if (block.XsdName == "Point" &&
@@ -1398,8 +1399,7 @@ namespace ExpPt1
                                         else
                                         {
                                             error = true;
-                                            ErrLogger.Log(blckProp.GetElemDesignation(block) +
-                                                ": Can not convert '" + attKeys[0] + "' to decimal");
+                                            ErrLogger.Warning("Can not convert to decimal", blckProp.GetElemDesignation(block), attKeys[0]);
                                         }
                                     }
                                     block.Location = loc;
@@ -1418,8 +1418,7 @@ namespace ExpPt1
                                         else
                                         {
                                             error = true;
-                                            ErrLogger.Log(blckProp.GetElemDesignation(block) +
-                                                ": Can not convert '" + attKeys[1] + "' to decimal");
+                                            ErrLogger.Warning("Can not convert to decimal", blckProp.GetElemDesignation(block), attKeys[1]);
                                         }
                                     }
                                     block.Location2 = loc;
@@ -1438,8 +1437,7 @@ namespace ExpPt1
                                         else
                                         {
                                             error = true;
-                                            ErrLogger.Log(blckProp.GetElemDesignation(block) +
-                                                ": Can not convert '" + attKeys[2] + "' to decimal");
+                                            ErrLogger.Warning("Can not convert to decimal", blckProp.GetElemDesignation(block), attKeys[2]);
                                         }
                                     }
                                     block.Location3 = loc;
@@ -1465,8 +1463,7 @@ namespace ExpPt1
                                     else
                                     {
                                         error = true;
-                                        ErrLogger.Log(blckProp.GetElemDesignation(block) +
-                                            ": Can not convert '" + attKeys[0] + "' to decimal");
+                                        ErrLogger.Warning("Can not convert to decimal", blckProp.GetElemDesignation(block), attKeys[0]);
                                     }
                                 }
                                 block.Location = loc;
@@ -1479,8 +1476,7 @@ namespace ExpPt1
                                     else
                                     {
                                         error = true;
-                                        ErrLogger.Log(blckProp.GetElemDesignation(block) +
-                                            ": Can not convert '" + attKeys[0] + "' to decimal");
+                                        ErrLogger.Warning("Can not convert to decimal", blckProp.GetElemDesignation(block), attKeys[0]);
                                     }
                                 }
                                 block.Location2 = loc2;
@@ -1618,7 +1614,7 @@ namespace ExpPt1
                     }
                     catch (ArgumentException e)
                     {
-                        ErrLogger.Log(e.Message + " Attribute:" + attRef.Tag + " Block:" + blkRef.Name);
+                        ErrLogger.Warning("Attribute exception " + e.Message, blkRef.Name, attRef.Tag );
                     }
                     trans.Commit();
                 }
@@ -1806,16 +1802,16 @@ namespace ExpPt1
                 Documents.Add(document);
                 if (CesLocs == null)
                 {
-                    ErrLogger.Log("Can't get data from file 'Signals closure table'");
+                    ErrLogger.Warning("Can't get data from file",  "Signals closure table", "");
                     error = true;
                     //return !error;
                 }
             }
             else
             {
-                if (this.GetType() != typeof(Display))
+                if (GetType() != typeof(Display))
                 {
-                    ErrLogger.Log("Data skipped. Signals closure table");
+                    ErrLogger.Warning("Data skipped",  "Signals closure table", "");
                     error = true;
                     //return !error;
                 }
@@ -1851,7 +1847,7 @@ namespace ExpPt1
                 else
                 {
                     signal.TrackSegmentID = "";
-                    ErrLogger.Log("Signal: '" + blckProp.GetElemDesignation(BlkSignal) + "'. TrackSegmentId not found");
+                    ErrLogger.Warning("TrackSegmentId not found", blckProp.GetElemDesignation(BlkSignal), "");
                     error = true;
                 }
                 signal.LineID = BlkSignal.LineID;
@@ -1927,7 +1923,7 @@ namespace ExpPt1
                         //      signal.KindOfSignal == TKindOfSignal.L2ExitSignal))
                         else 
                         {
-                            ErrLogger.Log("Signal '" + signal.Designation + "' not found in Signals Closure Table.");
+                            ErrLogger.Warning("Element not found in Signals Closure Table", signal.Designation, "");
                             error = true;
                             continue;
                         }
@@ -1982,7 +1978,7 @@ namespace ExpPt1
 
                         if (Ac == null)
                         {
-                            ErrLogger.Log("Signal '" + signal.Designation + "' danger point '" + cesLoc.Ac + "' not found on SL.");
+                            ErrLogger.Warning("Danger point not found on SL", signal.Designation, cesLoc.Ac);
                             error = true;
                             //signal.DangerPointID = "not found";
                         }
@@ -2011,7 +2007,7 @@ namespace ExpPt1
                 if (spstBlock == null)
                 {
                     error = true;
-                    ErrLogger.Log("Can not find EOT for route '" + route.Start + "_" + route.Dest + "'");
+                    ErrLogger.Warning("Unable to find EOT for route ", route.Start + "_" + route.Dest, "");
                     continue;
                 }
                 if (signalsSignal.Where(x => x.Designation == route.Start).Count() > 0)
@@ -2072,7 +2068,7 @@ namespace ExpPt1
             }
             else
             {
-                Logger.Log("Flank Protection data skipped\tFlank protection table");
+                ErrLogger.Information("Flank Protection data skipped", "Flank protection table");
             }
 
             List<ReadExcel.EmergStopGroup> emergStopGroups = new List<ReadExcel.EmergStopGroup>();
@@ -2085,7 +2081,7 @@ namespace ExpPt1
             }
             else
             {
-                Logger.Log("Emergency Stop Group data skipped\tEmergency Stop Group table");
+                ErrLogger.Information("Emergency Stop Group data skipped", "Emergency Stop Group table");
             }
 
             foreach (Block BlkPoint in BlkPoints)
@@ -2105,7 +2101,7 @@ namespace ExpPt1
                         LineID = BlkPoint.LineID,
                         Location = Convert.ToDecimal(BlkPoint.Attributes["KMP"].Value).ToString()
                     });
-                    Logger.Log(blckProp.GetElemDesignation(BlkPoint) + ": Fouling point not found");
+                    ErrLogger.Information("Fouling point not found", blckProp.GetElemDesignation(BlkPoint));
                     //ExportPoints.Add(stationName + "\t" +
                     //                 BlkPoint.Attributes["NAME"].Value + "\t" +
                     //                 Convert.ToInt32(Convert.ToDecimal(BlkPoint.Attributes["KMP"].Value) * 1000) + "\t" +
@@ -2193,7 +2189,7 @@ namespace ExpPt1
                     }
                     catch
                     {
-                        ErrLogger.Log(blckProp.GetElemDesignation(BlkPoint) + ". MaxSpeed not found.");
+                        ErrLogger.Warning("MaxSpeed not found", blckProp.GetElemDesignation(BlkPoint), "");
                         error = true;
                     }
                 }
@@ -2269,7 +2265,7 @@ namespace ExpPt1
                     }
                     else
                     {
-                        Logger.Log("Flank Protection not Found: " + blckProp.GetElemDesignation(BlkPoint));
+                        ErrLogger.Information("Flank Protection not found", blckProp.GetElemDesignation(BlkPoint));
                     }
                 }
 
@@ -2284,7 +2280,7 @@ namespace ExpPt1
                     }
                     else
                     {
-                        Logger.Log("Emergency Stop Group not found: " + point.Designation);
+                        ErrLogger.Information("Emergency Stop Group not found", point.Designation);
                     }
                 }
                 else
@@ -2346,7 +2342,7 @@ namespace ExpPt1
                 else
                 {
                     detpoint.TrackSegmentID = "";
-                    ErrLogger.Log("Detection point: '" + detpoint.Designation + "'. TrackSegmentId not found");
+                    ErrLogger.Warning("TrackSegmentId not found", detpoint.Designation, "");
                     error = true;
                 }
                 detpoint.LineID = BlkDP.LineID;
@@ -2394,7 +2390,7 @@ namespace ExpPt1
                 if (trackSegments.Count == 1)
                 {
                     connector.TrackSegmentID1 = trackSegments[0].Designation;
-                    Logger.Log("TrackSegmentID2 not found. Connector:" + connector.Designation);
+                    ErrLogger.Information("TrackSegmentID2 not found", connector.Designation);
                 }
                 if (trackSegments.Count > 1)
                 {
@@ -2425,6 +2421,7 @@ namespace ExpPt1
             //TEst ac new
             if (frmStation.AutoAC)
             {
+                ErrLogger.Information("AC sections are calculated from SL", "Auto AC");
                 AssignDpsToTrckSections();
             }
 
@@ -2563,20 +2560,20 @@ namespace ExpPt1
                 {
                     if (frmStation.AutoAC)
                     {
-                        ErrLogger.Log("AC Section " + blckProp.GetElemDesignation(BlkAcSection) +
-                            ". Unable to initialize, AC created from attributes");
+                        ErrLogger.Warning("Unable to auto initialize, AC section created from attributes", blckProp.GetElemDesignation(BlkAcSection),
+                            "");
                         error = true;
                     }
                     if (tmpDps.Count != DPs.Length)
                     {
-                        ErrLogger.Log("AC Section " + blckProp.GetElemDesignation(BlkAcSection) +
-                            ".Inconsistent count of Detection points found " + tmpDps.Count + "<>" + DPs.Length);
+                        ErrLogger.Warning("Inconsistent count of Detection points found", blckProp.GetElemDesignation(BlkAcSection),
+                            "SL:" + tmpDps.Count + " Atts:" + DPs.Length);
                         error = true;
                     }
                     else if (tmpDps.Count == 0)
                     {
-                        ErrLogger.Log("AC Section " + blckProp.GetElemDesignation(BlkAcSection) +
-                            ".Detection points not found");
+                        ErrLogger.Warning("Detection points not found", blckProp.GetElemDesignation(BlkAcSection),
+                            "");
                         error = true;
                     }
                     else if (DPs.Count() > 0)
@@ -2587,22 +2584,22 @@ namespace ExpPt1
                         {
                             if (AttDps[j] != BlkDps[j])
                             {
-                                ErrLogger.Log("AC Section '" + blckProp.GetElemDesignation(BlkAcSection) +
-                                        "'. Detectionpoints not match '" + AttDps[j] + "'<>'" + BlkDps[j] + "'");
+                                ErrLogger.Warning("Detection point not match", blckProp.GetElemDesignation(BlkAcSection),
+                                        "Atts:" + AttDps[j] + " SL:" + BlkDps[j]);
                                 error = true;
                             }
                         }
                     }
                     else
                     {
-                        ErrLogger.Log("AC Section " + blckProp.GetElemDesignation(BlkAcSection) +
-                            "Detection points not found in attributes");
+                        ErrLogger.Warning("Detection points not found in attributes", blckProp.GetElemDesignation(BlkAcSection),
+                            "");
                         error = true;
                     }
                     if (BlkAcSection.XsdName == "AxleCounterSection" && AcElements.Count == 0)
                     {
-                        ErrLogger.Log("AC Section " + blckProp.GetElemDesignation(BlkAcSection) +
-                            ".No Elements found for Ac section");
+                        ErrLogger.Warning("No Elements found for Ac section", blckProp.GetElemDesignation(BlkAcSection),
+                            "");
                         error = true;
                         //Logger.Log("No Elements found for Ac section", blckProp.GetElemDesignation(BlkAcSection));
                     }
@@ -2663,14 +2660,14 @@ namespace ExpPt1
                     }
                     else
                     {
-                        ErrLogger.Log("AC Section " + acSection.Designation +
-                            ".No Elements found for Ac section");
+                        ErrLogger.Warning("No Elements found for Ac section", acSection.Designation,
+                            "");
                         error = true;
                     }
                     if (!DPs.OrderBy(x => x).SequenceEqual(section.Dps.Select(x => x.Designation).OrderBy(x => x)))
                     {
-                        ErrLogger.Log("AC Section " + blckProp.GetElemDesignation(BlkAcSection) +
-                            ". Calculated dps not equal to attributes");
+                        ErrLogger.Warning("Calculated dps not equal to attributes", blckProp.GetElemDesignation(BlkAcSection),
+                            "");
                         error = true;
                     }
                     axleCounterSections.Add(acSection);
@@ -2763,7 +2760,7 @@ namespace ExpPt1
                 }
                 else
                 {
-                    ErrLogger.Log("Track Section " + blckProp.GetElemDesignation(BlkTrackSection) + ".Error finding limitations");
+                    ErrLogger.Warning("Unable to find limitations", blckProp.GetElemDesignation(BlkTrackSection), "");
                     error = true;
                 }
 
@@ -2782,7 +2779,7 @@ namespace ExpPt1
                     }
                     else
                     {
-                        Logger.Log("Emergency Stop Group not found: " + TrackSection.Designation);
+                        ErrLogger.Information("Emergency Stop Group not found", TrackSection.Designation);
                     }
                 }
                 else
@@ -2855,11 +2852,11 @@ namespace ExpPt1
             List<BaliseGroupsBaliseGroup> source = new List<BaliseGroupsBaliseGroup>();
             //BaliseGroupsBaliseGroup groupsBaliseGroup1 = new BaliseGroupsBaliseGroup();
             if (!this.checkData["checkBoxBG"])
-                Logger.Log("Balise Group data skipped\tBalise Group table");
+                ErrLogger.Information("Balise Group data skipped", "Balise Group table");
             List<Block> list1 = blocks.Where((Func<Block, bool>)(x => x.XsdName == "BaliseGroup" && !x.IsOnNextStation && x.Visible)).OrderBy((Func<Block, string>)(x => x.Attributes["KMP"].Value)).ToList();
             foreach (Block Block in blocks.Where((Func<Block, bool>)(x => x.XsdName == "BaliseGroup" && x.TrackSegId == null)).ToList())
             {
-                ErrLogger.Log(this.blckProp.GetElemDesignation(Block, false, true) + " Balise without TrackSegment");
+                ErrLogger.Warning("BG without TrackSegment", this.blckProp.GetElemDesignation(Block, false, true), "");
                 flag = true;
             }
             TFileDescr document1 = new TFileDescr();
@@ -2877,11 +2874,12 @@ namespace ExpPt1
             foreach (Block block in list1)
             {
                 Block BlkBalisGrp = block;
-                List<TrackSegmentTmp> list2 = this.TrackSegmentsTmp.Where((Func<TrackSegmentTmp, bool>)(s => s.BlocksOnSegments.Any((Func<Block, bool>)(x => x.Designation.Equals(this.blckProp.GetElemDesignation(BlkBalisGrp, false, true)))))).ToList();
+                List<TrackSegmentTmp> list2 = this.TrackSegmentsTmp.Where(s => s.BlocksOnSegments.Any(x => x.Designation.Equals(this.blckProp.GetElemDesignation(BlkBalisGrp, false, true)))).ToList();
                 NominalReverseBothType result1;
                 if (!Enum.TryParse(BlkBalisGrp.Attributes["DIRECTION"].Value.ToString().ToLower(), out result1))
                 {
-                    ErrLogger.Log("Unable to parse DIRECTION attribute value " + this.blckProp.GetElemDesignation(BlkBalisGrp, false, true));
+                    ErrLogger.Warning("Unable to parse DIRECTION attribute value", this.blckProp.GetElemDesignation(BlkBalisGrp, false, true),
+                        BlkBalisGrp.Attributes["DIRECTION"].Value.ToString());
                     flag = true;
                 }
                 string str1 = (string)null;
@@ -2914,7 +2912,8 @@ namespace ExpPt1
                     };
                     if (!Enum.TryParse(BlkBalisGrp.Attributes["ORIENT"].Value.ToString().ToLower(), out result2))
                     {
-                        ErrLogger.Log("Unable to parse ORIENT attribute value " + this.blckProp.GetElemDesignation(BlkBalisGrp, false, true));
+                        ErrLogger.Warning("Unable to parse ORIENT attribute value", this.blckProp.GetElemDesignation(BlkBalisGrp, false, true),
+                            BlkBalisGrp.Attributes["ORIENT"].Value.ToString());
                         flag = true;
                     }
                 }
@@ -2936,13 +2935,13 @@ namespace ExpPt1
                     strArray[strArray.Length - 1] = strArray[strArray.Length - 1].ToUpper();
                     strArray[strArray.Length - 2] = strArray[strArray.Length - 2].ToUpper();
                     groupsBaliseGroup3.TrackSegmentID = string.Join("-", strArray);
-                    ErrLogger.Log(BlkBalisGrp.Designation + " TrackSegmentId taken from table");
+                    ErrLogger.Warning("TrackSegmentId copied from table", BlkBalisGrp.Designation, "");
                     flag = true;
                 }
                 else if (list2.Count == 0)
                 {
                     groupsBaliseGroup3.TrackSegmentID = "";
-                    ErrLogger.Log(this.blckProp.GetElemDesignation(BlkBalisGrp, false, true) + " TrackSegmentId not found");
+                    ErrLogger.Warning("TrackSegmentId not found", this.blckProp.GetElemDesignation(BlkBalisGrp, false, true), "");
                     flag = true;
                 }
                 else
@@ -2951,7 +2950,7 @@ namespace ExpPt1
                     foreach (TrackSegmentTmp trackSegmentTmp in list2)
                         str2 = str2 + trackSegmentTmp.Designation + "; ";
                     groupsBaliseGroup3.TrackSegmentID = "";
-                    ErrLogger.Log(this.blckProp.GetElemDesignation(BlkBalisGrp, false, true) + " To many Segments found " + str2);
+                    ErrLogger.Warning("To many Segments found", this.blckProp.GetElemDesignation(BlkBalisGrp, false, true), str2);
                     flag = true;
                 }
                 PSA psa = pSAs
@@ -2995,7 +2994,7 @@ namespace ExpPt1
                 }
                 else
                 {
-                    ErrLogger.Log("Pws:'" + blckProp.GetElemDesignation(BlkPws, true, false) + "'. Activations table not found.");
+                    ErrLogger.Warning("Activations table not found", blckProp.GetElemDesignation(BlkPws, true, false), "");
                     error = true;
                 }
                 StaffPassengerCrossingsStaffPassengerCrossing staffPassengerCrossing =
@@ -3033,8 +3032,8 @@ namespace ExpPt1
                                                 .ToList();
                             if (DpsOnSeg == null)
                             {
-                                ErrLogger.Log("PWS: '" + blckProp.GetElemDesignation(BlkPws, true, false) + "', '"
-                                        + "'. Detection points not found on Track Segment.");
+                                ErrLogger.Warning("Detection points not found on Track Segment",
+                                    blckProp.GetElemDesignation(BlkPws, true, false), tmpSegment.Designation);
                                 error = true;
                                 continue;
                             }
@@ -3046,8 +3045,9 @@ namespace ExpPt1
                                                  .ToList();
                             if (AcSectionOnSeg == null)
                             {
-                                ErrLogger.Log("PWS: '" + blckProp.GetElemDesignation(BlkPws, true, false) + "', '"
-                                        + "'. Ac sections not found on Track Segment.");
+                                ErrLogger.Warning("Ac sections not found on Track Segment",
+                                    blckProp.GetElemDesignation(BlkPws, true, false),
+                                        "");
                                 error = true;
                                 continue;
                             }
@@ -3057,7 +3057,8 @@ namespace ExpPt1
                             if (ActivOnSeg.Count == 0)
                             {
                                 error = true;
-                                ErrLogger.Log(staffPassengerCrossing.Designation + ": LxAxleCounterSectionID not found on segment '" + tmpSegment.Designation + "'");
+                                ErrLogger.Warning("LxAxleCounterSectionID not found on segment",
+                                    staffPassengerCrossing.Designation, tmpSegment.Designation);
                             }
                             foreach (var act in ActivOnSeg)
                             {
@@ -3066,7 +3067,7 @@ namespace ExpPt1
                                     if (pwsAct.ActivationDelayTime == 1)
                                     {
                                         pwsAct.ActivationDelayTime = 2;
-                                        Logger.Log(blckProp.GetElemDesignation(BlkPws, true, false) + ": Activation Delay time changed from 1 to 2");
+                                        ErrLogger.Information("Activation Delay time changed from 1 to 2", blckProp.GetElemDesignation(BlkPws, true, false));
                                     }
                                 }
                                 activationSections.Add(new StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracksStaffPassengerCrossingTrackActivationSectionsActivationSection
@@ -3142,19 +3143,22 @@ namespace ExpPt1
                             if (!decimal.TryParse(BlkPws.Attributes["START_KMP_" + trckCounter.ToString()].Value, out decimal beginLca))
                             {
                                 error = true;
-                                ErrLogger.Log(staffPassengerCrossing.Designation + ": Unable to parse 'START_KMP_" + trckCounter.ToString() + "' attribute to decimal");
+                                ErrLogger.Warning("Unable to parse attribute value", staffPassengerCrossing.Designation,
+                                    ":  'START_KMP_" + trckCounter.ToString());
                             }
                             else if (!decimal.TryParse(BlkPws.Attributes["END_KMP_" + trckCounter.ToString()].Value, out endLca))
                             {
                                 error = true;
-                                ErrLogger.Log(staffPassengerCrossing.Designation + ": Unable to parse 'END_KMP_" + trckCounter.ToString() + "' attribute to decimal");
+                                ErrLogger.Warning("Unable to parse attribute value", staffPassengerCrossing.Designation,
+                                    "END_KMP_" + trckCounter.ToString());
                             }
                             else
                             {
                                 if (beginLca > endLca)
                                 {
                                     beginLca = endLca;
-                                    ErrLogger.Log("BeginLca less then EndLca for " + blckProp.GetElemDesignation(BlkPws, true, false) + ". BeginLca and EndLca have been swapped");
+                                    ErrLogger.Warning("BeginLca less then EndLca. BeginLca and EndLca have been swapped",
+                                        blckProp.GetElemDesignation(BlkPws, true, false), "");
                                     error = true;
                                 }
                             }
@@ -3163,12 +3167,14 @@ namespace ExpPt1
                             if (!decimal.TryParse(BlkPws.Attributes["LENGTH_" + trckCounter.ToString()].Value.Replace(',', '.'), out decimal length))
                             {
                                 error = true;
-                                ErrLogger.Log(staffPassengerCrossing.Designation + ": Unable to parse 'LENGTH_" + trckCounter.ToString() + "' attribute to decimal");
+                                ErrLogger.Warning("Unable to parse attribute value", staffPassengerCrossing.Designation,
+                                    "LENGTH_" + trckCounter.ToString());
                             }
                             length = Convert.ToDecimal(Calc.RoundUp(Convert.ToDouble(length), 0));
                             if (beginLca + length / 1000 != endLca)
                             {
-                                ErrLogger.Log(blckProp.GetElemDesignation(BlkPws, true, false) + ": beginLca+lengthLca not equal to endLca " + pwsTrack.Designation);
+                                ErrLogger.Warning("beginLca+lengthLca not equal to endLca", blckProp.GetElemDesignation(BlkPws, true, false),
+                                    pwsTrack.Designation);
                                 error = true;
                             }
                             pwsTrack.LengthSPCA = length;
@@ -3178,19 +3184,20 @@ namespace ExpPt1
                             if (!decimal.TryParse(BlkPws.Attributes["START_KMP"].Value, out decimal beginLca))
                             {
                                 error = true;
-                                ErrLogger.Log(staffPassengerCrossing.Designation + ": Unable to parse 'START_KMP' attribute to decimal");
+                                ErrLogger.Warning("Unable to parse attribute value", staffPassengerCrossing.Designation, "START_KMP");
                             }
                             else if (!decimal.TryParse(BlkPws.Attributes["END_KMP"].Value, out endLca))
                             {
                                 error = true;
-                                ErrLogger.Log(staffPassengerCrossing.Designation + ": Unable to parse 'END_KMP' attribute to decimal");
+                                ErrLogger.Warning("Unable to parse attribute value", staffPassengerCrossing.Designation, "END_KMP");
                             }
                             else
                             {
                                 if (beginLca > endLca)
                                 {
                                     beginLca = endLca;
-                                    ErrLogger.Log("BeginLca less than EndLca for " + blckProp.GetElemDesignation(BlkPws, true, false) + ". BeginLca and EndLca have been swapped");
+                                    ErrLogger.Warning("BeginLca less then EndLca. BeginLca and EndLca have been swapped",
+                                       blckProp.GetElemDesignation(BlkPws, true, false), "");
                                     error = true;
                                 }
                             }
@@ -3199,12 +3206,12 @@ namespace ExpPt1
                             if (!decimal.TryParse(BlkPws.Attributes["LENGTH_1"].Value.Replace(',', '.'), out decimal length))
                             {
                                 error = true;
-                                ErrLogger.Log(staffPassengerCrossing.Designation + ": Unable to parse 'LENGTH_1' attribute to decimal");
+                                ErrLogger.Warning("Unable to parse attribute value", staffPassengerCrossing.Designation, "LENGTH_1");
                             }
                             length = Convert.ToDecimal(Calc.RoundUp(Convert.ToDouble(length), 0));
                             if (beginLca + length / 1000 != endLca)
                             {
-                                ErrLogger.Log(blckProp.GetElemDesignation(BlkPws, true, false) + ": beginLca+lengthLca not equal to endLca " + pwsTrack.Designation);
+                                ErrLogger.Warning("beginLca+lengthLca not equal to endLca", blckProp.GetElemDesignation(BlkPws, true, false), pwsTrack.Designation);
                                 error = true;
                             }
                             pwsTrack.LengthSPCA = length;
@@ -3212,7 +3219,7 @@ namespace ExpPt1
                         if (!decimal.TryParse(BlkPws.Attributes["KMP"].Value, out decimal location))
                         {
                             error = true;
-                            ErrLogger.Log(staffPassengerCrossing.Designation + ": Unable to parse 'KMP' attribute to decimal");
+                            ErrLogger.Warning("Unable to parse attribute value", staffPassengerCrossing.Designation, "KMP");
                         }
                         pwsTrack.Location = string.Format("{0:0.000}", location);
 
@@ -3227,7 +3234,7 @@ namespace ExpPt1
                 else
                 {
 
-                    ErrLogger.Log("PWS: '" + blckProp.GetElemDesignation(BlkPws, true, false) + "'. Level Crossing Tracks not found");
+                    ErrLogger.Warning("Level Crossing Tracks not found", blckProp.GetElemDesignation(BlkPws, true, false), "");
                     error = true;
 
 
@@ -3257,7 +3264,7 @@ namespace ExpPt1
                 }
                 else
                 {
-                    ErrLogger.Log("SX:'" + blckProp.GetElemDesignation(BlkSx, true, false) + "'. Activations table not found.");
+                    ErrLogger.Warning("Activations table not found", blckProp.GetElemDesignation(BlkSx, true, false), "");
                     error = true;
                 }
                 StaffPassengerCrossingsStaffPassengerCrossing staffPassengerCrossing =
@@ -3296,8 +3303,8 @@ namespace ExpPt1
                                                 .ToList();
                             if (DpsOnSeg == null)
                             {
-                                ErrLogger.Log("SX: '" + blckProp.GetElemDesignation(BlkSx, true, false) + "', '"
-                                        + "'. Detection points not found on Track Segment.");
+                                ErrLogger.Warning("Detection points not found on Track Segment",
+                                    blckProp.GetElemDesignation(BlkSx, true, false), tmpSegment.Designation);
                                 error = true;
                                 continue;
                             }
@@ -3309,8 +3316,8 @@ namespace ExpPt1
                                                  .ToList();
                             if (AcSectionOnSeg == null)
                             {
-                                ErrLogger.Log("SX: '" + blckProp.GetElemDesignation(BlkSx, true, false) + "', '"
-                                        + "'. Ac sections not found on Track Segment.");
+                                ErrLogger.Warning("Ac sections not found on Track Segment",
+                                    blckProp.GetElemDesignation(BlkSx, true, false), "");
                                 error = true;
                                 continue;
                             }
@@ -3320,7 +3327,8 @@ namespace ExpPt1
                             if (ActivOnSeg.Count == 0)
                             {
                                 error = true;
-                                ErrLogger.Log(staffPassengerCrossing.Designation + ": LxAxleCounterSectionID not found on segment '" + tmpSegment.Designation + "'");
+                                ErrLogger.Warning("LxAxleCounterSectionID not found on segment", 
+                                    staffPassengerCrossing.Designation, tmpSegment.Designation);
                             }
                             foreach (var act in ActivOnSeg)
                             {
@@ -3329,7 +3337,7 @@ namespace ExpPt1
                                     if (pwsAct.ActivationDelayTime == 1)
                                     {
                                         pwsAct.ActivationDelayTime = 2;
-                                        Logger.Log(blckProp.GetElemDesignation(BlkSx, true, false) + ": Activation Delay time changed from 1 to 2");
+                                        ErrLogger.Information("Activation Delay time changed from 1 to 2", blckProp.GetElemDesignation(BlkSx, true, false));
                                     }
                                 }
 
@@ -3404,19 +3412,22 @@ namespace ExpPt1
                             if (!decimal.TryParse(BlkSx.Attributes["START_KM_" + trckCounter.ToString()].Value, out decimal beginLca))
                             {
                                 error = true;
-                                ErrLogger.Log(staffPassengerCrossing.Designation + ": Unable to parse 'START_KM_" + trckCounter.ToString() + "' attribute to decimal");
+                                ErrLogger.Warning("Unable to parse attribute value", staffPassengerCrossing.Designation,
+                                    "START_KM_" + trckCounter.ToString());
                             }
                             else if (!decimal.TryParse(BlkSx.Attributes["END_KM_" + trckCounter.ToString()].Value, out endLca))
                             {
                                 error = true;
-                                ErrLogger.Log(staffPassengerCrossing.Designation + ": Unable to parse 'END_KM_" + trckCounter.ToString() + "' attribute to decimal");
+                                ErrLogger.Warning("Unable to parse attribute value", staffPassengerCrossing.Designation,
+                                    "END_KM_" + trckCounter.ToString());
                             }
                             else
                             {
                                 if (beginLca > endLca)
                                 {
                                     beginLca = endLca;
-                                    ErrLogger.Log("BeginLca less than EndLca for " + blckProp.GetElemDesignation(BlkSx, true, false) + ". BeginLca and EndLca have been swapped");
+                                    ErrLogger.Warning("BeginLca less than EndLca. BeginLca and EndLca have been swapped",
+                                        blckProp.GetElemDesignation(BlkSx, true, false), "");
                                     error = true;
                                 }
                             }
@@ -3425,11 +3436,13 @@ namespace ExpPt1
                             if (!decimal.TryParse(BlkSx.Attributes["LENGTH_" + trckCounter.ToString()].Value.Replace(',', '.'), out length))
                             {
                                 error = true;
-                                ErrLogger.Log(staffPassengerCrossing.Designation + ": Unable to parse 'LENGTH_" + trckCounter.ToString() + "' attribute to decimal");
+                                ErrLogger.Warning("Unable to parse attribute value", staffPassengerCrossing.Designation,
+                                    "LENGTH_" + trckCounter.ToString());
                             }
                             if (beginLca + length / 1000 != endLca)
                             {
-                                ErrLogger.Log(blckProp.GetElemDesignation(BlkSx, true, false) + ": beginLca+lengthLca not equal to endLca " + staffTrack.Designation);
+                                ErrLogger.Warning("beginLca+lengthLca not equal to endLca",
+                                    blckProp.GetElemDesignation(BlkSx, true, false),staffTrack.Designation);
                                 error = true;
                             }
                             staffTrack.LengthSPCA = length;
@@ -3439,19 +3452,22 @@ namespace ExpPt1
                             if (!decimal.TryParse(BlkSx.Attributes["START_KM"].Value, out decimal beginLca))
                             {
                                 error = true;
-                                ErrLogger.Log(staffPassengerCrossing.Designation + ": Unable to parse 'START_KMP' attribute to decimal");
+                                ErrLogger.Warning("Unable to parse attribute value", staffPassengerCrossing.Designation,
+                                    "START_KMP");
                             }
                             else if (!decimal.TryParse(BlkSx.Attributes["END_KM"].Value, out endLca))
                             {
                                 error = true;
-                                ErrLogger.Log(staffPassengerCrossing.Designation + ": Unable to parse 'END_KMP' attribute to decimal");
+                                ErrLogger.Warning("Unable to parse attribute value", staffPassengerCrossing.Designation,
+                                    "END_KMP");
                             }
                             else
                             {
                                 if (beginLca > endLca)
                                 {
                                     beginLca = endLca;
-                                    ErrLogger.Log("BeginLca less than EndLca for " + blckProp.GetElemDesignation(BlkSx, true, false) + ". BeginLca and EndLca have been swapped");
+                                    ErrLogger.Warning("BeginLca less than EndLca.  BeginLca and EndLca have been swapped",
+                                        blckProp.GetElemDesignation(BlkSx, true, false), "");
                                     error = true;
                                 }
                             }
@@ -3460,11 +3476,12 @@ namespace ExpPt1
                             if (!decimal.TryParse(BlkSx.Attributes["LENGTH_1"].Value.Replace(',', '.'), out length))
                             {
                                 error = true;
-                                ErrLogger.Log(staffPassengerCrossing.Designation + ": Unable to parse 'LENGTH_1' attribute to decimal");
+                                ErrLogger.Warning("Unable to parse attribute value", staffPassengerCrossing.Designation,
+                                    "LENGTH_1");
                             }
                             if (beginLca + length / 1000 != endLca)
                             {
-                                ErrLogger.Log(blckProp.GetElemDesignation(BlkSx, true, false) + ": beginLca+lengthLca not equal to endLca " + staffTrack.Designation);
+                                ErrLogger.Warning("beginLca+lengthLca not equal to endLca", blckProp.GetElemDesignation(BlkSx, true, false),  staffTrack.Designation);
                                 error = true;
                             }
                             staffTrack.LengthSPCA = length;
@@ -3472,7 +3489,8 @@ namespace ExpPt1
                         if (!decimal.TryParse(BlkSx.Attributes["KMP"].Value, out decimal location))
                         {
                             error = true;
-                            ErrLogger.Log(staffPassengerCrossing.Designation + ": Unable to parse 'KMP' attribute to decimal");
+                            ErrLogger.Warning("Unable to parse attribute value", staffPassengerCrossing.Designation,
+                                "KMP");
                         }
                         staffTrack.Location = string.Format("{0:0.000}", location);
                         levelCrossingTracks.Add(staffTrack);
@@ -3486,7 +3504,7 @@ namespace ExpPt1
                 else
                 {
 
-                    ErrLogger.Log("SX: '" + blckProp.GetElemDesignation(BlkSx, true, false) + "'. SX Tracks not found");
+                    ErrLogger.Warning("Tracks not found", blckProp.GetElemDesignation(BlkSx, true, false), "");
                     error = true;
 
 
@@ -3520,14 +3538,14 @@ namespace ExpPt1
                     xlsLxActivations = LxsActivations[BlkLx.Attributes["NAME"].Value].ActivationSections;
                     if (xlsLxActivations.Count == 0)
                     {
-                        ErrLogger.Log(blckProp.GetElemDesignation(BlkLx, true, false) + "'. Activations not found in table.");
+                        ErrLogger.Warning("Activations not found in table", blckProp.GetElemDesignation(BlkLx, true, false), "");
                         error = true;
                     }
                     Documents.Add(LxsActivations[BlkLx.Attributes["NAME"].Value].Document);
                 }
                 else
                 {
-                    ErrLogger.Log("LX: '" + blckProp.GetElemDesignation(BlkLx, true, false) + "'. Activations table not found.");
+                    ErrLogger.Warning("Activations table not found", blckProp.GetElemDesignation(BlkLx, true, false), "");
                     error = true;
                 }
 
@@ -3568,8 +3586,8 @@ namespace ExpPt1
                                                 .ToList();
                         if (DpsOnSeg == null)
                         {
-                            ErrLogger.Log("LX: '" + blckProp.GetElemDesignation(BlkLx, true, false) + "', '"
-                                    + "'. Detection points not found on Track Segment.");
+                            ErrLogger.Warning("Detection points not found on Track Segment",
+                                blckProp.GetElemDesignation(BlkLx, true, false), tmpSegment.Designation);
                             error = true;
                             continue;
                         }
@@ -3581,8 +3599,8 @@ namespace ExpPt1
                                              .ToList();
                         if (AcSectionOnSeg == null)
                         {
-                            ErrLogger.Log("LX: '" + blckProp.GetElemDesignation(BlkLx, true, false) + "', '"
-                                    + "'. Ac sections not found on Track Segment.");
+                            ErrLogger.Warning("Ac sections not found on Track Segment",
+                                blckProp.GetElemDesignation(BlkLx, true, false), tmpSegment.Designation);
                             error = true;
                             continue;
                         }
@@ -3596,7 +3614,7 @@ namespace ExpPt1
                                 if (act.ActivationDelayTime == 1)
                                 {
                                     act.ActivationDelayTime = 2;
-                                    Logger.Log("LX: '" + blckProp.GetElemDesignation(BlkLx, true, false) + ": Activation Delay time changed from 1 to 2");
+                                    ErrLogger.Information("Activation Delay time changed from 1 to 2", blckProp.GetElemDesignation(BlkLx, true, false));
                                 }
                                 activationSections.Add(act);
 
@@ -3645,12 +3663,14 @@ namespace ExpPt1
                         {
                             if (!decimal.TryParse(BlkLx.Attributes["KMP_TSEG" + trksegcount.ToString()].Value, out location))
                             {
-                                ErrLogger.Log("Unable to parse KMP_TSEG" + trksegcount.ToString() + " " + blckProp.GetElemDesignation(BlkLx, true, false));
+                                ErrLogger.Warning("Unable to parse attribute value",
+                                     blckProp.GetElemDesignation(BlkLx, true, false), "KMP_TSEG" + trksegcount.ToString());
                                 error = true;
                             }
                             if (Convert.ToDouble(location) == 0)
                             {
-                                ErrLogger.Log("Location is '0' " + blckProp.GetElemDesignation(BlkLx, true, false) + ": " + crossingTrack.Designation);
+                                ErrLogger.Warning("Location is '0' ", blckProp.GetElemDesignation(BlkLx, true, false),
+                                    crossingTrack.Designation);
                                 error = true;
                             }
                             crossingTrack.Location =
@@ -3658,23 +3678,28 @@ namespace ExpPt1
 
                             if (!decimal.TryParse(BlkLx.Attributes["BEGIN_LCA_TSEG" + trksegcount.ToString()].Value, out beginLca))
                             {
-                                ErrLogger.Log("Unable to parse BEGIN_LCA_TSEG" + trksegcount.ToString() + " " + blckProp.GetElemDesignation(BlkLx, true, false));
+                                ErrLogger.Warning("Unable to parse attribute value",
+                                    blckProp.GetElemDesignation(BlkLx, true, false), "BEGIN_LCA_TSEG" + trksegcount.ToString());
                                 error = true;
                             }
                             if (!decimal.TryParse(BlkLx.Attributes["END_LCA_TSEG" + trksegcount.ToString()].Value, out endLca))
                             {
-                                ErrLogger.Log("Unable to parse END_LCA_TSEG" + trksegcount.ToString() + " " + blckProp.GetElemDesignation(BlkLx, true, false));
+                                ErrLogger.Warning("Unable to parse attribute value",
+                                    blckProp.GetElemDesignation(BlkLx, true, false), "END_LCA_TSEG" + trksegcount.ToString());
                                 error = true;
                             }
                             if (beginLca > endLca)
                             {
                                 beginLca = endLca;
-                                ErrLogger.Log("BeginLca less than EndLca for " + blckProp.GetElemDesignation(BlkLx, true, false) + ". BeginLca and EndLca have been swapped");
+                                ErrLogger.Warning("BeginLca less than EndLca. BeginLca and EndLca have been swapped",
+                                    blckProp.GetElemDesignation(BlkLx, true, false),
+                                    tmpSegment.Designation);
                                 error = true;
                             }
                             if (Convert.ToDouble(beginLca) == 0)
                             {
-                                ErrLogger.Log("BeginLca is '0' " + blckProp.GetElemDesignation(BlkLx, true, false) + ". BeginLca and EndLca have been swapped");
+                                ErrLogger.Warning("BeginLca is '0' ", blckProp.GetElemDesignation(BlkLx, true, false),
+                                    tmpSegment.Designation);
                                 error = true;
                             }
                             crossingTrack.BeginLCA =
@@ -3688,25 +3713,27 @@ namespace ExpPt1
                             {
                                 if (!decimal.TryParse(LcaLenght.Value.Replace(',', '.'), out lengthLca))
                                 {
-                                    ErrLogger.Log("Unable to parse LENGHT_LCA_TSEG" + trksegcount.ToString() + " " + blckProp.GetElemDesignation(BlkLx, true, false));
+                                    ErrLogger.Warning("Unable to parse attribute value",
+                                        blckProp.GetElemDesignation(BlkLx, true, false), "LENGHT_LCA_TSEG" + trksegcount.ToString());
                                     error = true;
                                 }
                                 if (Convert.ToDouble(lengthLca) == 0)
                                 {
-                                    ErrLogger.Log("LengthLca is '0' " + blckProp.GetElemDesignation(BlkLx, true, false));
+                                    ErrLogger.Warning("LengthLca is '0'", blckProp.GetElemDesignation(BlkLx, true, false),"");
                                     error = true;
                                 }
                                 if (beginLca + lengthLca / 1000 != endLca)
                                 {
-                                    ErrLogger.Log(blckProp.GetElemDesignation(BlkLx, true, false) + ": beginLca+lengthLca not equal to endLca " + crossingTrack.Designation);
+                                    ErrLogger.Warning("beginLca+lengthLca not equal to endLca",
+                                        blckProp.GetElemDesignation(BlkLx, true, false), crossingTrack.Designation);
                                     error = true;
                                 }
                                 crossingTrack.LengthLCA = lengthLca;
                             }
                             else
                             {
-                                ErrLogger.Log("Attribute " + "LENGHT_LCA_TSEG" + trksegcount.ToString() +
-                                    " not found in Block " + blckProp.GetElemDesignation(BlkLx, true, false));
+                                ErrLogger.Warning("Attribute not found in Block",
+                                    blckProp.GetElemDesignation(BlkLx, true, false),"LENGHT_LCA_TSEG" + trksegcount.ToString());
                                 error = true;
                             }
                         }
@@ -3714,12 +3741,14 @@ namespace ExpPt1
                         {
                             if (!decimal.TryParse(BlkLx.Attributes["KMP"].Value, out location))
                             {
-                                ErrLogger.Log("Unable to parse KMP " + blckProp.GetElemDesignation(BlkLx, true, false));
+                                ErrLogger.Warning("Unable to parse attribute value", 
+                                    blckProp.GetElemDesignation(BlkLx, true, false), "KMP");
                                 error = true;
                             }
                             if (Convert.ToDouble(location) == 0)
                             {
-                                ErrLogger.Log("Location is '0' " + blckProp.GetElemDesignation(BlkLx, true, false) + ": " + crossingTrack.Designation);
+                                ErrLogger.Warning("Location is '0'",
+                                    blckProp.GetElemDesignation(BlkLx, true, false), crossingTrack.Designation);
                                 error = true;
                             }
                             crossingTrack.Location =
@@ -3727,39 +3756,45 @@ namespace ExpPt1
 
                             if (!decimal.TryParse(BlkLx.Attributes["BEGIN_LCA"].Value, out beginLca))
                             {
-                                ErrLogger.Log("Unable to parse BEGIN_LCA " + blckProp.GetElemDesignation(BlkLx, true, false));
+                                ErrLogger.Warning("Unable to parse attribute value",
+                                    blckProp.GetElemDesignation(BlkLx, true, false), "BEGIN_LCA");
                                 error = true;
                             }
                             if (!decimal.TryParse(BlkLx.Attributes["END_LCA"].Value, out endLca))
                             {
-                                ErrLogger.Log("Unable to parse END_LCA " + blckProp.GetElemDesignation(BlkLx, true, false));
+                                ErrLogger.Warning("Unable to parse attribute value",
+                                    blckProp.GetElemDesignation(BlkLx, true, false), "END_LCA");
                                 error = true;
                             }
                             if (beginLca > endLca)
                             {
                                 beginLca = endLca;
-                                ErrLogger.Log("BeginLca less than EndLca for " + blckProp.GetElemDesignation(BlkLx, true, false) + ". BeginLca and EndLca have been swapped");
+                                ErrLogger.Warning("BeginLca less than EndLca. BeginLca and EndLca have been swapped",
+                                  blckProp.GetElemDesignation(BlkLx, true, false), crossingTrack.Designation);
                                 error = true;
                             }
                             if (Convert.ToDouble(beginLca) == 0)
                             {
-                                ErrLogger.Log("BeginLca is '0' " + blckProp.GetElemDesignation(BlkLx, true, false) + ". BeginLca and EndLca have been swapped");
+                                ErrLogger.Warning("BeginLca is '0'", blckProp.GetElemDesignation(BlkLx, true, false),
+                                    crossingTrack.Designation);
                                 error = true;
                             }
                             crossingTrack.BeginLCA = string.Format("{0:0.000}", beginLca);
                             if (!decimal.TryParse(BlkLx.Attributes["LENGHT_LCA"].Value.Replace(',', '.'), out lengthLca))
                             {
-                                ErrLogger.Log("Unable to parse LENGHT_LCA " + blckProp.GetElemDesignation(BlkLx, true, false));
+                                ErrLogger.Warning("Unable to parse attribute value", blckProp.GetElemDesignation(BlkLx, true, false),
+                                    "LENGHT_LCA");
                                 error = true;
                             }
                             if (Convert.ToDouble(lengthLca) == 0)
                             {
-                                ErrLogger.Log("LengthLca is '0' " + blckProp.GetElemDesignation(BlkLx, true, false));
+                                ErrLogger.Warning("LengthLca is '0'", blckProp.GetElemDesignation(BlkLx, true, false), "");
                                 error = true;
                             }
                             if (beginLca + lengthLca / 1000 != endLca)
                             {
-                                ErrLogger.Log(blckProp.GetElemDesignation(BlkLx, true, false) + ": beginLca+lengthLca not equal to endLca " + crossingTrack.Designation);
+                                ErrLogger.Warning("beginLca+lengthLca not equal to endLca", 
+                                    blckProp.GetElemDesignation(BlkLx, true, false), crossingTrack.Designation);
                                 error = true;
                             }
                             crossingTrack.LengthLCA = lengthLca;
@@ -3781,7 +3816,7 @@ namespace ExpPt1
                 else
                 {
 
-                    ErrLogger.Log("LX: '" + blckProp.GetElemDesignation(BlkLx, true, false) + "'. Level Crossing Tracks not found.");
+                    ErrLogger.Warning("Level Crossing Tracks not found", blckProp.GetElemDesignation(BlkLx, true, false), "");
                     //Logger.Log("Level Crossing Tracks not found", blckProp.GetElemDesignation(BlkLx, true));
                     error = true;
                 }
@@ -3798,7 +3833,7 @@ namespace ExpPt1
                                         blckProp.GetElemDesignation(BlkLx, true), ref TableError);
                 if (TableError)
                 {
-                    ErrLogger.Log("LX: '" + blckProp.GetElemDesignation(BlkLx, true, false) + "'. Unable to read LXs table.");
+                    ErrLogger.Warning("Unable to read LXs table", blckProp.GetElemDesignation(BlkLx, true, false), "");
                     error = true;
                     crossings.Add(crossing);
                     continue;
@@ -3812,7 +3847,7 @@ namespace ExpPt1
                 }
                 else
                 {
-                    ErrLogger.Log("LX: '" + BlkLx.Designation + "'. Value 'Barriers' not found.");
+                    ErrLogger.Warning("Value 'Barriers' not found", "LX params", BlkLx.Designation);
                     error = true;
                 }
 
@@ -3824,7 +3859,7 @@ namespace ExpPt1
                 }
                 else
                 {
-                    ErrLogger.Log("LX: '" + BlkLx.Designation + "'. Value 'MaxCloseTime(MaxRestrictTime)' not found.");
+                    ErrLogger.Warning("Value 'MaxCloseTime(MaxRestrictTime)' not found", "LX params", BlkLx.Designation);
                     error = true;
                 }
 
@@ -3836,7 +3871,7 @@ namespace ExpPt1
                 }
                 else
                 {
-                    ErrLogger.Log("LX: '" + BlkLx.Designation + "'. Value 'ExpMaxClosTim' not found.");
+                    ErrLogger.Warning("Value 'ExpMaxClosTim' not found", "LX params", BlkLx.Designation);
                     error = true;
                 }
 
@@ -3848,7 +3883,7 @@ namespace ExpPt1
                 }
                 else
                 {
-                    ErrLogger.Log("LX: '" + BlkLx.Designation + "'. Value 'MinOpenTime' not found.");
+                    ErrLogger.Warning("Value 'MinOpenTime' not found", "LX params", BlkLx.Designation);
                     error = true;
                 }
 
@@ -3868,7 +3903,7 @@ namespace ExpPt1
                         }
                         else
                         {
-                            ErrLogger.Log("LX: '" + BlkLx.Designation + "'. Value 'DebouncingDelayRTLS' not found.");
+                            ErrLogger.Warning("Value 'DebouncingDelayRTLS' not found", "LX params", BlkLx.Designation);
                             error = true;
                         }
                     }
@@ -3879,7 +3914,7 @@ namespace ExpPt1
                 }
                 else
                 {
-                    ErrLogger.Log("LX: '" + BlkLx.Designation + "'. Value 'InterfaceRTLS' not found.");
+                    ErrLogger.Warning("Value 'InterfaceRTLS' not found", "LX params", BlkLx.Designation);
                     error = true;
                 }
 
@@ -3891,7 +3926,7 @@ namespace ExpPt1
                 }
                 else
                 {
-                    ErrLogger.Log("LX: '" + BlkLx.Designation + "'. Value 'DelayTimeRTLS' not found.");
+                    ErrLogger.Warning("Value 'DelayTimeRTLS' not found", "LX params", BlkLx.Designation);
                     error = true;
                 }
 
@@ -3903,7 +3938,7 @@ namespace ExpPt1
                 }
                 else
                 {
-                    ErrLogger.Log("LX: '" + BlkLx.Designation + "'. Value 'CheckTimerRTLS' not found.");
+                    ErrLogger.Warning("Value 'CheckTimerRTLS' not found", "LX params", BlkLx.Designation);
                     error = true;
                 }
 
@@ -3928,7 +3963,7 @@ namespace ExpPt1
                 }
                 else
                 {
-                    ErrLogger.Log("LX: '" + BlkLx.Designation + "'. Value 'DelayTimeExitBarriers' not found.");
+                    ErrLogger.Warning("Value 'DelayTimeExitBarriers' not found", "LX params", BlkLx.Designation);
                     error = true;
                 }
 
@@ -3941,7 +3976,7 @@ namespace ExpPt1
                 }
                 else
                 {
-                    ErrLogger.Log("LX: '" + BlkLx.Designation + "'. Value 'DelayTimeShortBarriers' not found.");
+                    ErrLogger.Warning("Value 'DelayTimeShortBarriers' not found", "LX params", BlkLx.Designation);
                     error = true;
                 }
 
@@ -3954,7 +3989,7 @@ namespace ExpPt1
                 }
                 else
                 {
-                    ErrLogger.Log("LX: '" + BlkLx.Designation + "'. Value 'SupervisionTimer' not found.");
+                    ErrLogger.Warning("Value 'SupervisionTimer' not found", "LX params", BlkLx.Designation);
                     error = true;
                 }
 
@@ -3968,7 +4003,7 @@ namespace ExpPt1
                 }
                 else
                 {
-                    ErrLogger.Log("LX: '" + BlkLx.Designation + "'. Value 'WaitBeforeForcedUp' not found.");
+                    ErrLogger.Warning("Value 'WaitBeforeForcedUp' not found", "LX params", BlkLx.Designation);
                     error = true;
                 }
 
@@ -3983,7 +4018,7 @@ namespace ExpPt1
                 }
                 else
                 {
-                    ErrLogger.Log("LX: '" + BlkLx.Designation + "'. Value 'DeactivateOnClearance' not found.");
+                    ErrLogger.Warning("Value 'DeactivateOnClearance' not found.", "LX params", BlkLx.Designation);
                     error = true;
                 }
 
@@ -3997,7 +4032,7 @@ namespace ExpPt1
                 }
                 else
                 {
-                    ErrLogger.Log("LX: '" + BlkLx.Designation + "'. Value 'BarrierClosingTime' not found.");
+                    ErrLogger.Warning("Value 'BarrierClosingTime' not found", "LX params", BlkLx.Designation);
                     error = true;
                 }
 
@@ -4014,7 +4049,7 @@ namespace ExpPt1
                 }
                 else
                 {
-                    ErrLogger.Log("LX: '" + BlkLx.Designation + "'. Value 'MaxWaitTime' not found.");
+                    ErrLogger.Warning("Value 'MaxWaitTime' not found", "LX params", BlkLx.Designation);
                     error = true;
                 }
 
@@ -4031,7 +4066,7 @@ namespace ExpPt1
                 //}
                 //else
                 //{
-                //    ErrLogger.Log("LX: '" + BlkLx.Designation + "'. Value 'PermittedSpeed' not found.");
+                //    ErrLogger.Warning("LX: '" + BlkLx.Designation + "'. Value 'PermittedSpeed' not found.");
                 //    error = true;
                 //}
 
@@ -4050,7 +4085,7 @@ namespace ExpPt1
         {
             if (!checkData["checkBoxEmSt"])
             {
-                Logger.Log("Emergency Stop groups data skipped\tEmergency Stop");
+                ErrLogger.Information("Emergency Stop groups data skipped", "Emergency Stop");
 
                 foreach (var emsg in emSGs.GroupBy(g => g.Designation))
                 {
@@ -4120,7 +4155,7 @@ namespace ExpPt1
             bool error = false;
             if (!this.checkData["checkBoxSpProf"])
             {
-                Logger.Log("Speed profiles data skipped");
+                ErrLogger.Information("Speed profiles data skipped", "Read SSP");
                 return !error;
             }
             TFileDescr document = new TFileDescr();
@@ -4135,7 +4170,7 @@ namespace ExpPt1
             bool error = false;
             if (!checkData["checkBoxRts"])
             {
-                Logger.Log("Routes data skipped");
+                ErrLogger.Information("Routes data skipped", "Routes");
                 return !error;
             }
             TFileDescr document =
@@ -4250,8 +4285,7 @@ namespace ExpPt1
                         }
                         else
                         {
-                            ErrLogger.Log("Route '" + Route.Designation +
-                                "' - point '" + point.Designation + "' not found in points");
+                            ErrLogger.Warning("Point not found on SL", Route.Designation, point.Designation);
                             ErrLogger.error = true;
                         }
                         groupPoints.Add(new RoutesRoutePointGroupPoint()
@@ -4323,7 +4357,7 @@ namespace ExpPt1
                     if (edges.Count == 0)
                     {
                         error = true;
-                        ErrLogger.Log("Trusted area: Edges not found for Track Segment '" + tmpSegments[j].Designation + "'");
+                        ErrLogger.Warning("Edges not found for Track Segment", "Trusted area", tmpSegments[j].Designation);
                         continue;
                     }
                     if (tmpSegments.Count > 1)
@@ -4377,7 +4411,7 @@ namespace ExpPt1
                         }
                         else if (edges.Count > 2)
                         {
-                            Logger.Log("More then 2 edges found for trusted area: " + tmpSegments.First().Designation);
+                            ErrLogger.Information("More then 2 edges found for trusted area", tmpSegments.First().Designation);
                             trackSegments.Add(new TrackSegmentType
                             {
                                 Value = tmpSegments.First().Designation,
@@ -4388,7 +4422,7 @@ namespace ExpPt1
                         else
                         {
                             error = true;
-                            ErrLogger.Log("Trusted area: Edges not found for Track Segment '" + tmpSegments[j].Designation + "'");
+                            ErrLogger.Warning("Edges not found for Track Segment", "Trusted area", tmpSegments[j].Designation);
                             continue;
                         }
                     }
@@ -4477,10 +4511,10 @@ namespace ExpPt1
             //    .FirstOrDefault();
             //int number =
             //    Convert.ToInt32(Regex.Replace(Blkplatform.Attributes["NAME"].Value, "[^0-9]", ""));
-            if (!int.TryParse(Regex.Replace(Blkplatform.Attributes["NAME"].Value, "[^0-9]", ""), out int number))
-            {
-                ErrLogger.Log("Unable parse platform name to number: '" + Blkplatform.Attributes["NAME"].Value + "'");
-            }
+            //if (!int.TryParse(Regex.Replace(Blkplatform.Attributes["NAME"].Value, "[^0-9]", ""), out int number))
+            //{
+            //    ErrLogger.Warning("Unable parse platform name to number: '" + Blkplatform.Attributes["NAME"].Value + "'");
+            //}
             List<TrackSegmentType> segmentTypes = new List<TrackSegmentType>();
             if (trackSegments.Count == 1)
             {
@@ -4578,7 +4612,7 @@ namespace ExpPt1
             //if (platDesignTmp.Count() < 2)
             //{
             //    errors = true;
-            //    ErrLogger.Log("Platform: " + blckProp.GetElemDesignation(Blkplatform) + "Platform name wrong format");
+            //    ErrLogger.Warning("Platform: " + blckProp.GetElemDesignation(Blkplatform) + "Platform name wrong format");
             //    platDesign = blckProp.GetElemDesignation(Blkplatform);
             //}
             //else
@@ -4609,7 +4643,7 @@ namespace ExpPt1
             else
             {
                 errors = true;
-                ErrLogger.Log("Platform: " + platformsPlatform.Designation + "Cannot parse direction from attributes");
+                ErrLogger.Warning("Unable to parse attribute value", platformsPlatform.Designation, "DIRECTION_PLAT");
             }
 
             if (Enum.TryParse(Blkplatform.Attributes["POSITION_PLAT"].Value,
@@ -4620,17 +4654,17 @@ namespace ExpPt1
             else
             {
                 errors = true;
-                ErrLogger.Log("Platform: " + platformsPlatform.Designation + "Cannot parse position from attributes");
+                ErrLogger.Warning("Unable to parse attribute value", platformsPlatform.Designation, "POSITION_PLAT");
             }
             Platform platformFromFile = platformsFromFile
                                        .Where(x => x.Track == Blkplatform.PlatformTrack &&
-                                        x.Number == number)
+                                        x.Number == Blkplatform.PlatformTrack)
                                         .OrderBy(x => x.Track)
                                        .FirstOrDefault();
             if (platformFromFile == null)
             {
-                ErrLogger.Log("Platform:" + platformsPlatform.Designation +
-                    " for track " + Blkplatform.PlatformTrack + " not found in data file");
+                ErrLogger.Warning("Platform not found in data file", platformsPlatform.Designation,
+                    "track:" + Blkplatform.PlatformTrack);
                 errors = true;
             }
             else
@@ -4661,7 +4695,7 @@ namespace ExpPt1
                     .ToList();
                 if (trackSegmentsTmp.Count == 0)
                 {
-                    ErrLogger.Log(pSA.Name.ToLower() + ". Track Segments not found");
+                    ErrLogger.Warning("Track Segments not found", pSA.Name.ToLower(), "");
                     areas.Add(shuntingArea);
                     errors = true;
                     continue;
@@ -4692,7 +4726,7 @@ namespace ExpPt1
                     }
                     else
                     {
-                        ErrLogger.Log(pSA.Name.ToLower() + ". Begin PSA block not found");
+                        ErrLogger.Warning("Begin PSA block not found", pSA.Name.ToLower(), "");
                         errors = true;
                     }
                 }
@@ -4718,8 +4752,7 @@ namespace ExpPt1
                 if (!Enum.TryParse(bi.Attributes["PER_HAND"].Value, out PerHand))
                 {
                     errors = true;
-                    ErrLogger.Log("Unable parse PER_HAND attribute from '"
-                        + blckProp.GetElemDesignation(bi) + "'");
+                    ErrLogger.Warning("Unable to parse attribute value", blckProp.GetElemDesignation(bi), "PER_HAND");
                 }
                 blockInterfaces.Add(new BlockInterfacesBlockInterface
                 {
@@ -4835,7 +4868,7 @@ namespace ExpPt1
             }
             else
             {
-                ErrLogger.Log("Unable to find track position of signal " + blckProp.GetElemDesignation(BlkSignal));
+                ErrLogger.Warning("Unable to find track position of signal", blckProp.GetElemDesignation(BlkSignal), "");
                 error = true;
             }
 
@@ -4896,7 +4929,8 @@ namespace ExpPt1
                     error = true;
                     if (!suppressLog)
                     {
-                        ErrLogger.Log("Signal direction not match with attribute '" + blckProp.GetElemDesignation(BlkSignal) + "'");
+                        ErrLogger.Warning("Signal direction not match with attribute '", blckProp.GetElemDesignation(BlkSignal),
+                            "atts:" + BlkSignal.Attributes["DIRECTION"].Value + " calc:" + dirTmp);
                         ErrLogger.error = true;
                     }                  
                 }
@@ -4924,7 +4958,7 @@ namespace ExpPt1
                               .ToList();
             if (segNodes.Count == 0)
             {
-                ErrLogger.Log("Start Segment(s) not found Signal to PSA - " + signal.Designation);
+                ErrLogger.Warning("Start Segment(s) not found", signal.Designation, "Sig To PSA");
                 ErrLogger.error = true;
                 return false;
             }
@@ -5005,11 +5039,11 @@ namespace ExpPt1
                     {
                         if (Constants.dpIterLimit == iterCount)
                         {
-                            ErrLogger.Log("Iteration limit reached for to PSA. Signal -" + signal.Designation);
+                            ErrLogger.Warning("Iteration limit reached", signal.Designation, "Sig to PSA");
                         }
                         else
                         {
-                            ErrLogger.Log("Segment(s) for next signal for signal to PSA not found. Signal -" + signal.Designation);
+                            ErrLogger.Warning("Segment(s) for next signal not found", signal.Designation, "Sig to PSA");
                         }
                         ErrLogger.error = true;
                         break;
@@ -5038,7 +5072,7 @@ namespace ExpPt1
             //skipNodes.AddRange(segNodes);
             if (segNodes.Count == 0)
             {
-                ErrLogger.Log("Start Segment(s) not found Signal - " + signal.Designation);
+                ErrLogger.Warning("Start Segment(s) not found", signal.Designation, "Sig to PSA");
                 ErrLogger.error = true;
                 return dangerPoint;
             }
@@ -5122,11 +5156,11 @@ namespace ExpPt1
                     {
                         if (Constants.dpIterLimit == iterCount)
                         {
-                            ErrLogger.Log("Iteration limit reached for danger point. Signal -" + signal.Designation);
+                            ErrLogger.Warning("Iteration limit reached", signal.Designation, "danger point");
                         }
                         else
                         {
-                            ErrLogger.Log("Segment(s) for next dp for danger point not found. Signal -" + signal.Designation);
+                            ErrLogger.Warning("Segment(s) for next dp not found", signal.Designation, "danger point");
                         }
                         ErrLogger.error = true;
                         break;
@@ -5140,7 +5174,7 @@ namespace ExpPt1
 
             if (dpsFound.Count == 0)
             {
-                ErrLogger.Log("Unable to find danger point. Signal -" + signal.Designation);
+                ErrLogger.Warning("Unable to find danger point.", signal.Designation, "");
                 ErrLogger.error = true;
                 return dangerPoint;
             }
@@ -5166,7 +5200,7 @@ namespace ExpPt1
                 }
                 else
                 {
-                    ErrLogger.Log("Unable to parse KMGAP value for danger point. Connector -" + dpConn.Designation);
+                    ErrLogger.Warning("Unable to parse attribute value", dpConn.Designation, "danger point");
                     ErrLogger.error = true;
                 }
             }
@@ -5205,8 +5239,7 @@ namespace ExpPt1
             if (SigSegment == null)
             {
                 error = true;
-                ErrLogger.Log("Danger Point. Track Segment not found for signal '"
-                                        + signal.Designation + "'");
+                ErrLogger.Warning("Track Segment not found", signal.Designation , "danger point");
                 return;
             }
 
@@ -5268,8 +5301,8 @@ namespace ExpPt1
                                 }
                                 if (TmpNextSegment == null)
                                 {
-                                    ErrLogger.Log("Unable to calculate segments path for danger point '"
-                                                    + signal.Designation + "'");
+                                    ErrLogger.Warning("Unable to calculate segments path",
+                                        signal.Designation, "Danger Point");
                                     error = true;
                                     break;
                                 }
@@ -5282,7 +5315,7 @@ namespace ExpPt1
                                     if (pointSeg)
                                     {
                                         nextSegment = TmpNextSegment;
-                                        Logger.Log(signal.Designation + ": Overlap via points '" + blckProp.GetElemDesignation(blockTdt) + "'");
+                                        //Logger.Log(signal.Designation + ": Overlap via points '" + blckProp.GetElemDesignation(blockTdt) + "'");
                                     }
                                     else
                                     {
@@ -5296,12 +5329,12 @@ namespace ExpPt1
                                         if (pointSeg)
                                         {
                                             nextSegment = TmpNextSegment;
-                                            Logger.Log(signal.Designation + ": Overlap via points '" + blckProp.GetElemDesignation(blockTdt) + "'");
+                                            //Logger.Log(signal.Designation + ": Overlap via points '" + blckProp.GetElemDesignation(blockTdt) + "'");
                                         }
                                         else
                                         {
-                                            ErrLogger.Log("Unable to calculate segments path for danger point '"
-                                                    + signal.Designation + "'");
+                                            ErrLogger.Warning("Unable to calculate segments path",
+                                                    signal.Designation,  "danger point");
                                             error = true;
                                             break;
                                         }
@@ -5357,8 +5390,8 @@ namespace ExpPt1
 
                                 if (TmpNextSegment == null)
                                 {
-                                    ErrLogger.Log("Unable to calculate segments path for danger point '"
-                                                    + signal.Designation + "'");
+                                    ErrLogger.Warning("Unable to calculate segments path",
+                                                    signal.Designation, "danger point");
                                     error = true;
                                     break;
                                 }
@@ -5371,7 +5404,7 @@ namespace ExpPt1
                                     if (pointSeg)
                                     {
                                         nextSegment = TmpNextSegment;
-                                        Logger.Log(signal.Designation + ": Overlap via points '" + blckProp.GetElemDesignation(blockTdt) + "'");
+                                        //Logger.Log(signal.Designation + ": Overlap via points '" + blckProp.GetElemDesignation(blockTdt) + "'");
                                     }
                                     else
                                     {
@@ -5385,12 +5418,12 @@ namespace ExpPt1
                                         if (pointSeg)
                                         {
                                             nextSegment = TmpNextSegment;
-                                            Logger.Log(signal.Designation + ": Overlap via points '" + blckProp.GetElemDesignation(blockTdt) + "'");
+                                            //Logger.Log(signal.Designation + ": Overlap via points '" + blckProp.GetElemDesignation(blockTdt) + "'");
                                         }
                                         else
                                         {
-                                            ErrLogger.Log("Unable to calculate segments path for danger point '"
-                                                    + signal.Designation + "'");
+                                            ErrLogger.Warning("Unable to calculate segments path",
+                                                    signal.Designation, "danger point");
                                             error = true;
                                             break;
                                         }
@@ -5413,8 +5446,8 @@ namespace ExpPt1
 
                         if (nextSegment == null)
                         {
-                            ErrLogger.Log("Unable to calculate segments path for danger point '"
-                                + signal.Designation + "'");
+                            ErrLogger.Warning("Unable to calculate segments path",
+                                signal.Designation, "danger point");
                             error = true;
                             break;
                         }
@@ -5422,8 +5455,8 @@ namespace ExpPt1
                         iterationlimit++;
                         if (iterationlimit >= Constants.nextNodeMaxAttemps)
                         {
-                            ErrLogger.Log("Danger point track segments limit reached. Signal '"
-                                + blckProp.GetElemDesignation(BlkSignal) + "'");
+                            ErrLogger.Warning("Danger point track segments limit reached",
+                                blckProp.GetElemDesignation(BlkSignal), "danger point");
                             error = true;
                             break;
                         }
@@ -5447,7 +5480,7 @@ namespace ExpPt1
             else
             {
                 error = true;
-                ErrLogger.Log("Danger Point not found '" + signal.Designation + "'");
+                ErrLogger.Warning("Danger Point not found", signal.Designation, "");
             }
         }
 
@@ -5689,7 +5722,7 @@ namespace ExpPt1
                         {
                             if (NextSeg.Vertex1.XsdName == "Point")
                             {
-                                Logger.Log(signal.Designation + ": Closure Ac via point " + blckProp.GetElemDesignation(NextSeg.Vertex1));
+                                ErrLogger.Information("Closure Ac via point " + blckProp.GetElemDesignation(NextSeg.Vertex1), signal.Designation);
                             }
                             tmpSegmentsAc.Add(NextSeg);
                             AcSegment = NextSeg;
@@ -5742,7 +5775,7 @@ namespace ExpPt1
                         {
                             if (NextSeg.Vertex2.XsdName == "Point")
                             {
-                                Logger.Log(signal.Designation + ": Closure BG via point " + blckProp.GetElemDesignation(NextSeg.Vertex2));
+                                ErrLogger.Information("Closure BG via point " + blckProp.GetElemDesignation(NextSeg.Vertex2), signal.Designation );
                                 if (NextSeg.Designation.Split('-').Last() == "T")
                                 {
                                     tmpSegmentsBg.Add(NextSeg);
@@ -5778,7 +5811,7 @@ namespace ExpPt1
 
                                     if (TrackSegmentsTmp.Where(x => x.Vertex2 == NextTmp.Vertex1).Count() < 2)
                                     {
-                                        ErrLogger.Log("Cannot find CES Bg for " + signal.Designation);
+                                        ErrLogger.Warning("Cannot find CES Bg", signal.Designation, "");
                                         break;
                                     }
                                     else
@@ -5846,7 +5879,7 @@ namespace ExpPt1
                         {
                             if (NextSeg.Vertex2.XsdName == "Point")
                             {
-                                Logger.Log(signal.Designation + ": Closure Ac via point " + blckProp.GetElemDesignation(NextSeg.Vertex2));
+                                ErrLogger.Information("Closure Ac via point " + blckProp.GetElemDesignation(NextSeg.Vertex2), signal.Designation);
                             }
                             tmpSegmentsAc.Add(NextSeg);
                             AcSegment = NextSeg;
@@ -5896,7 +5929,7 @@ namespace ExpPt1
                         {
                             if (NextSeg.Vertex1.XsdName == "Point")
                             {
-                                Logger.Log(signal.Designation + ": Closure BG via point " + blckProp.GetElemDesignation(NextSeg.Vertex2));
+                                ErrLogger.Information("Closure BG via point " + blckProp.GetElemDesignation(NextSeg.Vertex2), signal.Designation);
                                 if (NextSeg.Designation.Split('-').Last() == "T")
                                 {
                                     tmpSegmentsBg.Add(NextSeg);
@@ -5932,7 +5965,7 @@ namespace ExpPt1
 
                                     if (TrackSegmentsTmp.Where(x => x.Vertex1 == NextTmp.Vertex2).Count() < 2)
                                     {
-                                        ErrLogger.Log("Cannot find CES Bg for " + signal.Designation);
+                                        ErrLogger.Warning("Cannot find CES Bg", signal.Designation, "");
                                         break;
                                     }
                                     else
@@ -5973,7 +6006,7 @@ namespace ExpPt1
 
             //if (Ac == null)
             //{
-            //    ErrLogger.Log("Cannot find CES Ac for " + signal.Designation);
+            //    ErrLogger.Warning("Cannot find CES Ac for " + signal.Designation);
             //    //return false;
             //}
             //else
@@ -6003,7 +6036,7 @@ namespace ExpPt1
             //}
             if (Bg == null)
             {
-                ErrLogger.Log("Cannot find CES Bg for " + signal.Designation);
+                ErrLogger.Warning("Cannot find CES Bg", signal.Designation, "");
                 //return false;
             }
             else
@@ -6025,7 +6058,7 @@ namespace ExpPt1
                     }
                     else
                     {
-                        ErrLogger.Log("Lines ID changing between BG and AC for " + signal.Designation);
+                        ErrLogger.Warning("Lines ID changing between BG and AC", signal.Designation, "sig closure");
                         //return false;
                     }
                 }
@@ -6117,12 +6150,12 @@ namespace ExpPt1
                     Node.KindOf != "derailer" &&
                     Node.IsOnCurrentArea)
                 {
-                    ErrLogger.Log("Point " + blckProp.GetElemDesignation(Node) + " not all branches were found");
+                    ErrLogger.Warning("Not all branches were found", blckProp.GetElemDesignation(Node), "track segments");
                     error = true;
                 }
                 else if (branches.Count == 0)
                 {
-                    ErrLogger.Log("Element " + blckProp.GetElemDesignation(Node) + " branches not found");
+                    ErrLogger.Warning("Branches not found",  blckProp.GetElemDesignation(Node), "track segments");
                     error = true;
                 }
                 foreach (TrackLine branch in branches)
@@ -6345,7 +6378,7 @@ namespace ExpPt1
                     {
                         if (Vertex1.IsOnCurrentArea)
                         {
-                            ErrLogger.Log(blckProp.GetElemDesignation(Vertex1) + ": Vertex2 not found");
+                            ErrLogger.Warning("Vertex2 not found", blckProp.GetElemDesignation(Vertex1), "track segment");
                             error = true;
                         }
                         //logs.Add(DateTime.Now +"Vertex2 for '" + blckProp.GetElemDesignation(Vertex1) + "' not found");
@@ -6391,7 +6424,7 @@ namespace ExpPt1
 
             if (trcksegments.Count != countSegLev)
             {
-                ErrLogger.Log("Unable to calculate Track segments levels");
+                ErrLogger.Warning("Unable to calculate Track segments levels", "Track Segments", "");
                 return false;
             }
             else
@@ -6720,9 +6753,9 @@ namespace ExpPt1
         {
             if (attemps >= Constants.nextNodeMaxAttemps)
             {
-                ErrLogger.Log("Max attempts reached finding next node of segment. Last line MaxPoint: X-'"
-                    + branch.line.GeometricExtents.MaxPoint.X +
-                    "' Y-'" + branch.line.GeometricExtents.MaxPoint.Y + "'");
+                ErrLogger.Warning("Max attempts reached finding next node of segment",
+                    "X:" + branch.line.GeometricExtents.MaxPoint.X +
+                    " Y:" + branch.line.GeometricExtents.MaxPoint.Y, "track segments");
                 ErrLogger.error = true;
                 return null;
             }
@@ -6903,7 +6936,7 @@ namespace ExpPt1
                 if (BlkPoint.XsdName == "Point")
                 {
                     error = true;
-                    ErrLogger.Log(blckProp.GetElemDesignation(BlkPoint) + ": Branch not found");
+                    ErrLogger.Warning("Branch not found", blckProp.GetElemDesignation(BlkPoint), "Tip");
                 }
                 return ConnectionBranchType.none;
             }
@@ -6912,7 +6945,7 @@ namespace ExpPt1
                 if (BlkPoint.XsdName == "Point")
                 {
                     error = true;
-                    ErrLogger.Log(blckProp.GetElemDesignation(BlkPoint) + ": Branch not found");
+                    ErrLogger.Warning("Branch not found", blckProp.GetElemDesignation(BlkPoint), "not Tip");
                 }
                 return ConnectionBranchType.none;
             }
@@ -7083,7 +7116,7 @@ namespace ExpPt1
             if (branchType == ConnectionBranchType.none)
             {
                 error = true;
-                ErrLogger.Log(blckProp.GetElemDesignation(BlkPoint) + ": Branch not found");
+                ErrLogger.Warning("Branch not found", blckProp.GetElemDesignation(BlkPoint), "");
             }
             return branchType;
         }
@@ -7528,7 +7561,7 @@ namespace ExpPt1
                 //{
                 //    //&&
                 //    //!trackLines.Any(x => !TrustedArea.Any(l => ObjectsIntersects(x.line, l, Intersect.OnBothOperands)))
-                //    ErrLogger.Log("Trusted area lines inconsistence. First line start X -'"
+                //    ErrLogger.Warning("Trusted area lines inconsistence. First line start X -'"
                 //    + TrustedArea[0].StartPoint.X.ToString() + "'");
                 //    error = true;
                 //}
@@ -7647,7 +7680,7 @@ namespace ExpPt1
                                 .ToList();
             foreach (var check in nonSegBlocks)
             {
-                ErrLogger.Log(blckProp.GetElemDesignation(check) + ": Element without TrackSegment");
+                ErrLogger.Warning("Element without TrackSegment", blckProp.GetElemDesignation(check), "");
                 error = true;
             }
             return !error;
@@ -8310,7 +8343,7 @@ namespace ExpPt1
                                              x.XsdName == "TrackSection") &&
                                              overlaps.Contains(blckProp.GetElemDesignation(x)))
                                  .FirstOrDefault();
-                Logger.Log(blckProp.GetElemDesignation(BlkSignal) + ": Extended overlap '" + blckProp.GetElemDesignation(blockTdt) + "'");
+                ErrLogger.Information("Extended overlap " + blckProp.GetElemDesignation(blockTdt), blckProp.GetElemDesignation(BlkSignal));
                 return true;
             }
             return false;
@@ -8345,17 +8378,19 @@ namespace ExpPt1
             //ErrLogger.filePath = Path.GetDirectoryName(db.Filename) + @"\KmpErrors.log";
             //ErrLogger.Start();
             var test = blocks
-                      .Where(x => x.Location > 0 && x.IsOnCurrentArea)
+                      .Where(x => x.Location > 0 && 
+                                  x.IsOnCurrentArea && 
+                                  x.XsdName != "FoulingPoint")
                       .GroupBy(x => new { x.X, x.TrackSegId })
                       .Where(x => x.Count() > 1)
                       .ToList();
             foreach (var km in test)
             {
-                var block = km.First();
+                Block block = km.First();
                 var test1 = km.Where(x => x.Location != block.Location);
                 if (test1.Count() > 0)
                 {
-                    ErrLogger.Log("KM inconsistence: " + block.Designation + " " + block.Location);
+                    ErrLogger.Warning("KM inconsistence", block.Designation, block.Location.ToString());
                 }
             }
             //ErrLogger.Stop();
@@ -8392,7 +8427,7 @@ namespace ExpPt1
             }
             catch (DirectoryNotFoundException e)
             {
-                ErrLogger.Log(e.Message);
+                ErrLogger.Warning(e.Message,"CR exception", "");
                 ErrLogger.error = true;
             }
             List<CrStartEnd> crStartEnds = new List<CrStartEnd>();
@@ -8403,9 +8438,9 @@ namespace ExpPt1
                                       .ToList();
                 if (signals.Count < 2)
                 {
-                    ErrLogger.Log("Spline not connected X - '" +
+                    ErrLogger.Warning("Spline not connected X - '" +
                                    crSpline.GeometricExtents.MinPoint.X + "', Y - '" +
-                                   crSpline.GeometricExtents.MinPoint.Y + "'");
+                                   crSpline.GeometricExtents.MinPoint.Y + "'", "CR calc", "");
                     ErrLogger.error = true;
                     continue;
                 }
@@ -8452,7 +8487,8 @@ namespace ExpPt1
                 {
                     if (point.KindOf == "trapPoint")
                     {
-                        ErrLogger.Log("KindOfPointType 'hhtTrapPoint' not defined. hhtPoint used instead " + blckProp.GetElemDesignation(point));
+                        ErrLogger.Warning("KindOfPointType 'hhtTrapPoint' not defined. hhtPoint used instead",
+                            blckProp.GetElemDesignation(point), "hht");
                         ErrLogger.error = true;
                         return KindOfPointType.hhtPoint;
                     }
@@ -8464,7 +8500,7 @@ namespace ExpPt1
                 }
                 else
                 {
-                    ErrLogger.Log("Htt and xsd name not match: " + blckProp.GetElemDesignation(point));
+                    ErrLogger.Warning("Hht and xsd name not match", blckProp.GetElemDesignation(point), point.XsdName);
                     ErrLogger.error = true;
                     return KindOfPointType.point;
                 }
@@ -8473,7 +8509,7 @@ namespace ExpPt1
             {
                 if (!Enum.TryParse(point.KindOf, out KindOfPointType kindOfPoint))
                 {
-                    ErrLogger.Log("Unable to parse kind of point: " + blckProp.GetElemDesignation(point));
+                    ErrLogger.Warning("Unable to parse kind of point", blckProp.GetElemDesignation(point), point.KindOf);
                     ErrLogger.error = true;
                 }
                 return kindOfPoint;
@@ -8500,12 +8536,13 @@ namespace ExpPt1
             }
             else
             {
-                ErrLogger.Log("Unable to get EOT direction for '" + BlkEndOfTrack.Designation + "'");
+                ErrLogger.Warning("Unable to get EOT direction", BlkEndOfTrack.Designation, "");
                 DirectionType result;
                 if (!Enum.TryParse(BlkEndOfTrack.Attributes["DIRECTION"].Value, out result))
-                    ErrLogger.Log("Unable to parse 'DIRECTION; attribute '" + BlkEndOfTrack.Designation + "'");
+                    ErrLogger.Warning("Unable to parse attribute value", BlkEndOfTrack.Designation, "DIRECTION");
                 else
-                    ErrLogger.Log("Value '" + BlkEndOfTrack.Attributes["DIRECTION"].Value + "' taken from 'DIRECTION' att.'" + BlkEndOfTrack.Designation + "'");
+                    ErrLogger.Warning("Value copied from attribute",
+                        BlkEndOfTrack.Designation, "DIRECTION");
                 directionType = result;
                 error = true;
             }
@@ -8535,7 +8572,7 @@ namespace ExpPt1
                 //skipNodes.AddRange(segNodes);
                 if (segNodes.Count == 0)
                 {
-                    ErrLogger.Log("Start Segment(s) not found Dp - " + firstDp.Designation);
+                    ErrLogger.Warning("Start Segment(s) not found", firstDp.Designation, "Auto AC");
                     ErrLogger.error = true;
                     continue;
                 }
@@ -8629,11 +8666,11 @@ namespace ExpPt1
                             }
                             if (Constants.dpIterLimit == iterCount)
                             {
-                                ErrLogger.Log("Iteration limit reached Dp -" + firstDp.Designation);
+                                ErrLogger.Warning("Iteration limit reached", firstDp.Designation, "Auto AC");
                             }
                             else
                             {
-                                ErrLogger.Log("Segment(s) for next dp not found Dp -" + firstDp.Designation);
+                                ErrLogger.Warning("Segment(s) for next dp not found", firstDp.Designation, "Auto AC");
                             }
                             ErrLogger.error = true;
                             break;
@@ -8665,7 +8702,7 @@ namespace ExpPt1
         {
             if (dps.Count < 2)
             {
-                ErrLogger.Log("Ac section with single dp: '" + this.blckProp.GetElemDesignation(dps[0], false, true) + "'.");
+                ErrLogger.Warning("Ac section with single dp", this.blckProp.GetElemDesignation(dps[0], false, true), "Auto AC");
                 ErrLogger.error = true;
                 return (AcSection)null;
             }
@@ -8683,7 +8720,7 @@ namespace ExpPt1
                                                     segLines.Any(l => (l.GetClosestPointTo(x.BlkRef.Position, false) - x.BlkRef.Position).Length <= 5));
             if (blockSection == null)
             {
-                ErrLogger.Log("Block for AC section not found. Related Dps: " + string.Join(",", dps.Select(x => x.Designation).ToArray()));
+                ErrLogger.Warning("Block for AC section not found", string.Join(",", dps.Select(x => x.Designation).ToArray()), "Auto AC");
                 ErrLogger.error = true;
                 return null;
             }
@@ -8698,7 +8735,7 @@ namespace ExpPt1
                 //                 .ToList();
                 if (elements == null || elements.Count == 0)
                 {
-                    ErrLogger.Log("No points for AC section found " + dps[0].Designation);
+                    ErrLogger.Warning("No points for AC section found", dps[0].Designation, "Auto AC");
                     ErrLogger.error = true;
                     return acSection;
                 }
@@ -8789,8 +8826,8 @@ namespace ExpPt1
                                 }
                                 else
                                 {
-                                    ErrLogger.Log("Point: '" + this.blckProp.GetElemDesignation(BlkPoint, false, true) +
-                                        "'. Point for detector locking '" + detLock.Pt + "' not found.");
+                                    ErrLogger.Warning("Point for detector locking not found on SL",
+                                        this.blckProp.GetElemDesignation(BlkPoint, false, true), "");
                                     error = true;
                                 }
                             }
@@ -8815,9 +8852,8 @@ namespace ExpPt1
                                                                                                     .FirstOrDefault();
                                     if (axleCounterSection == null)
                                     {
-                                        ErrLogger.Log("Detector locking Point: '" +
-                                            this.blckProp.GetElemDesignation(BlkPoint, false, true) + "'. Section '" + tdt +
-                                            "' not found neither in Ac sections nor in track sections.");
+                                        ErrLogger.Warning("Detector locking section not found neither in Ac sections nor in track sections",
+                                            this.blckProp.GetElemDesignation(BlkPoint, false, true), tdt);
                                         error = true;
                                     }
                                     else
@@ -8828,8 +8864,8 @@ namespace ExpPt1
                                             if (!axleCounterSection.Elements.Element
                                                 .Any(x => x.Value == "spsk-" + this.stationID + "-" + checkPoint))
                                             {
-                                                ErrLogger.Log("Point: '" + this.blckProp.GetElemDesignation(checkPoint) +
-                                                    "'. Ac section '" + tdt + "' no points found.");
+                                                ErrLogger.Warning("No points found in TDL section", 
+                                                    this.blckProp.GetElemDesignation(checkPoint), tdt);
                                                 error = true;
                                             }
                                         }
@@ -8841,7 +8877,8 @@ namespace ExpPt1
                     PointsPoint pointsPoint = this.points.Where((Func<PointsPoint, bool>)(x => x.Designation == this.blckProp.GetElemDesignation(BlkPoint, false, true))).FirstOrDefault();
                     if (pointsPoint == null)
                     {
-                        ErrLogger.Log("Detector locking - Point: '" + this.blckProp.GetElemDesignation(BlkPoint, false, true) + "' not found in RDD points.");
+                        ErrLogger.Warning("Detector locking point not found in RDD points",
+                            this.blckProp.GetElemDesignation(BlkPoint, false, true), "");
                         error = true;
                     }
                     else if (trackforDetectorLockingList.Count > 0)
@@ -8852,7 +8889,7 @@ namespace ExpPt1
                 }
                 return !error;
             }
-            Logger.Log("Track for detector locking data skipped\tTrack for detector locking table");
+            ErrLogger.Information("Track for detector locking data skipped", "TDL table");
             return false;
         }
 
@@ -8879,7 +8916,6 @@ namespace ExpPt1
 
         public void Dispose()
         {
-            Logger.Stop();
             ErrLogger.Stop();
         }
     }

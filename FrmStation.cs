@@ -208,7 +208,7 @@ namespace ExpPt1
         {
             if (this.DialogResult != DialogResult.OK)
             {
-                ErrLogger.Log("Program canceled by user");
+                ErrLogger.Information("Program canceled by user", "Station Dialog");
                 return;
             }
             if (txtBoxStationId.Text.Length == 0 ||

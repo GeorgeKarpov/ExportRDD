@@ -19,11 +19,11 @@ namespace ReadWord
                 document =
                 application.Documents.Open(path);
             }
-            catch
+            catch(Exception e)
             {
                 application.Quit();
                 error = true;
-                ErrLogger.Log("Can not open document: " + Path.GetFileName(path));
+                ErrLogger.Warning(e.Message, "Cover Page", Path.GetFileName(path));
                 return CoverPage;
             }
             Table table =
@@ -67,7 +67,7 @@ namespace ReadWord
                                 if (!datconv)
                                 {
                                     error = true;
-                                    ErrLogger.Log("Cover Page: cannot get date and author" + document.Name);
+                                    ErrLogger.Warning("Unable to get date and author", "Cover Page", document.Name);
                                     break;
                                 }
                                 else

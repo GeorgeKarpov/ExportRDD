@@ -65,6 +65,12 @@
       <HintPath>..\..\..\7.CompareRddXml\CompOrderRddLib\bin\Release\RddXmlLib.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Serilog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
+      <HintPath>..\packages\Serilog.2.9.0\lib\net46\Serilog.dll</HintPath>
+    </Reference>
+    <Reference Include="Serilog.Sinks.File, Version=2.0.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
+      <HintPath>..\packages\Serilog.Sinks.File.4.1.0\lib\net45\Serilog.Sinks.File.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -186,8 +192,7 @@ if not exist $(TargetDir)\doc mkdir $(TargetDir)\doc
 xcopy /Y $(SolutionDir)AccessDatabaseEngine_X64.exe $(TargetDir)\drv
 xcopy /Y $(SolutionDir)mso.reg $(TargetDir)\drv
 xcopy /Y C:\3.TRDD\DynamicBlocks\Blks_Dynamic.dwg $(TargetDir)\cfg
-xcopy /Y $(SolutionDir)\docs\ExpPt1_User_Manual_01P01.pdf $(TargetDir)\doc
-del /f $(TargetDir)\log\error.log</PostBuildEvent>
+xcopy /Y $(SolutionDir)\docs\ExpPt1_User_Manual_01P01.pdf $(TargetDir)\doc</PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\Fody.6.0.0\build\Fody.targets" Condition="Exists('..\packages\Fody.6.0.0\build\Fody.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

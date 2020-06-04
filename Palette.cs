@@ -75,7 +75,7 @@ namespace ExpPt1
                 palCntrlSigLay.BtnLoad.Click += BtnLoad_Click;
                 palCntrlSigLay.DataGridView.DataSourceChanged += Dgw_DataSourceChanged;
 
-
+                errCntrl.ListView.DoubleClick += ListView_DoubleClick;
 
 
 
@@ -98,6 +98,11 @@ namespace ExpPt1
             {
                 _ps.Visible = true;
             }
+        }
+
+        private void ListView_DoubleClick(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         private void Dgw_DataSourceChanged(object sender, EventArgs e)
@@ -207,7 +212,7 @@ namespace ExpPt1
                 palCntrlPt.LblInfo.Text = "Points count: " + points.Rows.Count;
             }
             errCntrl.ListView.Items.Clear();
-            foreach (var line in File.ReadAllLines(ErrLogger.filePath)
+            foreach (var line in File.ReadAllLines(ErrLogger.GetWarnFileName())
                                 .Where(x => x[0] != '#' && 
                                             !x.Contains("log begin") && 
                                             !x.Contains("log end")))

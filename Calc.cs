@@ -170,9 +170,7 @@ namespace ExpPt1
             return Regex.Replace(numbchars, "[^0-9n/a]", "");
         }
 
-        public static DateTime StringToDate(string s, out DateTime date, out bool success, bool log = true,
-            [System.Runtime.CompilerServices.CallerMemberName] string memberName = "",
-            [System.Runtime.CompilerServices.CallerLineNumber] int sourceLineNumber = 0)
+        public static DateTime StringToDate(string s, out DateTime date, out bool success, bool log = true)
         {
             StackTrace stackTrace = new StackTrace();
             success = false;
@@ -184,8 +182,7 @@ namespace ExpPt1
                 {
                     if (log)
                     {
-                        ErrLogger.Log("Wrong date format. Source: '" + stackTrace.GetFrame(1).GetMethod().DeclaringType.Name + "."
-                        + memberName + "', Line number: " + sourceLineNumber);
+                        ErrLogger.Warning("Wrong date format", "", "");
                         ErrLogger.error = true;
                     }
                     success = false;

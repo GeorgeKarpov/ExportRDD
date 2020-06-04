@@ -74,7 +74,7 @@ namespace ExpPt1
                     }
                     catch (InvalidOperationException e)
                     {
-                        ErrLogger.Log(e.Message + crStart + "_" + crEnd);
+                        ErrLogger.Warning(e.Message,crStart + "_" + crEnd, "");
                         error = true;
                         break;
                     }
@@ -88,7 +88,7 @@ namespace ExpPt1
 
             if (error)
             {
-                ErrLogger.Log("Routes path between '" + crStart + "' and '" + crEnd + "' not found.");
+                ErrLogger.Warning("Routes path not found", crStart, crEnd);
                 return !error;
             }
 
@@ -106,7 +106,7 @@ namespace ExpPt1
             Array.Reverse(routeIDsRouteID);
             if (routeIDsRouteID.Length > Constants.maxRoutesInCmRoute)
             {
-                ErrLogger.Log("Routes count " + routeIDsRouteID.Length + " in '" + crStart + "_" + crEnd + "' from " + routeIDsRouteID[8].Value);
+                ErrLogger.Warning("Routes count exceeds limit ", crStart + "_" + crEnd, "Count:" + routeIDsRouteID.Length);
                 return false;
             }
             CompoundRoutesCompoundRoute compoundRoute = new CompoundRoutesCompoundRoute
@@ -155,7 +155,7 @@ namespace ExpPt1
                 //CheckForDefaults(tmpcompoundRoute);
                 if (this.routes.Any(x => x.Designation == tmpcompoundRoute.Designation))
                 {
-                    Logger.Log("Route exists with CR designation '" + tmpcompoundRoute.Designation + "'");
+                    ErrLogger.Information("Compound Route already exists", tmpcompoundRoute.Designation);
                     int counter = 1;
                     do
                     {
@@ -193,8 +193,7 @@ namespace ExpPt1
                         builder.Append(crtid.Designation);
                         delimiter = ", ";
                     }
-                    ErrLogger.Log("CR '" + compoundRoute.Designation +
-                                  "' has additional non-default routes: " + builder.ToString());
+                    ErrLogger.Warning("CR has additional non-default routes", compoundRoute.Designation, builder.ToString());
                 }
             }
         }

@@ -13,7 +13,7 @@ namespace ExpPt1
             {
                 if (!trackSegmentsDesigs.Contains(ssp))
                 {
-                    ErrLogger.Log("SSP segment '" + ssp + "' not found in track segments");
+                    ErrLogger.Warning("Segment not found in track segments", "SSP verification", ssp);
                 }
             }
         }
