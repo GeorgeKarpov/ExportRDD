@@ -207,7 +207,7 @@ namespace ExpPt1
                 palCntrlPt.LblInfo.Text = "Points count: " + points.Rows.Count;
             }
             errCntrl.ListView.Items.Clear();
-            foreach (var line in File.ReadAllLines(ErrLogger.filePath)
+            foreach (var line in File.ReadAllLines(ErrLogger.GetWarnFileName())
                                 .Where(x => x[0] != '#' && 
                                             !x.Contains("log begin") && 
                                             !x.Contains("log end")))

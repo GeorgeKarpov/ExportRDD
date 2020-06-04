@@ -198,7 +198,7 @@ namespace ExpPt1
         {
             if (!Block.Attributes.ContainsKey("NAME"))
             {
-                //ErrLogger.Log("Attribute 'NAME' does not exist: " + Block.BlkRef.Name);
+                //ErrLogger.Warning("Attribute 'NAME' does not exist: " + Block.BlkRef.Name);
                 return Block.BlkRef.Name;
             }
             string Name = Block.Attributes["NAME"].Value.Split('_')[0];
