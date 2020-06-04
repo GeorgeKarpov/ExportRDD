@@ -92,7 +92,7 @@ namespace ExpPt1
             ViewTableRecord view = new ViewTableRecord();
             view.CenterPoint = point2dCenter;
             view.Height = zoomFactor; //(max2d.Y - min2d.Y) * 10;
-            view.Width = (point2d - point2d1).Length + 20; // (max2d.X - min2d.X) * 10;
+            view.Width = (point2d - point2d1).Length + zoomFactor / 2; // (max2d.X - min2d.X) * 10;
             try
             {
                 ed.SetCurrentView(view);

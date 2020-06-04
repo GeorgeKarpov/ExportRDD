@@ -61,7 +61,7 @@ namespace ExpPt1
                 palCntrlSigLay = new ElCntrl();
                 errCntrl = new ErrCntrl();
                 palCntrlSeg.BtnLoad.Click += BtnLoad_Click;
-                palCntrlSeg.DataGridView.CellDoubleClick += Dgw_CellDoubleClick;
+                palCntrlSeg.DataGridView.CellDoubleClick += DgwSegs_CellDoubleClick;
                 palCntrlSeg.DataGridView.DataSourceChanged += Dgw_DataSourceChanged;
 
                 palCntrlMb.BtnLoad.Click += BtnLoad_Click;
@@ -122,7 +122,7 @@ namespace ExpPt1
                 }
             }
         }
-        private void Dgw_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        private void DgwSegs_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             DataGridView dataGrid = (DataGridView)sender;
             if (e.RowIndex != -1)
@@ -146,12 +146,12 @@ namespace ExpPt1
                 }
                 if (entities[0] != null && entities[1] != null)
                 {
-                    AcadTools.ZoomToObjects(entities, 70);
+                    AcadTools.ZoomToObjects(entities, 150);
                 }
             }
         }
 
-        private void DataGridView_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        private void Dgw_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             DataGridView dataGrid = (DataGridView)sender;
             if (e.RowIndex != -1)
