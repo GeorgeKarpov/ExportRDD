@@ -85,20 +85,6 @@ namespace ExpPt1
             this.BlocksToGet = new Dictionary<string, string>();
             this.Status = new TStatus();
             ErrLogger.Start(Path.GetDirectoryName(dwgPath));
-            //if (this.GetType() == typeof(Display))
-            //{
-            //    File.Delete(this.dwgDir + "\\Disp_error.log");
-            //    File.Delete(this.dwgDir + "\\Disp_report.log");
-            //    ErrLogger.Start(this.dwgDir + "\\Disp_error.log");
-            //    Logger.Start(this.dwgDir + "\\Disp_report.log");
-            //}
-            //else
-            //{
-            //    File.Delete(this.dwgDir + "\\Error.log");
-            //    File.Delete(this.dwgDir + "\\Report.log");
-            //    ErrLogger.Start(this.dwgDir + "\\Error.log");
-            //    Logger.Start(this.dwgDir + "\\Report.log");
-            //}
             this.ReadBlocksDefinitions();
             this.blocksErr = false;
             this.blocks = this.GetBlocks(ref this.blocksErr);
