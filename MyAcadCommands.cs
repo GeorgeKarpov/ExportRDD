@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Runtime;
+using System.IO;
 using System.Runtime.CompilerServices;
 
 [assembly: CommandClass(typeof(ExpPt1.MyAcadCommands))]
@@ -12,7 +13,24 @@ namespace ExpPt1
 
         public static DocumentCollection Docs { get; set; }
         public static Palette Pl { get; set; }
-        //static ExpPt1.Export exportTmp;
+
+        [CommandMethod("RDDERRORLOG")]
+        public static void Test()
+        {
+            System.Windows.Forms.Form frmErrors = new System.Windows.Forms.Form
+            {
+                Text = "RDD errors List"
+            };
+            ErrCntrl err = new ErrCntrl();
+            err.BtnLoad.Visible = false;
+            err.ListView.Dock = System.Windows.Forms.DockStyle.Fill;
+            err.Dock = System.Windows.Forms.DockStyle.Fill;
+            ErrLogger.Dir = Path.GetDirectoryName(DwgPath);
+            err.LoadList();
+            frmErrors.Controls.Add(err);
+            Application.ShowModelessDialog(null, frmErrors, true);
+        }
+
         [CommandMethod("ExportRDD")]
         public static void ExportRdd()
         {

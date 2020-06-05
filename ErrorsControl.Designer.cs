@@ -33,6 +33,7 @@
             this.ListViewErr = new System.Windows.Forms.ListView();
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.Message = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.btnLoad = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // imageList1
@@ -54,29 +55,42 @@
             this.ListViewErr.Location = new System.Drawing.Point(0, 0);
             this.ListViewErr.MultiSelect = false;
             this.ListViewErr.Name = "ListViewErr";
-            this.ListViewErr.Size = new System.Drawing.Size(586, 366);
+            this.ListViewErr.Size = new System.Drawing.Size(653, 391);
             this.ListViewErr.SmallImageList = this.imageList1;
             this.ListViewErr.TabIndex = 1;
             this.ListViewErr.UseCompatibleStateImageBehavior = false;
             this.ListViewErr.View = System.Windows.Forms.View.Details;
+            this.ListViewErr.SizeChanged += new System.EventHandler(this.ListViewErr_SizeChanged);
             // 
             // columnHeader1
             // 
-            this.columnHeader1.Text = "Time";
+            this.columnHeader1.Text = "Date";
             this.columnHeader1.Width = 91;
             // 
             // Message
             // 
             this.Message.Text = "Message";
-            this.Message.Width = 525;
+            this.Message.Width = 542;
+            // 
+            // btnLoad
+            // 
+            this.btnLoad.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.btnLoad.Location = new System.Drawing.Point(0, 391);
+            this.btnLoad.Margin = new System.Windows.Forms.Padding(0);
+            this.btnLoad.Name = "btnLoad";
+            this.btnLoad.Size = new System.Drawing.Size(653, 23);
+            this.btnLoad.TabIndex = 3;
+            this.btnLoad.Text = "Load";
+            this.btnLoad.UseVisualStyleBackColor = true;
             // 
             // ErrCntrl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.ListViewErr);
+            this.Controls.Add(this.btnLoad);
             this.Name = "ErrCntrl";
-            this.Size = new System.Drawing.Size(586, 366);
+            this.Size = new System.Drawing.Size(653, 414);
             this.ResumeLayout(false);
 
         }
@@ -87,5 +101,6 @@
         internal System.Windows.Forms.ListView ListViewErr;
         internal System.Windows.Forms.ColumnHeader Message;
         private System.Windows.Forms.ColumnHeader columnHeader1;
+        private System.Windows.Forms.Button btnLoad;
     }
 }

@@ -76,7 +76,7 @@ namespace ExpPt1
                 palCntrlSigLay.DataGridView.DataSourceChanged += Dgw_DataSourceChanged;
 
                 errCntrl.ListView.DoubleClick += ListView_DoubleClick;
-
+                errCntrl.BtnLoad.Click += BtnLoad_Click;
 
 
 #if DEBUG
@@ -102,7 +102,19 @@ namespace ExpPt1
 
         private void ListView_DoubleClick(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            ListView lstView = (ListView)(sender);
+            if (lstView.SelectedItems.Count > 0)
+            {
+
+                string designation = lstView.SelectedItems[0].SubItems[1].Text.Split(new string[] { "|", " " },options: StringSplitOptions.RemoveEmptyEntries)[0];
+                Block element = Blocks
+                                .Where(x => x.Designation == designation)
+                                .FirstOrDefault();
+                if (element != null)
+                {
+                    AcadTools.ZoomToObjects(element.BlkRef, 70);
+                }
+            }
         }
 
         private void Dgw_DataSourceChanged(object sender, EventArgs e)
@@ -211,15 +223,7 @@ namespace ExpPt1
                 palCntrlPt.DataGridView.DataSource = points;
                 palCntrlPt.LblInfo.Text = "Points count: " + points.Rows.Count;
             }
-            errCntrl.ListView.Items.Clear();
-            foreach (var line in File.ReadAllLines(ErrLogger.GetWarnFileName())
-                                .Where(x => x[0] != '#' && 
-                                            !x.Contains("log begin") && 
-                                            !x.Contains("log end")))
-            {
-                ListViewItem tmp = new ListViewItem(line.Split(new string[] { " -- ", }, StringSplitOptions.RemoveEmptyEntries), 2);
-                errCntrl.ListView.Items.Add(tmp);
-            }     
+            errCntrl.LoadList();
             if (ErrLogger.error)
             {
                 _ps.Activate(_ps.Count - 1);

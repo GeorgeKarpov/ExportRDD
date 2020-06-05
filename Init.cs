@@ -23,7 +23,7 @@ namespace ExpPt1
                     .WriteTo.Logger(l => l.Filter.ByIncludingOnly(e => e.Level == LogEventLevel.Fatal)
                         .WriteTo.File(@"log\Fatal.log", rollingInterval: RollingInterval.Day))
                     .CreateLogger();
-            Log.Logger.Information("", MyAcadCommands.DwgPath);
+
             MyAcadCommands.DwgPath = AcadApp.DocumentManager.CurrentDocument.Name;
             MyAcadCommands.Docs = AcadApp.DocumentManager;
             MyAcadCommands.AddPalette();

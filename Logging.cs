@@ -1,13 +1,15 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using DocumentFormat.OpenXml.Spreadsheet;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 public static class ErrLogger
 {
-    private static string Dir;
+    public static string Dir;
     public static bool error;
     private static string warnFileName;
     private static string infoFileName;
@@ -19,9 +21,18 @@ public static class ErrLogger
         infoFileName = "info.log";
     }
 
-    public static string GetWarnFileName()
+    public static List<string> GetWarnLines()
     {
-        return Dir + "\\" + warnFileName;
+        if (Dir != null && File.Exists(Dir + "\\" + warnFileName))
+        {
+            return
+            File.ReadAllLines(Dir + "\\" + warnFileName)
+            .Where(x => x[0] != '#' &&
+                        !x.Contains("log begin") &&
+                        !x.Contains("log end"))
+            .ToList();
+        }
+        return new List<string>(); 
     }
 
     public static void Start(string dir)
@@ -35,7 +46,7 @@ public static class ErrLogger
             {
                 streamWriter.WriteLine("# File: " + Dir + "\\" + warnFileName);
                 streamWriter.WriteLine("# Date: " + DateTime.Now.Date.ToString("dd.MM.yyyy"));
-                streamWriter.WriteLine(DateTime.Now.ToString("HH:mm:ss") + " -- log begin");
+                streamWriter.WriteLine(DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss") + " -- log begin");
                 streamWriter.Close();
                 error = false;
             }
@@ -46,7 +57,7 @@ public static class ErrLogger
             {
                 streamWriter.WriteLine("# File: " + Dir + "\\" + infoFileName);
                 streamWriter.WriteLine("# Date: " + DateTime.Now.Date.ToString("dd.MM.yyyy"));
-                streamWriter.WriteLine(DateTime.Now.ToString("HH:mm:ss") + " -- log begin");
+                streamWriter.WriteLine(DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss") + " -- log begin");
                 streamWriter.Close();
             }
         }
@@ -58,7 +69,7 @@ public static class ErrLogger
         {
             using (StreamWriter streamWriter = new StreamWriter(Dir + "\\" + warnFileName, append: true))
             {
-                streamWriter.WriteLine(DateTime.Now.ToString("HH:mm:ss") + " -- log end");
+                streamWriter.WriteLine(DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss") + " -- log end");
                 streamWriter.Close();
             }
         }
@@ -66,20 +77,11 @@ public static class ErrLogger
         {
             using (StreamWriter streamWriter = new StreamWriter(Dir + "\\" + infoFileName, append: true))
             {
-                streamWriter.WriteLine(DateTime.Now.ToString("HH:mm:ss") + " -- log end");
+                streamWriter.WriteLine(DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss") + " -- log end");
                 streamWriter.Close();
             }
         }
     }
-
-    //public static void Log(string message)
-    //{
-    //    using (StreamWriter streamWriter = new StreamWriter(Dir, append: true))
-    //    {
-    //        streamWriter.WriteLine(DateTime.Now.ToString("HH:mm:ss") + " -- " +  message);
-    //        streamWriter.Close();
-    //    }
-    //}
 
     public static void Warning<T>(string message, T Par1, T Par2)
     {
@@ -87,8 +89,13 @@ public static class ErrLogger
         {
             using (StreamWriter streamWriter = new StreamWriter(Dir + "\\" + warnFileName, append: true))
             {
-                streamWriter.WriteLine(DateTime.Now.ToString("HH:mm:ss") + " -- " + 
+#if DEBUG
+                streamWriter.WriteLine(DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss") + " -- " + 
                                        string.Format("{1} | {0} | {2} | {3}", message, Par1, Par2, GetCaller()));
+#else
+                streamWriter.WriteLine(DateTime.Now.ToString("HH:mm:ss") + " -- " + 
+                                       string.Format("{1} | {0} | {2}", message, Par1, Par2));
+#endif
                 streamWriter.Close();
             }
         }       
@@ -100,7 +107,7 @@ public static class ErrLogger
         {
             using (StreamWriter streamWriter = new StreamWriter(Dir + "\\" + infoFileName, append: true))
             {
-                streamWriter.WriteLine(DateTime.Now.ToString("HH:mm:ss") + " -- " +
+                streamWriter.WriteLine(DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss") + " -- " +
                                        string.Format("{1} | {0}", message, Par1));
                 streamWriter.Close();
             }
@@ -127,7 +134,7 @@ public static class ErrLogger
                 break;
 
             // Get class name and method of the current stack frame
-            result = string.Format("{0}.{1} Line {2}", declaringType.Name, methodBase.Name, stackFrame.GetFileLineNumber());
+            result = string.Format("{0}.{1} {2}", declaringType.Name, methodBase.Name, stackFrame.GetFileLineNumber());
 
             // Here, we're at the first method outside of SimpleLog class. 
             // This is the method that called the log method. We're done unless it is 
