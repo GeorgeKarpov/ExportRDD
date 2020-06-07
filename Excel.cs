@@ -193,7 +193,7 @@ namespace ReadExcel
                         }
                         catch (OleDbException ex1)
                         {
-                            ErrLogger.Warning(ex1.Message, "Flank Protection", "");
+                            ErrLogger.Error(ex1.Message, "Flank Protection", "");
                         }
                     }
                     else
@@ -731,7 +731,7 @@ namespace ReadExcel
             List<SpeedProfilesSpeedProfile> speedProfiles = new List<SpeedProfilesSpeedProfile>();
             if (!File.Exists(dataSource))
             {
-                ErrLogger.Warning("File does not exist", "SSP", dataSource);
+                ErrLogger.Error("File does not exist", "SSP", dataSource);
                 error = true;
                 return speedProfiles;
             }
@@ -1221,7 +1221,7 @@ namespace ReadExcel
                         }
                         catch (Exception ex)
                         {
-                            ErrLogger.Warning(ex.Message, "Routes", dataSource);
+                            ErrLogger.Error(ex.Message, "Routes", dataSource);
                             cmd = null;
                             conn.Close();
                             return null;
@@ -1302,7 +1302,7 @@ namespace ReadExcel
                 }
                 catch
                 {
-                    ErrLogger.Warning("Unable to query compound routes table", "RT table", dataSource);
+                    ErrLogger.Error("Unable to query compound routes table", "RT table", dataSource);
                     oleDbConnection.Close();
                     return (List<XlsCmpRoute>)null;
                 }
@@ -1420,7 +1420,7 @@ namespace ReadExcel
                 }
                 if (ValueColumn == "")
                 {
-                    ErrLogger.Warning("LX not found in crossings parameters table", LxId.ToLower(), "");
+                    ErrLogger.Error("LX not found in crossings parameters table", LxId.ToLower(), "");
                     error = true;
                     return null;
                 }
@@ -1602,13 +1602,13 @@ namespace ReadExcel
                         }
                         if (!decimal.TryParse((string)dt.Rows[a][ColumnNumber + 1], out decimal mTrSpeed))
                         {
-                            ErrLogger.Warning("Unable parse maxTrainSpeed", blckProp.GetElemDesignation(blkRefLx),actName);
-                            ErrLogger.error = true;
+                            ErrLogger.Error("Unable parse maxTrainSpeed", blckProp.GetElemDesignation(blkRefLx),actName);
+                            ErrLogger.ErrorsFound = true;
                         }
                         if (!decimal.TryParse((string)dt.Rows[a][ColumnNumber + 2], out decimal actDelT))
                         {
-                            ErrLogger.Warning("Unable parse ActivationDelayTime", blckProp.GetElemDesignation(blkRefLx), actName);
-                            ErrLogger.error = true;
+                            ErrLogger.Error("Unable parse ActivationDelayTime", blckProp.GetElemDesignation(blkRefLx), actName);
+                            ErrLogger.ErrorsFound = true;
                         }
                         activationDelays.Add(new PwsActDl
                         {
@@ -1628,9 +1628,9 @@ namespace ReadExcel
                     }
                     else
                     {
-                        ErrLogger.Warning("wrong ActivationAxleCounterSectionID", blckProp.GetElemDesignation(blkRefLx), actName + " " +
+                        ErrLogger.Error("wrong ActivationAxleCounterSectionID", blckProp.GetElemDesignation(blkRefLx), actName + " " +
                                  (string)dt.Rows[a][ColumnNumber + 1]);
-                        ErrLogger.error = true;
+                        ErrLogger.ErrorsFound = true;
                     }
 
                     a++;
@@ -1653,9 +1653,9 @@ namespace ReadExcel
                     }
                     else
                     {
-                        ErrLogger.Warning("Wrong LxAxleCounterSectionID", blckProp.GetElemDesignation(blkRefLx), actName + " " +
+                        ErrLogger.Error("Wrong LxAxleCounterSectionID", blckProp.GetElemDesignation(blkRefLx), actName + " " +
                                  (string)dt.Rows[a][ColumnNumber + 1]);
-                        ErrLogger.error = true;
+                        ErrLogger.ErrorsFound = true;
                     }
 
                     a++;
@@ -1671,9 +1671,9 @@ namespace ReadExcel
                     }
                     else
                     {
-                        ErrLogger.Warning("Wrong DeactivationAxleCounterSectionID", blckProp.GetElemDesignation(blkRefLx), actName + " " +
+                        ErrLogger.Error("Wrong DeactivationAxleCounterSectionID", blckProp.GetElemDesignation(blkRefLx), actName + " " +
                                  (string)dt.Rows[a][ColumnNumber + 1]);
-                        ErrLogger.error = true;
+                        ErrLogger.ErrorsFound = true;
                     }
                     activation.ActivationSections.Add(section);
 
@@ -1887,9 +1887,9 @@ namespace ReadExcel
                                 }
                                 else
                                 {
-                                    ErrLogger.Warning("Wrong ActivationAxleCounterSectionID", LXname, actName + " " +
+                                    ErrLogger.Error("Wrong ActivationAxleCounterSectionID", LXname, actName + " " +
                                         (string)dt.Rows[a + j][ColumnNumber + 1]);
-                                    ErrLogger.error = true;
+                                    ErrLogger.ErrorsFound = true;
                                 }
                             }
                         }
@@ -1923,9 +1923,9 @@ namespace ReadExcel
                             }
                             else
                             {
-                                ErrLogger.Warning("Wrong LxAxleCounterSectionID", LXname, actName + " " +
+                                ErrLogger.Error("Wrong LxAxleCounterSectionID", LXname, actName + " " +
                                          (string)dt.Rows[a + j][ColumnNumber + 1]);
-                                ErrLogger.error = true;
+                                ErrLogger.ErrorsFound = true;
                             }
                         }
                         j++;
@@ -2026,15 +2026,15 @@ namespace ReadExcel
                         new List<BaliseGroupsBaliseGroupBaliseGroupTypesKindOfBG>();
                     if (!Enum.TryParse(BGs[b]["Balise Groupe Types"].ToString().Replace(" ", string.Empty), out KindOfBG kindOfBG))
                     {
-                        ErrLogger.Warning("Unable to parse KindOfBG from BG table", BGs[b]["Designation"].ToString().ToLower(), 
+                        ErrLogger.Error("Unable to parse KindOfBG from BG table", BGs[b]["Designation"].ToString().ToLower(), 
                             BGs[b]["Balise Groupe Types"].ToString().Replace(" ", string.Empty));
                     }
                     if (!Enum.TryParse(BGs[b]["Direction"].ToString().ToLower(),
                         out NominalReverseBothType nominalReverseBothType))
                     {
-                        ErrLogger.Warning("Unable parse NominalReverseBothType from BG table", BGs[b]["Designation"].ToString().ToLower(),
+                        ErrLogger.Error("Unable parse NominalReverseBothType from BG table", BGs[b]["Designation"].ToString().ToLower(),
                                BGs[b]["Direction"].ToString().ToLower());
-                        ErrLogger.error = true;
+                        ErrLogger.ErrorsFound = true;
                     }
                     BaliseGroupsBaliseGroupBaliseGroupTypesKindOfBG KindOfBG =
                         new BaliseGroupsBaliseGroupBaliseGroupTypesKindOfBG
@@ -2066,15 +2066,15 @@ namespace ReadExcel
                         if (!Enum.TryParse(BGs[b + routeChainCounter]["Balise Groupe Types"].ToString()
                                       .Replace(" ", string.Empty), out kindOfBG))
                         {
-                            ErrLogger.Warning("Unable to parse KindOfBG from BG table", BGs[b]["Designation"].ToString().ToLower(),
+                            ErrLogger.Error("Unable to parse KindOfBG from BG table", BGs[b]["Designation"].ToString().ToLower(),
                                 BGs[b + routeChainCounter]["Balise Groupe Types"].ToString().Replace(" ", string.Empty));
-                            ErrLogger.error = true;
+                            ErrLogger.ErrorsFound = true;
                         }
                         if (!Enum.TryParse(BGs[b + routeChainCounter]["Direction"].ToString().ToLower(), out NominalReverseBothType reverseBothType))
                         {
-                            ErrLogger.Warning("Unable to parse NominalReverseBothType from BG table", BGs[b]["Designation"].ToString().ToLower(),
+                            ErrLogger.Error("Unable to parse NominalReverseBothType from BG table", BGs[b]["Designation"].ToString().ToLower(),
                                 BGs[b + routeChainCounter]["Direction"].ToString().ToLower());
-                            ErrLogger.error = true;
+                            ErrLogger.ErrorsFound = true;
                         }
                         KindOfBG = new BaliseGroupsBaliseGroupBaliseGroupTypesKindOfBG
                         {

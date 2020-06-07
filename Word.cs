@@ -23,7 +23,7 @@ namespace ReadWord
             {
                 application.Quit();
                 error = true;
-                ErrLogger.Warning(e.Message, "Cover Page", Path.GetFileName(path));
+                ErrLogger.Error(e.Message, "Cover Page", Path.GetFileName(path));
                 return CoverPage;
             }
             Table table =
@@ -67,7 +67,7 @@ namespace ReadWord
                                 if (!datconv)
                                 {
                                     error = true;
-                                    ErrLogger.Warning("Unable to get date and author", "Cover Page", document.Name);
+                                    ErrLogger.Error("Unable to get date and author", "Cover Page", document.Name);
                                     break;
                                 }
                                 else

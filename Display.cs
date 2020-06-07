@@ -63,7 +63,7 @@ namespace ExpPt1
             if (!GetSegments(blocks, TracksLines, Tracks, pSAs, true))
             {
                 AcadApp.ShowAlertDialog("Track Segments errors. See Errors Tab");
-                ErrLogger.error = true;
+                ErrLogger.ErrorsFound = true;
                 //return;
             }
             checkData = new Dictionary<string, bool> {

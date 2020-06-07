@@ -19,15 +19,24 @@ namespace ExpPt1
 
         private void DgwKms_DataSourceChanged(object sender, EventArgs e)
         {
-            for (int i = 0; i <= dgwMb.Columns.Count - 1; i++)
+            DataGridView dgw = (DataGridView)(sender);
+            dgw.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.False;
+            for (int i = 0; i <= dgw.Columns.Count - 1; i++)
             {
-                dgwMb.Columns[i].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+                dgw.Columns[i].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
                 //store autosized widths
-                int colw = dgwMb.Columns[i].Width;
+                int colw = dgw.Columns[i].Width;
                 //remove autosizing
-                dgwMb.Columns[i].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
-                //set width to calculated by autosize
-                dgwMb.Columns[i].Width = colw;
+                if (i == dgw.Columns.Count - 1)
+                {
+                    dgw.Columns[i].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                }
+                else
+                {
+                    dgw.Columns[i].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+                    //set width to calculated by autosize
+                    dgw.Columns[i].Width = colw;
+                }
             }
         }
     }

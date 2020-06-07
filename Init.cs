@@ -1,11 +1,8 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Runtime;
-using Serilog;
-using Serilog.Events;
 using System;
 using System.IO;
-using System.Reflection;
 using System.Threading;
 using AcadApp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 using Application = System.Windows.Forms.Application;
@@ -18,12 +15,7 @@ namespace ExpPt1
     {
         public void Initialize()
         {
-            Log.Logger = new LoggerConfiguration()
-                    .MinimumLevel.Debug()
-                    .WriteTo.Logger(l => l.Filter.ByIncludingOnly(e => e.Level == LogEventLevel.Fatal)
-                        .WriteTo.File(@"log\Fatal.log", rollingInterval: RollingInterval.Day))
-                    .CreateLogger();
-
+            ErrLogger.Configure(logDirApp: Directory.GetCurrentDirectory() + "\\log", prefix: "rdd", startExplicitly: false, createDirectory: true);
             MyAcadCommands.DwgPath = AcadApp.DocumentManager.CurrentDocument.Name;
             MyAcadCommands.Docs = AcadApp.DocumentManager;
             MyAcadCommands.AddPalette();
@@ -47,7 +39,7 @@ namespace ExpPt1
 
         private void CurrentDomain_FirstChanceException(object sender, System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs e)
         {
-            Log.Logger.Fatal(e.Exception.Message, e.Exception);
+            ErrLogger.Fatal(e.Exception.Message);
             //using (StreamWriter streamWriter =
             //    new StreamWriter(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) +
             //    Constants.logFolder + @"\error.log", append: true))
@@ -60,7 +52,7 @@ namespace ExpPt1
         static void MyHandler(object sender, UnhandledExceptionEventArgs args)
         {
             System.Exception e = (System.Exception)args.ExceptionObject;
-            Log.Logger.Fatal(e.Message, e);
+            ErrLogger.Fatal(e.Message);
             //using (StreamWriter streamWriter =
             //    new StreamWriter(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) +
             //    Constants.logFolder + @"\error.log", append: true))
@@ -72,7 +64,7 @@ namespace ExpPt1
 
         static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
         {
-            Log.Logger.Fatal(e.Exception.Message, e.Exception);
+            ErrLogger.Fatal(e.Exception.Message);
             //using (StreamWriter streamWriter =
             //    new StreamWriter(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) +
             //    Constants.logFolder + @"\error.log", append: true))
@@ -89,7 +81,7 @@ namespace ExpPt1
 
         public void Terminate()
         {
-            Log.CloseAndFlush();
+            ErrLogger.Stop();
         }
 
         public void DocColDocAct(object senderObj, DocumentCollectionEventArgs docColDocActEvtArgs)

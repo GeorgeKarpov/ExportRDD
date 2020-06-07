@@ -44,6 +44,7 @@ namespace ExpPt1
                 palCntrlSeg.DataGridView.DataSource = "";
                 palCntrlMb.DataGridView.DataSource = "";
                 palCntrlPt.DataGridView.DataSource = "";
+                errCntrl.ListView.Items.Clear();
 
                 palCntrlSeg.LblInfo.Text = "";
                 palCntrlMb.LblInfo.Text = "";
@@ -224,7 +225,7 @@ namespace ExpPt1
                 palCntrlPt.LblInfo.Text = "Points count: " + points.Rows.Count;
             }
             errCntrl.LoadList();
-            if (ErrLogger.error)
+            if (ErrLogger.ErrorsFound)
             {
                 _ps.Activate(_ps.Count - 1);
             }

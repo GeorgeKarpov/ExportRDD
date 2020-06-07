@@ -90,7 +90,7 @@ namespace ExpPt1
             Point2d point2dCenter = point2d + center * 0.5;
 
             ViewTableRecord view = new ViewTableRecord();
-            view.CenterPoint = point2dCenter;
+            view.CenterPoint = new Point2d(point2dCenter.X - zoomFactor / 2, point2dCenter.Y);
             view.Height = zoomFactor; //(max2d.Y - min2d.Y) * 10;
             view.Width = (point2d - point2d1).Length + zoomFactor / 2; // (max2d.X - min2d.X) * 10;
             try

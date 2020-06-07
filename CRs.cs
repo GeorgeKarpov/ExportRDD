@@ -74,7 +74,7 @@ namespace ExpPt1
                     }
                     catch (InvalidOperationException e)
                     {
-                        ErrLogger.Warning(e.Message,crStart + "_" + crEnd, "");
+                        ErrLogger.Error(e.Message,crStart + "_" + crEnd, "");
                         error = true;
                         break;
                     }
@@ -88,7 +88,7 @@ namespace ExpPt1
 
             if (error)
             {
-                ErrLogger.Warning("Routes path not found", crStart, crEnd);
+                ErrLogger.Error("Routes path not found", crStart, crEnd);
                 return !error;
             }
 
@@ -106,7 +106,7 @@ namespace ExpPt1
             Array.Reverse(routeIDsRouteID);
             if (routeIDsRouteID.Length > Constants.maxRoutesInCmRoute)
             {
-                ErrLogger.Warning("Routes count exceeds limit ", crStart + "_" + crEnd, "Count:" + routeIDsRouteID.Length);
+                ErrLogger.Error("Routes count exceeds limit ", crStart + "_" + crEnd, "Count:" + routeIDsRouteID.Length);
                 return false;
             }
             CompoundRoutesCompoundRoute compoundRoute = new CompoundRoutesCompoundRoute
@@ -193,7 +193,7 @@ namespace ExpPt1
                         builder.Append(crtid.Designation);
                         delimiter = ", ";
                     }
-                    ErrLogger.Warning("CR has additional non-default routes", compoundRoute.Designation, builder.ToString());
+                    ErrLogger.Error("CR has additional non-default routes", compoundRoute.Designation, builder.ToString());
                 }
             }
         }

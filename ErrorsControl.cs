@@ -28,7 +28,7 @@ namespace ExpPt1
         public void LoadList()
         {
             this.ListView.Items.Clear();
-            foreach (var line in ErrLogger.GetWarnLines())
+            foreach (var line in ErrLogger.GetWarnLines().Skip(1))
             {
                 ListViewItem tmp = new ListViewItem(line.Split(new string[] { " -- ", }, StringSplitOptions.RemoveEmptyEntries), 2);
                 this.ListView.Items.Add(tmp);

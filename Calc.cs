@@ -182,8 +182,8 @@ namespace ExpPt1
                 {
                     if (log)
                     {
-                        ErrLogger.Warning("Wrong date format", "", "");
-                        ErrLogger.error = true;
+                        ErrLogger.Error("Wrong date format", "", "");
+                        ErrLogger.ErrorsFound = true;
                     }
                     success = false;
                 }
