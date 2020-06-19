@@ -25,7 +25,7 @@ namespace ExpPt1
             err.BtnLoad.Visible = false;
             err.ListView.Dock = System.Windows.Forms.DockStyle.Fill;
             err.Dock = System.Windows.Forms.DockStyle.Fill;
-            ErrLogger.Configure(Path.GetDirectoryName(DwgPath));
+            ErrLogger.Configure(logDirTmp: Path.GetDirectoryName(DwgPath));
             err.LoadList();
             frmErrors.Controls.Add(err);
             Application.ShowModelessDialog(null, frmErrors, true);
