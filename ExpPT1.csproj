@@ -193,7 +193,7 @@ del *.log
 xcopy /Y $(SolutionDir)AccessDatabaseEngine_X64.exe $(TargetDir)\drv
 xcopy /Y $(SolutionDir)mso.reg $(TargetDir)\drv
 xcopy /Y C:\3.TRDD\DynamicBlocks\Blks_Dynamic.dwg $(TargetDir)\cfg
-xcopy /Y $(SolutionDir)\docs\ExpPt1_User_Manual_01P01.pdf $(TargetDir)\doc</PostBuildEvent>
+</PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\Fody.6.2.0\build\Fody.targets" Condition="Exists('..\packages\Fody.6.2.0\build\Fody.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
