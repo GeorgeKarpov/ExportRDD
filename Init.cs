@@ -15,7 +15,7 @@ namespace ExpPt1
     {
         public void Initialize()
         {
-            ErrLogger.Configure(logDirApp: Directory.GetCurrentDirectory() + "\\log", prefix: "rdd", startExplicitly: false, createDirectory: true);
+            ErrLogger.Configure(logDirApp: Directory.GetCurrentDirectory() + "\\log", startExplicitly: false, createDirectory: true);
             MyAcadCommands.DwgPath = AcadApp.DocumentManager.CurrentDocument.Name;
             MyAcadCommands.Docs = AcadApp.DocumentManager;
             MyAcadCommands.AddPalette();

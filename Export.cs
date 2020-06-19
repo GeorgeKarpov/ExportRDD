@@ -84,6 +84,7 @@ namespace ExpPt1
             this.RailwayLines = new List<RailwayLine>();
             this.BlocksToGet = new Dictionary<string, string>();
             this.Status = new TStatus();
+            ErrLogger.Prefix = Path.GetFileNameWithoutExtension(this.dwgPath);
             ErrLogger.StartTmpLog(this.dwgDir);
             ErrLogger.Information(Path.GetFileNameWithoutExtension(dwgPath), "Processed SL");
             ErrLogger.Error(Path.GetFileNameWithoutExtension(dwgPath), "Processed SL", "");
