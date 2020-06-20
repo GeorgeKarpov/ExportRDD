@@ -1850,17 +1850,17 @@ namespace ExpPt1
 
                 // DK2.1 Danger point distance is calculated by DMT,
                 // but requested to validation facilities
-                //bool toPsa = IsSignalToPSA(BlkSignal, signal.Direction);
+                bool toPsa = IsSignalToPSA(BlkSignal, signal.Direction);
                 DangerPoint dangerPoint = new DangerPoint();
-                if (signal.KindOfSignal == TKindOfSignal.L2EntrySignal ||
-                              signal.KindOfSignal == TKindOfSignal.L2ExitSignal ||
+                if (/*signal.KindOfSignal == TKindOfSignal.L2EntrySignal ||
+                              signal.KindOfSignal == TKindOfSignal.L2ExitSignal ||*/
                               signal.KindOfSignal == TKindOfSignal.foreignSignal ||
                               signal.KindOfSignal == TKindOfSignal.eotmb)
                 {
                     dangerPoint.Distance = 0;
                     dangerPoint.DistanceSpecified = true;
                 }
-                else if(!IsSignalToPSA(BlkSignal, signal.Direction))
+                else
                 {
                     dangerPoint = GetDangerPoint(BlkSignal, signal.Direction);
                 }
@@ -1881,101 +1881,36 @@ namespace ExpPt1
                 ReadExcel.Signal cesLoc = CesLocs
                                               .Where(x => x.Mb == BlkSignal.Attributes["NAME"].Value)
                                               .FirstOrDefault();
-                bool sigNextStat = false;
-                if (cesLoc == null)
+
+                signal.ShiftCESLocationSpecified = true;
+                if (signal.KindOfSignal == TKindOfSignal.eotmb ||
+                    signal.KindOfSignal == TKindOfSignal.foreignSignal ||
+                    toPsa ||
+                    signal.KindOfSignal == TKindOfSignal.L2ExitSignal)
                 {
-                    List<ReadExcel.Signal> CesLocsN = null;
-                    if (checkData["checkBoxSCN"])
-                    {
-                        document = new TFileDescr();
-                        CesLocsN =
-                            excel.DangerPoints(loadFiles["lblxlsSigClosN"], ref document);
-                        if (CesLocsN != null)
-                        {
-                            Documents.Add(document);
-                            cesLoc = CesLocsN
-                                     .Where(x => x.Mb == BlkSignal.Attributes["NAME"].Value.Split('-').Last())
-                                     .FirstOrDefault();
-                            sigNextStat = true;
-                        }
-                    }
+                    signal.ShiftCESLocation = 0;
+                }
+                else
+                {
                     if (cesLoc == null)
                     {
-                        if (signal.KindOfSignal == TKindOfSignal.L2EntrySignal ||
-                              signal.KindOfSignal == TKindOfSignal.L2ExitSignal ||
-                              signal.KindOfSignal == TKindOfSignal.foreignSignal ||
-                              signal.KindOfSignal == TKindOfSignal.eotmb )
-                        {
-                            cesLoc = new ReadExcel.Signal { Ac = "N/A" };
-                        }
-                        //if (!(signal.KindOfSignal == TKindOfSignal.L2EntrySignal ||
-                        //      signal.KindOfSignal == TKindOfSignal.L2ExitSignal))
-                        else 
-                        {
-                            ErrLogger.Error("Element not found in Signals Closure Table", signal.Designation, "");
-                            error = true;
-                            continue;
-                        }
-                    }
-                }
-                //signal.DangerPointDistanceSpecified = true;
-                signal.ShiftCESLocationSpecified = true;
-                signal.ShiftCESLocation = 0;
-
-                //List<string> overPts = null;
-                //Block blockTdt = null;
-                //bool overlaps = CheckExtOverlap(BlkSignal, xlsRoutes, blocks, ref overPts, ref blockTdt);
-
-                //if (overlaps)
-                //{
-                //    GetDangerPointOld(BlkSignal, ref signal, blocks, ref error, ref overPts, ref blockTdt);
-                //    if (signal.KindOfSignal == TKindOfSignal.mb && signal.TrackPosition != LeftRightOthersType.others)
-                //    {
-                //        signal.ShiftCESLocation = cesLoc.OCes;
-                //    }
-                //}
-                //else
-                {
-                    if (signal.KindOfSignal == TKindOfSignal.eotmb ||
-                        signal.KindOfSignal == TKindOfSignal.foreignSignal ||
-                        signal.KindOfSignal == TKindOfSignal.L2EntrySignal ||
-                        signal.KindOfSignal == TKindOfSignal.L2ExitSignal || cesLoc.Ac == "N/A")
-                    {
-                        //signal.DangerPointDistance = 0;
-                        signal.ShiftCESLocation = 0;
+                        ErrLogger.Error("Element not found in Signals Closure Table", signal.Designation, "");
+                        error = true;
                     }
                     else
                     {
-                        //signal.DangerPointDistance = Convert.ToDecimal(cesLoc.Distance);
                         signal.ShiftCESLocation = cesLoc.OCes;
                         Block Ac = null;
-                        if (sigNextStat)
-                        {
-                            string[] sigName = signal.Designation.Split('-');
-                            Ac = blocks
-                               .Where(x => x.XsdName == "DetectionPoint" &&
-                                           x.Designation == string.Join("-", new string[] { "at", sigName[1], cesLoc.Ac.Split('-').Last() }))
-                               .FirstOrDefault();
-                        }
-                        else
-                        {
-                            Ac = blocks
+                        Ac = blocks
                                .Where(x => x.XsdName == "DetectionPoint" &&
                                            x.Attributes["NAME"].Value == cesLoc.Ac)
                                .FirstOrDefault();
-                        }
-
                         if (Ac == null)
                         {
-                            ErrLogger.Error("Danger point not found on SL", signal.Designation, cesLoc.Ac);
+                            ErrLogger.Error("Danger point from SC table not found on SL", signal.Designation, cesLoc.Ac);
                             error = true;
-                            //signal.DangerPointID = "not found";
                         }
-                        else
-                        {
-                            //signal.DangerPointID = blckProp.GetElemDesignation(Ac);
-                        }
-                    }
+                    }                
                 }
                 signalsSignal.Add(signal);
             }
@@ -2028,7 +1963,8 @@ namespace ExpPt1
                     signalVirtualEot.Direction = DirectionType.up;
                 }
                 // DK2.1 Danger point distance by DMT
-                signalVirtualEot.DangerPointDistanceSpecified = false;
+                signalVirtualEot.DangerPointDistanceSpecified = true;
+                signalVirtualEot.DangerPointDistance = 0;
                 signalVirtualEot.DangerPointID = null;
 
                 signalsSignal.Add(signalVirtualEot);
