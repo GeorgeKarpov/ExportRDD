@@ -35,9 +35,10 @@ namespace ExpPt1
             dataTable.Columns.Add("Line", typeof(string));
             dataTable.Columns.Add("Danger Point Id", typeof(string));
             dataTable.Columns.Add("Danger Point Distance", typeof(decimal));
+            dataTable.Columns.Add("Shift Oces", typeof(decimal));
             foreach (var item in items)
             {
-                var values = new object[7];
+                var values = new object[8];
                 values[0] = item.Designation;
                 values[1] = item.KindOfSignal;
                 values[2] = item.Location;
@@ -45,6 +46,7 @@ namespace ExpPt1
                 values[4] = item.LineID;
                 values[5] = item.DangerPointID;
                 values[6] = item.DangerPointDistance;
+                values[7] = item.ShiftCESLocation;
                 dataTable.Rows.Add(values);
             }
             return dataTable;
