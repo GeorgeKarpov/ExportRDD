@@ -117,6 +117,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Register.cs" />
+    <Compile Include="ShiftCesBG.cs" />
     <Compile Include="SspSimp.cs" />
     <Compile Include="Verify.cs" />
     <Compile Include="WirteData.cs" />

@@ -90,6 +90,8 @@ namespace ExpPt1
         public string Designation;
         public Block Vertex1;
         public Block Vertex2;
+        public ConnectionBranchType ConnV1;
+        public ConnectionBranchType ConnV2;
         public List<Block> BlocksOnSegments;
         public List<Line> TrustedLines;
         public string Track;

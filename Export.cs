@@ -489,7 +489,7 @@ namespace ExpPt1
 
             RailwayDesignData RDD = new RailwayDesignData
             {
-                version = "1.6.17",
+                version = "1.6.18",
                 SchemaDocId = "7HA700001014_109EN",
                 MetaData = new RailwayDesignDataMetaData
                 {
@@ -1899,17 +1899,23 @@ namespace ExpPt1
                     }
                     else
                     {
-                        signal.ShiftCESLocation = cesLoc.OCes;
-                        Block Ac = null;
-                        Ac = blocks
-                               .Where(x => x.XsdName == "DetectionPoint" &&
-                                           x.Attributes["NAME"].Value == cesLoc.Ac)
-                               .FirstOrDefault();
-                        if (Ac == null)
+                        //Test CES location
+                        ShiftCesBG cesBG = GetCesBalise(BlkSignal, signal.Direction);
+                        if (cesBG != null && dangerPoint != null)
                         {
-                            ErrLogger.Error("Danger point from SC table not found on SL", signal.Designation, cesLoc.Ac);
-                            error = true;
+                            signal.ShiftCESLocation = GetShiftCESLocationValue(BlkSignal.Location, dangerPoint, cesBG);
                         }
+                        //signal.ShiftCESLocation = cesLoc.OCes;
+                        //Block Ac = null;
+                        //Ac = blocks
+                        //       .Where(x => x.XsdName == "DetectionPoint" &&
+                        //                   x.Attributes["NAME"].Value == cesLoc.Ac)
+                        //       .FirstOrDefault();
+                        //if (Ac == null)
+                        //{
+                        //    ErrLogger.Error("Danger point from SC table not found on SL", signal.Designation, cesLoc.Ac);
+                        //    error = true;
+                        //}
                     }                
                 }
                 signalsSignal.Add(signal);
@@ -4994,27 +5000,47 @@ namespace ExpPt1
             List<TrackSegmentTmp> segNodes = this.TrackSegmentsTmp
                               .Where(x => x.Designation == signal.TrackSegId)
                               .ToList();
-            //skipNodes.AddRange(segNodes);
             if (segNodes.Count == 0)
             {
-                ErrLogger.Error("Start Segment(s) not found", signal.Designation, "Sig to PSA");
+                ErrLogger.Error("Start Segment(s) not found", signal.Designation, "Danger point");
                 ErrLogger.ErrorsFound = true;
                 return dangerPoint;
             }
             Stack<Stack<TrackSegmentTmp>> stackNodes = new Stack<Stack<TrackSegmentTmp>>();
             stackNodes.Push(new Stack<TrackSegmentTmp>(segNodes));
             int iterCount = 0;
-            //List<TrackSegmentTmp> skipNodes = new List<TrackSegmentTmp>();
-            //skipNodes.AddRange(segNodes);
-            List<Block> connectors = new List<Block>();
+            decimal KmGap = 0;
+            decimal tmpSigLocation = signal.Location;
+            TrackSegmentTmp prevSegment = null;
             while (stackNodes.Count > 0)
             {
                 Block nextDp = null;
+                if (prevSegment != null)
+                {
+                    string nextLineId = stackNodes.Peek().Peek().lineId;
+                    if (prevSegment.lineId != nextLineId)
+                    {
+                        ErrLogger.Error("Line change between signal and danger point", signal.Designation, "");
+                        ErrLogger.ErrorsFound = true;
+                        RailwayLine nextLine = this.RailwayLines
+                                   .Where(x => x.designation == nextLineId)
+                                   .FirstOrDefault();
+                        if (nextLine != null)
+                        {
+                            direction = nextLine.direction;
+                            tmpSigLocation += KmGap;
+                        }
+                    }
+                }
+                else
+                {
+                    tmpSigLocation = signal.Location;
+                }
                 if (direction == DirectionType.up)
                 {
                     nextDp = this.blocks
                              .Where(x => x.XsdName == "DetectionPoint" &&
-                                         x.Location >= signal.Location &&
+                                         x.Location >= tmpSigLocation &&
                                          x.TrackSegId == stackNodes.Peek().Peek().Designation)
                              .OrderBy(x => Convert.ToDecimal(x.Location))
                              .FirstOrDefault();
@@ -5023,12 +5049,12 @@ namespace ExpPt1
                 {
                     nextDp = this.blocks
                              .Where(x => x.XsdName == "DetectionPoint" &&
-                                         x.Location <= signal.Location &&
+                                         x.Location <= tmpSigLocation &&
                                          x.TrackSegId == stackNodes.Peek().Peek().Designation)
                              .OrderByDescending(x => Convert.ToDecimal(x.Location))
                              .FirstOrDefault();
                 }
-                
+                prevSegment = stackNodes.Peek().Peek();
                 if (nextDp != null)
                 {
                     dpsFound.Add(nextDp);
@@ -5037,6 +5063,7 @@ namespace ExpPt1
                         if (stackNodes.Peek().Count == 2)
                         {
                             stackNodes.Peek().Pop();
+                            prevSegment = stackNodes.Peek().Peek();
                             break;
                         }
                         stackNodes.Pop();
@@ -5051,11 +5078,25 @@ namespace ExpPt1
                     {
                         if (stackNodes.Peek().Peek().Vertex2.XsdName == "Connector")
                         {
-                            connectors.Add(stackNodes.Peek().Peek().Vertex2);
+                            if (decimal.TryParse(stackNodes.Peek().Peek().Vertex2.Attributes["KMGAP"].Value, out decimal tmp))
+                            {
+                                if (!tmp.ToString().Contains('.'))
+                                {
+                                    tmp *= 0.001M;
+                                }
+                                KmGap += tmp * -1;
+                            }
+                            else
+                            {
+                                ErrLogger.Error("Unable to parse attribute value", stackNodes.Peek().Peek().Vertex2.Designation, "danger point");
+                                ErrLogger.ErrorsFound = true;
+                            }
                         }
                         if (stackNodes.Peek().Peek().Vertex2.XsdName == "Point")
                         {
-                            return GetDangerPoint(signal, DirectionType.down);
+                            ErrLogger.Error("No axle counter between marker board and first interlocked movable element", signal.Designation, stackNodes.Peek().Peek().Vertex2.Designation);
+                            ErrLogger.ErrorsFound = true;
+                            return GetDangerPoint(stackNodes.Peek().Peek().Vertex2, DirectionType.down);                         
                         }
                         segNodes = this.TrackSegmentsTmp
                                .Where(x => (x.Vertex1 == stackNodes.Peek().Peek().Vertex2))
@@ -5065,11 +5106,25 @@ namespace ExpPt1
                     {
                         if (stackNodes.Peek().Peek().Vertex1.XsdName == "Connector")
                         {
-                            connectors.Add(stackNodes.Peek().Peek().Vertex2);
+                            if (decimal.TryParse(stackNodes.Peek().Peek().Vertex1.Attributes["KMGAP"].Value, out decimal tmp))
+                            {
+                                if (!tmp.ToString().Contains('.'))
+                                {
+                                    tmp *= 0.001M;
+                                }
+                                KmGap += tmp * -1;
+                            }
+                            else
+                            {
+                                ErrLogger.Error("Unable to parse attribute value", stackNodes.Peek().Peek().Vertex1.Designation, "danger point");
+                                ErrLogger.ErrorsFound = true;
+                            }
                         }
                         if (stackNodes.Peek().Peek().Vertex1.XsdName == "Point")
                         {
-                            return GetDangerPoint(signal, DirectionType.up);
+                            ErrLogger.Error("No axle counter between marker board and first interlocked movable element", signal.Designation, stackNodes.Peek().Peek().Vertex2.Designation);
+                            ErrLogger.ErrorsFound = true;
+                            return GetDangerPoint(stackNodes.Peek().Peek().Vertex1, DirectionType.up);
                         }
                         segNodes = this.TrackSegmentsTmp
                                .Where(x => (x.Vertex2 == stackNodes.Peek().Peek().Vertex1))
@@ -5116,33 +5171,267 @@ namespace ExpPt1
                           .Where(x => Math.Abs(x.Location - signal.Location) == min)
                           .FirstOrDefault();
             }
-            decimal KmGapAc = 0;
-            foreach (Block dpConn in connectors)
+                      
+            if (dpFound.Location >= signal.Location)
             {
-                if (decimal.TryParse(dpConn.Attributes["KMGAP"].Value, out decimal tmp))
-                {
-                    KmGapAc += tmp;
-                }
-                else
-                {
-                    ErrLogger.Error("Unable to parse attribute value", dpConn.Designation, "danger point");
-                    ErrLogger.ErrorsFound = true;
-                }
+                dangerPoint.Distance = (int)((Math.Abs(dpFound.Location - signal.Location) - KmGap) * 1000);
+                dangerPoint.Location = dpFound.Location - KmGap;
             }
-            
-
-            //kmAc = (Math.Abs(Math.Round(Ac.Location * 1000, 0)) + KmGapAc).ToString();
-            if (direction == DirectionType.up)
+            else if (dpFound.Location <= signal.Location)
             {
-                dangerPoint.Distance = Math.Round(Math.Abs(dpFound.Location - signal.Location) * 1000, 0) - KmGapAc;
-            }
-            else
-            {
-                dangerPoint.Distance = Math.Round(Math.Abs(dpFound.Location - signal.Location) * 1000, 0) + KmGapAc;
+                dangerPoint.Distance = (int)((Math.Abs(dpFound.Location - signal.Location) + KmGap) * 1000);
+                dangerPoint.Location = dpFound.Location + KmGap;
             }
             dangerPoint.Id = dpFound.Designation;
             dangerPoint.DistanceSpecified = true;
             return dangerPoint;
+        }
+
+        private ShiftCesBG GetCesBalise(Block signal, DirectionType direction)
+        {
+            ShiftCesBG shiftCesBG = null;
+            List<Block> bgsFound = new List<Block>();
+            List<TrackSegmentTmp> segNodes = this.TrackSegmentsTmp
+                              .Where(x => x.Designation == signal.TrackSegId)
+                              .ToList();
+           
+            if (segNodes.Count == 0)
+            {
+                ErrLogger.Error("Start Segment(s) not found", signal.Designation, "Oces Balise");
+                ErrLogger.ErrorsFound = true;
+                return null;
+            }
+            Stack<Stack<TrackSegmentTmp>> stackNodes = new Stack<Stack<TrackSegmentTmp>>();
+            stackNodes.Push(new Stack<TrackSegmentTmp>(segNodes));
+            int iterCount = 0;
+            decimal KmGap = 0;
+            decimal tmpSigLocation = signal.Location;
+            TrackSegmentTmp prevSegment = null;
+            while (stackNodes.Count > 0)
+            {
+                Block nextBg = null;
+                if (prevSegment != null)
+                {
+                    string nextLineId = stackNodes.Peek().Peek().lineId;
+                    if (prevSegment.lineId != nextLineId)
+                    {
+                        ErrLogger.Error("Line change between signal and oCes Bg", signal.Designation, "");
+                        ErrLogger.ErrorsFound = true;
+                        RailwayLine nextLine = this.RailwayLines
+                                   .Where(x => x.designation == nextLineId)
+                                   .FirstOrDefault();
+                        if (nextLine != null)
+                        {
+                            direction = nextLine.direction;
+                            tmpSigLocation += KmGap;
+                        }
+                    }
+                }
+                else
+                {
+                    tmpSigLocation = signal.Location;
+                }
+                if (direction == DirectionType.up)
+                {
+                    nextBg = this.blocks
+                             .Where(x => x.XsdName == "BaliseGroup" &&
+                                         x.Location <= tmpSigLocation &&
+                                         x.TrackSegId == stackNodes.Peek().Peek().Designation)
+                             .OrderByDescending(x => Convert.ToDecimal(x.Location))
+                             .FirstOrDefault();
+                }
+                else
+                {
+                    nextBg = this.blocks
+                             .Where(x => x.XsdName == "BaliseGroup" &&
+                                         x.Location >= tmpSigLocation &&
+                                         x.TrackSegId == stackNodes.Peek().Peek().Designation)
+                             .OrderBy(x => Convert.ToDecimal(x.Location))
+                             .FirstOrDefault();
+                }
+                prevSegment = stackNodes.Peek().Peek();
+                if (nextBg != null)
+                {
+                    bgsFound.Add(nextBg);
+                    do
+                    {
+                        if (stackNodes.Peek().Count == 2)
+                        {
+                            stackNodes.Peek().Pop();
+                            prevSegment = stackNodes.Peek().Peek();
+                            break;
+                        }
+                        stackNodes.Pop();
+                        iterCount--;
+                    }
+                    while (stackNodes.Count > 0);
+                }
+                else
+                {
+                    if (direction == DirectionType.down)
+                    {
+                        if (stackNodes.Peek().Peek().Vertex2.XsdName == "Connector")
+                        {
+                            if (decimal.TryParse(stackNodes.Peek().Peek().Vertex2.Attributes["KMGAP"].Value, out decimal tmp))
+                            {
+                                if (!tmp.ToString().Contains('.'))
+                                {
+                                    tmp *= 0.001M;
+                                }
+                                KmGap += tmp * -1;
+                            }
+                            else
+                            {
+                                ErrLogger.Error("Unable to parse attribute value", stackNodes.Peek().Peek().Vertex2.Designation, "danger point");
+                                ErrLogger.ErrorsFound = true;
+                            }
+                        }
+                        else if (stackNodes.Peek().Peek().Vertex2.XsdName == "Point")
+                        {
+                            KmGap +=
+                                GetPointHidConnValue(stackNodes.Peek().Peek().Vertex2, stackNodes.Peek().Peek().ConnV2);
+                        }
+                        segNodes = this.TrackSegmentsTmp
+                               .Where(x => (x != stackNodes.Peek().Peek()) && 
+                                           (x.Vertex1 == stackNodes.Peek().Peek().Vertex2 ||
+                                            x.Vertex2 == stackNodes.Peek().Peek().Vertex2))
+                               .ToList();
+                    }
+                    else
+                    {
+                        if (stackNodes.Peek().Peek().Vertex1.XsdName == "Connector")
+                        {
+                            if (decimal.TryParse(stackNodes.Peek().Peek().Vertex1.Attributes["KMGAP"].Value, out decimal tmp))
+                            {
+                                if (!tmp.ToString().Contains('.'))
+                                {
+                                    tmp *= 0.001M;
+                                }
+                                KmGap += tmp * -1;
+                            }
+                            else
+                            {
+                                ErrLogger.Error("Unable to parse attribute value", stackNodes.Peek().Peek().Vertex1.Designation, "danger point");
+                                ErrLogger.ErrorsFound = true;
+                            }
+                        }
+                        else if (stackNodes.Peek().Peek().Vertex1.XsdName == "Point")
+                        {
+                            KmGap +=
+                                GetPointHidConnValue(stackNodes.Peek().Peek().Vertex1, stackNodes.Peek().Peek().ConnV1);
+                        }
+                        segNodes = this.TrackSegmentsTmp
+                               .Where(x => (x != stackNodes.Peek().Peek()) &&
+                                           (x.Vertex2 == stackNodes.Peek().Peek().Vertex1 ||
+                                            x.Vertex1 == stackNodes.Peek().Peek().Vertex1))
+                               .ToList();
+                    }
+
+                    iterCount++;
+                    if (segNodes.Count == 0 || Constants.dpIterLimit == iterCount)
+                    {
+                        if (Constants.dpIterLimit == iterCount)
+                        {
+                            ErrLogger.Error("Iteration limit reached", signal.Designation, "Ces BG");
+                        }
+                        else
+                        {
+                            ErrLogger.Error("Segment(s) for next BG not found", signal.Designation, "Ces BG");
+                        }
+                        ErrLogger.ErrorsFound = true;
+                        break;
+                    }
+                    else
+                    {
+                        stackNodes.Push(new Stack<TrackSegmentTmp>(segNodes));
+                    }
+                }
+            }
+
+            if (bgsFound.Count == 0)
+            {
+                ErrLogger.Error("Unable to Ces BG.", signal.Designation, "");
+                ErrLogger.ErrorsFound = true;
+                return shiftCesBG;
+            }
+            shiftCesBG = new ShiftCesBG();
+            Block bgFound = null;
+            if (bgsFound.Count == 1)
+            {
+                bgFound = bgsFound[0];
+            }
+            else
+            {
+                decimal max = bgsFound
+                              .Max(x => Math.Abs(x.Location - signal.Location));
+                bgFound = bgsFound
+                          .Where(x => Math.Abs(x.Location - signal.Location) == max)
+                          .FirstOrDefault();
+            }
+           
+            if (signal.Location >= bgFound.Location)
+            {
+                shiftCesBG.Location = bgFound.Location - KmGap;
+            }
+            else if (signal.Location <= bgFound.Location)
+            {
+                shiftCesBG.Location = bgFound.Location + KmGap;
+            }
+            shiftCesBG.Id = bgFound.Designation;
+            return shiftCesBG;
+        }
+
+        private decimal GetShiftCESLocationValue(decimal sigLocation, DangerPoint dangerPoint, ShiftCesBG cesBG)
+        {
+            double shift = 0.05 * Convert.ToDouble(Math.Abs(dangerPoint.Location - cesBG.Location) * 1000) - 
+                                  Convert.ToDouble(Math.Abs(sigLocation - dangerPoint.Location) * 1000) + 16.0;
+            decimal value = 0;
+            if (shift > 0)
+            {
+                value = (int)Math.Ceiling(shift);
+            }
+            return value;
+        }
+
+        private decimal GetPointHidConnValue(Block point, ConnectionBranchType branchType)
+        {
+            decimal kmgap = 0;
+            decimal kmpSide = 0;
+            if (!decimal.TryParse(point.Attributes["KMP"].Value, out decimal kmp))
+            {
+                ErrLogger.Error("Unable to parse attribute value", point.Designation, "KMP");
+                ErrLogger.ErrorsFound = true;
+                return kmgap;
+            }
+
+            if (branchType == ConnectionBranchType.right)
+            {
+                if (!decimal.TryParse(point.Attributes["KMP_CONTACT_2"].Value, out kmpSide))
+                {
+                    ErrLogger.Error("Unable to parse attribute value", point.Designation, "KMP_CONTACT_2");
+                    ErrLogger.ErrorsFound = true;
+                    return kmgap;
+                }
+            }
+            else if (branchType == ConnectionBranchType.left)
+            {
+                if (!decimal.TryParse(point.Attributes["KMP_CONTACT_3"].Value, out kmpSide))
+                {
+                    ErrLogger.Error("Unable to parse attribute value", point.Designation, "KMP_CONTACT_3");
+                    ErrLogger.ErrorsFound = true;
+                    return kmgap;
+                }
+            }
+            else if (branchType == ConnectionBranchType.tip)
+            {
+                if (!decimal.TryParse(point.Attributes["KMP"].Value, out kmpSide))
+                {
+                    ErrLogger.Error("Unable to parse attribute value", point.Designation, "KMP");
+                    ErrLogger.ErrorsFound = true;
+                    return kmgap;
+                }
+            }
+            return kmp - kmpSide;
         }
 
         private void GetDangerPointOld(Block BlkSignal, ref SignalsSignal signal,
@@ -6223,6 +6512,8 @@ namespace ExpPt1
                             Designation = designation,
                             Vertex1 = Vertex1,
                             Vertex2 = Vertex2,
+                            ConnV1 = branchType1,
+                            ConnV2 = branchType2,
                             BlocksOnSegments = blocksOnSegement,
                             TrustedLines = TrustLinesOnSegment,
                             TrackLines = TrackLinesOnSegment,
