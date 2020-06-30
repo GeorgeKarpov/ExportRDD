@@ -4177,23 +4177,6 @@ namespace ExpPt1
                     Route.Default = YesNoType.yes;
                 }
 
-                if (route.ActCross.Count() != 0)
-                {
-                    List<RoutesRouteActivateCrossingElementGroupActivateCrossingElement> crossingElements =
-                   new List<RoutesRouteActivateCrossingElementGroupActivateCrossingElement>();
-                    foreach (string cract in route.ActCross)
-                    {
-                        crossingElements.Add(new RoutesRouteActivateCrossingElementGroupActivateCrossingElement
-                        {
-                            Value = cract
-                        });
-                    }
-                    Route.ActivateCrossingElementGroup = new RoutesRouteActivateCrossingElementGroup
-                    {
-                        ActivateCrossingElement = crossingElements.ToArray()
-                    };
-                }
-
                 List<RoutesRoutePointGroupPoint> groupPoints = new List<RoutesRoutePointGroupPoint>();
                 if (route.PointsGrps.Count() != 0)
                 {
@@ -4227,7 +4210,42 @@ namespace ExpPt1
                         Point = groupPoints.ToArray()
                     };
                 else
-                    Route.PointGroup = (RoutesRoutePointGroup)null;
+                    Route.PointGroup = null;
+                if (route.ActCross.Count() != 0)
+                {
+                    List<RoutesRouteActivateCrossingElementGroupActivateCrossingElement> crossingElements =
+                   new List<RoutesRouteActivateCrossingElementGroupActivateCrossingElement>();
+                    foreach (string cract in route.ActCross)
+                    {
+                        crossingElements.Add(new RoutesRouteActivateCrossingElementGroupActivateCrossingElement
+                        {
+                            Value = cract
+                        });
+                    }
+                    Route.ActivateCrossingElementGroup = new RoutesRouteActivateCrossingElementGroup
+                    {
+                        ActivateCrossingElement = crossingElements.ToArray()
+                    };
+                    // EPT-8 implementation
+                    if (Route.KindOfRoute == KindOfRouteType.both)
+                    {
+                        RoutesRoute routeActShunt = new RoutesRoute()
+                        {
+                            Designation = Route.Designation,
+                            Status = Route.Status,
+                            KindOfRoute = KindOfRouteType.shunting,
+                            Start = Route.Start,
+                            Destination = Route.Destination,
+                            Default = YesNoType.no,
+                            SdLastElementID = Route.SdLastElementID,
+                            SafetyDistance = Route.SafetyDistance,
+                            PointGroup = Route.PointGroup,
+                            StartAreaGroup = Route.StartAreaGroup,
+                            DestinationArea = Route.DestinationArea 
+                        };
+                        routes.Add(routeActShunt);
+                    }
+                }
                 routes.Add(Route);
             }
             List<RoutesRoute> dubplicatesRoutes = routes.GroupBy(s => s.Designation)
