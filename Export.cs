@@ -4226,25 +4226,28 @@ namespace ExpPt1
                     {
                         ActivateCrossingElement = crossingElements.ToArray()
                     };
-                    // EPT-8 implementation
-                    if (Route.KindOfRoute == KindOfRouteType.both)
+                }
+                // EPT-8, EPT-12 implementation
+                if (Route.KindOfRoute == KindOfRouteType.both && 
+                    (Route.ActivateCrossingElementGroup != null || Route.StartAreaGroup != null))
+                {
+                    Route.KindOfRoute = KindOfRouteType.main;
+                    RoutesRoute routeActShunt = new RoutesRoute()
                     {
-                        RoutesRoute routeActShunt = new RoutesRoute()
-                        {
-                            Designation = Route.Designation,
-                            Status = Route.Status,
-                            KindOfRoute = KindOfRouteType.shunting,
-                            Start = Route.Start,
-                            Destination = Route.Destination,
-                            Default = YesNoType.no,
-                            SdLastElementID = Route.SdLastElementID,
-                            SafetyDistance = Route.SafetyDistance,
-                            PointGroup = Route.PointGroup,
-                            StartAreaGroup = Route.StartAreaGroup,
-                            DestinationArea = Route.DestinationArea 
-                        };
-                        routes.Add(routeActShunt);
-                    }
+                        Designation = Route.Designation,
+                        Status = Route.Status,
+                        KindOfRoute = KindOfRouteType.shunting,
+                        Start = Route.Start,
+                        Destination = Route.Destination,
+                        Default = YesNoType.no,
+                        SdLastElementID = Route.SdLastElementID,
+                        SafetyDistance = Route.SafetyDistance,
+                        PointGroup = Route.PointGroup,
+                        DestinationArea = Route.DestinationArea,
+                        ActivateCrossingElementGroup = null,
+                        StartAreaGroup = null
+                    };
+                    routes.Add(routeActShunt);
                 }
                 routes.Add(Route);
             }
@@ -4268,7 +4271,6 @@ namespace ExpPt1
             }
             return !error;
         }
-
 
         private bool ReadTrustedAreas(ref List<TrustedAreasTrustedArea> trustedAreas)
         {
