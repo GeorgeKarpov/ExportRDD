@@ -69,6 +69,7 @@ namespace ExpPt1
         public bool Dest_Cr;
         public int Ac_angle;
         public int PlatformTrack;
+        public bool Virtual { get; set; }
     }
 
     /// <summary>
