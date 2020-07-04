@@ -4261,7 +4261,8 @@ namespace ExpPt1
             foreach (Block signalBlk in this.blocks.Where(x => x.XsdName == "Signal" && !x.Virtual))
             {
                 var signal = this.signals
-                             .Where(x => x.Designation == signalBlk.Designation)
+                             .Where(x => x.Designation == signalBlk.Designation &&
+                                         x.KindOfSignal != TKindOfSignal.eotmb)
                              .FirstOrDefault();
                 if (signal != null)
                 {
@@ -4930,6 +4931,8 @@ namespace ExpPt1
             stackNodes.Push(new Stack<TrackSegmentTmp>(segNodes));
             int iterCount = 0;
             bool sigDirError = false;
+            decimal tmpSigLocation = signal.Location;
+            decimal kmGap = 0;
             while (stackNodes.Count > 0)
             {
                 Block nextSignal = null;
@@ -4937,7 +4940,7 @@ namespace ExpPt1
                 {
                     nextSignal = this.blocks
                              .Where(x => x.XsdName == "Signal" &&
-                                         x.Location > signal.Location &&
+                                         x.Location > tmpSigLocation &&
                                          GetSignalDirection(x, ref sigDirError, true) == direction &&
                                          x.TrackSegId == stackNodes.Peek().Peek().Designation)
                              .OrderBy(x => Convert.ToDecimal(x.Location))
@@ -4947,7 +4950,7 @@ namespace ExpPt1
                 {
                     nextSignal = this.blocks
                              .Where(x => x.XsdName == "Signal" &&
-                                         x.Location < signal.Location &&
+                                         x.Location < tmpSigLocation &&
                                          GetSignalDirection(x, ref sigDirError, true) == direction &&
                                          x.TrackSegId == stackNodes.Peek().Peek().Designation)
                              .OrderByDescending(x => Convert.ToDecimal(x.Location))
@@ -4976,15 +4979,25 @@ namespace ExpPt1
                 if (nextSignal == null)
                 {
                     iterCount++;
+                    segNodes = new List<TrackSegmentTmp>();
+                    if (IsLineChanging(stackNodes.Peek().Peek(), direction, out DirectionType newDirection, out kmGap, out TrackSegmentTmp changeSeg, out Block _))
+                    {
+                        segNodes.Add(changeSeg);
+                        tmpSigLocation += kmGap;
+                        direction = newDirection;
+                        ErrLogger.Error("Check Signal to PSA: Line change detected. Should be rechecked manually.", signal.Designation, "");
+                        ErrLogger.ErrorsFound = true;
+                    }
                     if (direction == DirectionType.up)
                     {
-                        if (stackNodes.Peek().Peek().Vertex2.XsdName == "Point" || 
+                        if (stackNodes.Peek().Peek().Vertex2.XsdName == "Point" ||
                             stackNodes.Peek().Peek().Vertex2.XsdName == "EndOfTrack")
                         {
                             return false;
                         }
                         segNodes = this.TrackSegmentsTmp
-                                   .Where(x => (x.Vertex1 == stackNodes.Peek().Peek().Vertex2))
+                                   .Where(x => x.Vertex1 == stackNodes.Peek().Peek().Vertex2 &&
+                                                x != changeSeg)
                                    .ToList();
                     }
                     else
@@ -4995,7 +5008,8 @@ namespace ExpPt1
                             return false;
                         }
                         segNodes = this.TrackSegmentsTmp
-                                   .Where(x => (x.Vertex2 == stackNodes.Peek().Peek().Vertex1))
+                                   .Where(x => x.Vertex2 == stackNodes.Peek().Peek().Vertex1 &&
+                                               x != changeSeg)
                                    .ToList();
                     }
                     iterCount++;
@@ -5020,7 +5034,7 @@ namespace ExpPt1
                 else
                 {
                     return false;
-                    
+
                 }
             }
             return false;
@@ -5053,7 +5067,7 @@ namespace ExpPt1
                     string nextLineId = stackNodes.Peek().Peek().lineId;
                     if (prevSegment.lineId != nextLineId)
                     {
-                        ErrLogger.Error("Line change between signal and danger point", signal.Designation, "");
+                        ErrLogger.Error("Line change between signal and danger point. Should be rechecked manually.", signal.Designation, "");
                         ErrLogger.ErrorsFound = true;
                         RailwayLine nextLine = this.RailwayLines
                                    .Where(x => x.designation == nextLineId)
@@ -5450,8 +5464,8 @@ namespace ExpPt1
             }
             if (branchType1 == branchType2)
             {
-                ErrLogger.Error("Unable to get hidden connector - branches are equal", point.Designation, branchType1.ToString());
-                ErrLogger.ErrorsFound = true;
+                //ErrLogger.Error("Unable to get hidden connector - branches are equal", point.Designation, branchType1.ToString());
+                //ErrLogger.ErrorsFound = true;
                 return 0;
             }
             decimal kmgap = 0;
@@ -5637,86 +5651,60 @@ namespace ExpPt1
                 }
                 else
                 {
+                    segNodes = new List<TrackSegmentTmp>();
                     if (IsLineChanging(stackNodes.Peek().Peek(), direction, out DirectionType newDir, out decimal kmGap, out TrackSegmentTmp nextSeg, out Block changeVertex))
                     {
                         tmpSigLocation += kmGap;
                         lineChange = true;
+                        segNodes.Add(nextSeg);
                         ErrLogger.Error("Create routes: Line change on route path. Should be rechecked manually.", startSignal.Designation, nextSeg.Designation);
                         ErrLogger.ErrorsFound = true;
                     }
-                    segNodes = new List<TrackSegmentTmp>();
+                    
                     if (direction == DirectionType.up)
                     {
-                        if (lineChange)
+                        if (stackNodes.Peek().Peek().ConnV2 == ConnectionBranchType.tip)
                         {
-                            segNodes.Add(nextSeg);
-                            //segNodes.AddRange(this.TrackSegmentsTmp
-                            //                  .Where(x => (x != stackNodes.Peek().Peek()) &&
-                            //                               x.Vertex1 == stackNodes.Peek().Peek().Vertex2)
-                            //                  .ToList());
-                            //segNodes = segNodes
-                            //           .OrderBy(x => x == nextSeg)
-                            //           .ToList();
-                            direction = newDir;
-
+                            segNodes.AddRange(this.TrackSegmentsTmp
+                                       .Where(x => (x != stackNodes.Peek().Peek()) &&
+                                                   (x != nextSeg) &&
+                                                   (x.Vertex1 == stackNodes.Peek().Peek().Vertex2))
+                                       .ToList());
                         }
-                        //else
+                        else
                         {
-                            if (stackNodes.Peek().Peek().ConnV2 == ConnectionBranchType.tip)
-                            {
-                                segNodes.AddRange(this.TrackSegmentsTmp
-                                           .Where(x => (x != stackNodes.Peek().Peek()) &&
-                                                       (x != nextSeg) &&
-                                                       (x.Vertex1 == stackNodes.Peek().Peek().Vertex2))
-                                           .ToList());
-                            }
-                            else
-                            {
-                                segNodes.AddRange(this.TrackSegmentsTmp
-                                           .Where(x => (x != stackNodes.Peek().Peek()) &&
-                                                       (x != nextSeg) &&
-                                                       (x.Vertex1 == stackNodes.Peek().Peek().Vertex2 && (x.ConnV1 == ConnectionBranchType.tip || x.ConnV1 == ConnectionBranchType.none) ||
-                                                        x.Vertex2 == stackNodes.Peek().Peek().Vertex2 && (x.ConnV2 == ConnectionBranchType.tip || x.ConnV2 == ConnectionBranchType.none)))
-                                           .ToList());
-                            }
+                            segNodes.AddRange(this.TrackSegmentsTmp
+                                       .Where(x => (x != stackNodes.Peek().Peek()) &&
+                                                   (x != nextSeg) &&
+                                                   (x.Vertex1 == stackNodes.Peek().Peek().Vertex2 && (x.ConnV1 == ConnectionBranchType.tip || x.ConnV1 == ConnectionBranchType.none) ||
+                                                    x.Vertex2 == stackNodes.Peek().Peek().Vertex2 && (x.ConnV2 == ConnectionBranchType.tip || x.ConnV2 == ConnectionBranchType.none)))
+                                       .ToList());
                         }
-
                     }
                     else if (direction == DirectionType.down)
                     {
-                        if (lineChange)
+                        if (stackNodes.Peek().Peek().ConnV1 == ConnectionBranchType.tip)
                         {
-                            segNodes.Add(nextSeg);
-                            //segNodes.AddRange(this.TrackSegmentsTmp
-                            //                  .Where(x => (x != stackNodes.Peek().Peek()) &&
-                            //                               x.Vertex2 == stackNodes.Peek().Peek().Vertex1)
-                            //                  .ToList());
-                            //segNodes = segNodes
-                            //           .OrderBy(x => x == nextSeg)
-                            //           .ToList();
-                            direction = newDir;                       
+                            segNodes.AddRange(this.TrackSegmentsTmp
+                                       .Where(x => (x != stackNodes.Peek().Peek()) &&
+                                                   (x != nextSeg) &&
+                                                   (x.Vertex2 == stackNodes.Peek().Peek().Vertex1))
+                                       .ToList());
                         }
-                        //else
+                        else
                         {
-                            if (stackNodes.Peek().Peek().ConnV1 == ConnectionBranchType.tip)
-                            {
-                                segNodes.AddRange(this.TrackSegmentsTmp
-                                           .Where(x => (x != stackNodes.Peek().Peek()) &&
-                                                       (x != nextSeg) &&
-                                                       (x.Vertex2 == stackNodes.Peek().Peek().Vertex1))
-                                           .ToList());
-                            }
-                            else
-                            {
-                                segNodes.AddRange(this.TrackSegmentsTmp
-                                      .Where(x => (x != stackNodes.Peek().Peek()) &&
-                                                  (x != nextSeg) &&
-                                                  (x.Vertex1 == stackNodes.Peek().Peek().Vertex1 && (x.ConnV1 == ConnectionBranchType.tip || x.ConnV1 == ConnectionBranchType.none) ||
-                                                   x.Vertex2 == stackNodes.Peek().Peek().Vertex1 && (x.ConnV2 == ConnectionBranchType.tip || x.ConnV2 == ConnectionBranchType.none)))
-                                      .ToList());
-                            }
+                            segNodes.AddRange(this.TrackSegmentsTmp
+                                  .Where(x => (x != stackNodes.Peek().Peek()) &&
+                                              (x != nextSeg) &&
+                                              (x.Vertex1 == stackNodes.Peek().Peek().Vertex1 && (x.ConnV1 == ConnectionBranchType.tip || x.ConnV1 == ConnectionBranchType.none) ||
+                                               x.Vertex2 == stackNodes.Peek().Peek().Vertex1 && (x.ConnV2 == ConnectionBranchType.tip || x.ConnV2 == ConnectionBranchType.none)))
+                                  .ToList());
                         }
-                        
+
+                    }
+                    if (lineChange)
+                    {
+                        direction = newDir;
                     }
                     segNodes = segNodes
                                .OrderBy(x => x == nextSeg)
