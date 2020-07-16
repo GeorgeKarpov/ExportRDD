@@ -101,6 +101,7 @@ namespace ExpPt1
         public double minY;
         public bool betweenLevels;
         public string lineId;
+        public decimal length;
     }
 
     /// <summary>

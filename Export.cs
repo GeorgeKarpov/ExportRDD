@@ -1379,7 +1379,7 @@ namespace ExpPt1
                                                .OrderBy(x => x.Key)
                                                .Select(x => x.Key)
                                                .ToArray();
-                                if (attKeys.Length > 0)
+                                if (attKeys.Length == 1)
                                 {
                                     string location =
                                     block.Attributes[attKeys[0]].Value;
@@ -1396,17 +1396,35 @@ namespace ExpPt1
                                         }
                                     }
                                     block.Location = loc;
+                                    if (block.XsdName == "Point")
+                                    {
+                                        block.Location2 = loc;
+                                        block.Location3 = loc;
+                                    }
                                 }
-
-                                if (attKeys.Length > 1)
+                                else if (attKeys.Length == 2)
                                 {
                                     string location =
+                                    block.Attributes[attKeys[0]].Value;
+                                    string location2 =
                                     block.Attributes[attKeys[1]].Value;
-                                    if (!decimal.TryParse(location, out decimal loc) && block.XsdName != "Point")
+                                    if (!decimal.TryParse(location, out decimal loc))
                                     {
                                         if (location == "")
                                         {
                                             loc = 0;
+                                        }
+                                        else
+                                        {
+                                            error = true;
+                                            ErrLogger.Error("Can not convert to decimal", blckProp.GetElemDesignation(block), attKeys[0]);
+                                        }
+                                    }
+                                    if (!decimal.TryParse(location2, out decimal loc2))
+                                    {
+                                        if (location2 == "")
+                                        {
+                                            loc2 = 0;
                                         }
                                         else
                                         {
@@ -1414,14 +1432,25 @@ namespace ExpPt1
                                             ErrLogger.Error("Can not convert to decimal", blckProp.GetElemDesignation(block), attKeys[1]);
                                         }
                                     }
-                                    block.Location2 = loc;
+                                    block.Location = loc;
+                                    if (block.XsdName == "Point" && loc2 == 0)
+                                    {
+                                        block.Location2 = loc;
+                                    }
+                                    else
+                                    {
+                                        block.Location2 = loc2;
+                                    }                                 
                                 }
-
-                                if (attKeys.Length > 2)
+                                else if (attKeys.Length == 3)
                                 {
                                     string location =
+                                    block.Attributes[attKeys[0]].Value;
+                                    string location2 =
+                                    block.Attributes[attKeys[1]].Value;
+                                    string location3 =
                                     block.Attributes[attKeys[2]].Value;
-                                    if (!decimal.TryParse(location, out decimal loc) && block.XsdName != "Point")
+                                    if (!decimal.TryParse(location, out decimal loc))
                                     {
                                         if (location == "")
                                         {
@@ -1430,10 +1459,54 @@ namespace ExpPt1
                                         else
                                         {
                                             error = true;
+                                            ErrLogger.Error("Can not convert to decimal", blckProp.GetElemDesignation(block), attKeys[0]);
+                                        }
+                                    }
+                                    if (!decimal.TryParse(location2, out decimal loc2))
+                                    {
+                                        if (location2 == "")
+                                        {
+                                            loc2 = 0;
+                                        }
+                                        else
+                                        {
+                                            error = true;
+                                            ErrLogger.Error("Can not convert to decimal", blckProp.GetElemDesignation(block), attKeys[1]);
+                                        }
+                                    }
+                                    if (!decimal.TryParse(location3, out decimal loc3))
+                                    {
+                                        if (location3 == "")
+                                        {
+                                            loc3 = 0;
+                                        }
+                                        else
+                                        {
+                                            error = true;
                                             ErrLogger.Error("Can not convert to decimal", blckProp.GetElemDesignation(block), attKeys[2]);
                                         }
                                     }
-                                    block.Location3 = loc;
+                                    if (block.XsdName == "Point" && loc == 0)
+                                    {
+                                        loc = block.Location;
+                                    }
+                                    block.Location = loc;
+                                    if (block.XsdName == "Point" && loc2 == 0)
+                                    {
+                                        block.Location2 = loc;
+                                    }
+                                    else
+                                    {
+                                        block.Location2 = loc2;
+                                    }
+                                    if (block.XsdName == "Point" && loc3 == 0)
+                                    {
+                                        block.Location3 = loc;
+                                    }
+                                    else
+                                    {
+                                        block.Location3 = loc3;
+                                    }
                                 }
                             }
                             else if (block.XsdName == "FoulingPoint") // Fouling Point
@@ -4255,26 +4328,17 @@ namespace ExpPt1
             return !error;
         }
 
-        public void RoutesList()
+        public List<RoutesRoute> RoutesList()
         {
             List<RoutesRoute> routes = new List<RoutesRoute>();
-            foreach (Block signalBlk in this.blocks.Where(x => x.XsdName == "Signal" && !x.Virtual))
+            foreach (Block signalBlk in this.blocks.Where(x => x.XsdName == "Signal" && !x.Virtual && x.TrackSegId != null))
             {
                 var signal = this.signals
                              .Where(x => x.Designation == signalBlk.Designation &&
                                          x.KindOfSignal != TKindOfSignal.eotmb)
                              .FirstOrDefault();
-                if (signal != null)
-                {
-                    routes.AddRange(GetDestSignals(signal));
-                }
-                else
-                {
-                    ErrLogger.Error("Start signal for routes list not found in RDD", signalBlk.Designation, "");
-                    ErrLogger.ErrorsFound = true;
-                }
-            }
-
+                routes.AddRange(GetDestSignals(signalBlk));
+            }         
             XmlSerializer serializer = new XmlSerializer(typeof(Routes));
             XmlWriterSettings settings = new XmlWriterSettings
             {
@@ -4289,6 +4353,7 @@ namespace ExpPt1
                 writer.WriteEndDocument();
                 writer.Flush();
             }
+            return routes;
         }
 
         private bool ReadTrustedAreas(ref List<TrustedAreasTrustedArea> trustedAreas)
@@ -5262,7 +5327,7 @@ namespace ExpPt1
                     string nextLineId = stackNodes.Peek().Peek().lineId;
                     if (prevSegment.lineId != nextLineId)
                     {
-                        ErrLogger.Error("Line change between signal and oCes Bg", signal.Designation, "");
+                        ErrLogger.Error("Line change detected between signal and oCes Bg. Should be rechecked manually", signal.Designation, "");
                         ErrLogger.ErrorsFound = true;
                         RailwayLine nextLine = this.RailwayLines
                                    .Where(x => x.designation == nextLineId)
@@ -5498,81 +5563,122 @@ namespace ExpPt1
             return kmp - kmpSide;
         }
 
-        private List<RoutesRoute> GetDestSignals(SignalsSignal startSignal)
+        private List<RoutesRoute> GetDestSignals(Block startSignal)
         {
-            DirectionType direction = startSignal.Direction;
-            List<RoutesRoute> routes = new List<RoutesRoute>();
-            List<TrackSegmentTmp> segNodes = this.TrackSegmentsTmp
-                              .Where(x => x.Designation == startSignal.TrackSegmentID)
-                              .ToList();
-
-            if (segNodes.Count == 0)
+            TrackSegmentTmp startNode = this.TrackSegmentsTmp
+                             .Where(x => x.Designation == startSignal.TrackSegId)
+                             .FirstOrDefault();
+            bool error = false;
+            if (startNode == null)
             {
                 ErrLogger.Error("Start Segment(s) not found", startSignal.Designation, "Exp routes list");
                 ErrLogger.ErrorsFound = true;
                 return null;
             }
-            Stack<Stack<TrackSegmentTmp>> stackNodes = new Stack<Stack<TrackSegmentTmp>>();
+            //DirectionType direction = startSignal.Direction;
+            List<RoutesRoute> routes = new List<RoutesRoute>();
+            List<SearchSegment> segNodes = new List<SearchSegment>();
+           
+            SearchSegment startSearch = new SearchSegment
+            {
+                Direction = GetSignalDirection(startSignal, ref error), 
+                SegTmp = startNode 
+            };
+            segNodes.Add(startSearch);
+            
+            Stack<Stack<SearchSegment>> stackNodes = new Stack<Stack<SearchSegment>>();
             Stack<RoutesRoutePointGroupPoint> points = new Stack<RoutesRoutePointGroupPoint>();
-            stackNodes.Push(new Stack<TrackSegmentTmp>(segNodes));
+            stackNodes.Push(new Stack<SearchSegment>(segNodes));
             int iterCount = 0;
             
             decimal tmpSigLocation = startSignal.Location;
             while (stackNodes.Count > 0)
             {
                 Block nextSig = null;
-                bool error = false;
-                bool lineChange = false;
-                if (direction == DirectionType.up)
+                if (stackNodes.Peek().Peek().Direction == DirectionType.up)
                 {
-                    nextSig = this.blocks
-                             .Where(x => x.XsdName == "Signal" &&
-                                         x.Designation != startSignal.Designation &&
-                                         GetSignalDirection(x, ref error) == direction &&
-                                         x.Location > tmpSigLocation &&
-                                         x.TrackSegId == stackNodes.Peek().Peek().Designation)
-                             .OrderBy(x => Convert.ToDecimal(x.Location))
-                             .FirstOrDefault();
-                    if (stackNodes.Peek().Peek().Vertex1.Location > tmpSigLocation &&
-                        stackNodes.Peek().Peek().Vertex1.XsdName == "Point" &&
-                                stackNodes.Peek().Peek().ConnV1 != ConnectionBranchType.tip)
+                    if (stackNodes.Peek().Peek().SegTmp.Vertex1.Location > tmpSigLocation &&
+                       stackNodes.Peek().Peek().SegTmp.Vertex1.XsdName == "Point" &&
+                               stackNodes.Peek().Peek().SegTmp.ConnV1 != ConnectionBranchType.tip)
                     {
                         RoutesRoutePointGroupPoint groupPoint = new RoutesRoutePointGroupPoint
                         {
-                            Value = stackNodes.Peek().Peek().Vertex1.Designation,
+                            Value = stackNodes.Peek().Peek().SegTmp.Vertex1.Designation,
                             RequiredPosition =
-                            stackNodes.Peek().Peek().ConnV1 == ConnectionBranchType.right ? LeftRightType.right : LeftRightType.left
+                            stackNodes.Peek().Peek().SegTmp.ConnV1 == ConnectionBranchType.right ? LeftRightType.right : LeftRightType.left
                         };
                         points.Push(groupPoint);
                     }
-                }
-                else if (direction == DirectionType.down)
-                {
-                    nextSig = this.blocks
+                    if (stackNodes.Peek().Peek().SegTmp.Designation == startSignal.TrackSegId)
+                    {
+                        decimal dist = GetDistToVertex(startSignal.Location, stackNodes.Peek().Peek().SegTmp.Vertex2, stackNodes.Peek().Peek().SegTmp.ConnV2, 1, stackNodes.Peek().Peek().Direction);
+                        tmpSigLocation += dist;
+                        nextSig = this.blocks
                              .Where(x => x.XsdName == "Signal" &&
                                          x.Designation != startSignal.Designation &&
-                                         GetSignalDirection(x, ref error) == direction &&
-                                         x.Location < tmpSigLocation &&
-                                         x.TrackSegId == stackNodes.Peek().Peek().Designation)
-                             .OrderByDescending(x => Convert.ToDecimal(x.Location))
+                                         GetSignalDirection(x, ref error) == stackNodes.Peek().Peek().Direction &&
+                                         GetDistToVertex(x.Location, stackNodes.Peek().Peek().SegTmp.Vertex2, stackNodes.Peek().Peek().SegTmp.ConnV2, 1, stackNodes.Peek().Peek().Direction) < dist &&
+                                         x.TrackSegId == stackNodes.Peek().Peek().SegTmp.Designation)
+                             .OrderBy(x => Convert.ToDecimal(x.Location))
                              .FirstOrDefault();
-                    if (stackNodes.Peek().Peek().Vertex2.Location < tmpSigLocation && 
-                        stackNodes.Peek().Peek().Vertex2.XsdName == "Point" &&
-                                stackNodes.Peek().Peek().ConnV2 != ConnectionBranchType.tip)
+                    }
+                    else
+                    {
+                        nextSig = this.blocks
+                             .Where(x => x.XsdName == "Signal" &&
+                                         x.Designation != startSignal.Designation &&
+                                         GetSignalDirection(x, ref error) == stackNodes.Peek().Peek().Direction &&
+                                         //x.Location > stackNodes.Peek().Peek().Vertex1.Location &&
+                                         x.TrackSegId == stackNodes.Peek().Peek().SegTmp.Designation)
+                             .OrderBy(x => Convert.ToDecimal(x.Location))
+                             .FirstOrDefault();
+                        tmpSigLocation += stackNodes.Peek().Peek().SegTmp.length;
+                    }                                           
+                }
+                else if (stackNodes.Peek().Peek().Direction == DirectionType.down)
+                {
+                    if (stackNodes.Peek().Peek().SegTmp.Vertex2.Location < tmpSigLocation &&
+                        stackNodes.Peek().Peek().SegTmp.Vertex2.XsdName == "Point" &&
+                                stackNodes.Peek().Peek().SegTmp.ConnV2 != ConnectionBranchType.tip)
                     {
                         RoutesRoutePointGroupPoint groupPoint = new RoutesRoutePointGroupPoint
                         {
-                            Value = stackNodes.Peek().Peek().Vertex2.Designation,
+                            Value = stackNodes.Peek().Peek().SegTmp.Vertex2.Designation,
                             RequiredPosition =
-                            stackNodes.Peek().Peek().ConnV2 == ConnectionBranchType.right ? LeftRightType.right : LeftRightType.left
+                            stackNodes.Peek().Peek().SegTmp.ConnV2 == ConnectionBranchType.right ? LeftRightType.right : LeftRightType.left
                         };
                         points.Push(groupPoint);
+                    }
+                    if (stackNodes.Peek().Peek().SegTmp.Designation == startSignal.TrackSegId)
+                    {
+                        decimal dist = GetDistToVertex(startSignal.Location, stackNodes.Peek().Peek().SegTmp.Vertex1, stackNodes.Peek().Peek().SegTmp.ConnV1, 1, stackNodes.Peek().Peek().Direction);
+                        tmpSigLocation -= dist;
+                        nextSig = this.blocks
+                             .Where(x => x.XsdName == "Signal" &&
+                                         x.Designation != startSignal.Designation &&
+                                         GetSignalDirection(x, ref error) == stackNodes.Peek().Peek().Direction &&
+                                         GetDistToVertex(x.Location, stackNodes.Peek().Peek().SegTmp.Vertex1, stackNodes.Peek().Peek().SegTmp.ConnV1, 1, stackNodes.Peek().Peek().Direction) < dist &&
+                                         x.TrackSegId == stackNodes.Peek().Peek().SegTmp.Designation)
+                             .OrderByDescending(x => Convert.ToDecimal(x.Location))
+                             .FirstOrDefault();
+                    }
+                    else
+                    {
+                        nextSig = this.blocks
+                             .Where(x => x.XsdName == "Signal" &&
+                                         x.Designation != startSignal.Designation &&
+                                         GetSignalDirection(x, ref error) == stackNodes.Peek().Peek().Direction &&
+                                         //x.Location < stackNodes.Peek().Peek().Vertex2.Location &&
+                                         x.TrackSegId == stackNodes.Peek().Peek().SegTmp.Designation)
+                             .OrderByDescending(x => Convert.ToDecimal(x.Location))
+                             .FirstOrDefault();
+                        tmpSigLocation -= stackNodes.Peek().Peek().SegTmp.length;
                     }
                 }
                 bool eot = false;
                 if (nextSig == null)
                 {
-                    eot = IsNextElEot(stackNodes.Peek().Peek(), direction, tmpSigLocation);
+                    eot = IsNextElEot(stackNodes.Peek().Peek().SegTmp, stackNodes.Peek().Peek().Direction, tmpSigLocation);
                     if (eot)
                     {
                         ErrLogger.Information("End of track found as route destination", "Start Signal: " + startSignal.Designation);
@@ -5595,54 +5701,49 @@ namespace ExpPt1
                     {
                         if (stackNodes.Peek().Count == 2)
                         {
-                            if (points.Count > 0)
+                            if (startSearch.Direction == DirectionType.up)
                             {
-                                if (direction == DirectionType.up)
+                                if (points.Count > 0)
                                 {
-                                    if (points.Peek().Value == stackNodes.Peek().Peek().Vertex1.Designation)
+                                    if (points.Peek().Value == stackNodes.Peek().Peek().SegTmp.Vertex1.Designation)
                                     {
                                         points.Pop();
                                     }
                                 }
-                                else if (direction == DirectionType.down)
-                                {
-                                    if (points.Peek().Value == stackNodes.Peek().Peek().Vertex2.Designation)
-                                    {
-                                        points.Pop();
-                                    }
-                                }
+                                tmpSigLocation -= stackNodes.Peek().Peek().SegTmp.length;
                             }
-                            if (IsLineChanging(stackNodes.Peek().Peek(), direction,
-                                out DirectionType newDirBack, out decimal kmGapBack, out TrackSegmentTmp _, out Block _, true ))
+                            else if (startSearch.Direction == DirectionType.down)
                             {
-                                tmpSigLocation -= kmGapBack;
-                                direction = newDirBack;
+                                if (points.Count > 0)
+                                {
+                                    if (points.Peek().Value == stackNodes.Peek().Peek().SegTmp.Vertex2.Designation)
+                                    {
+                                        points.Pop();
+                                    }
+                                }
+                                tmpSigLocation += stackNodes.Peek().Peek().SegTmp.length;
                             }
                             stackNodes.Peek().Pop();
                             break;
                         }
                         if (points.Count > 0)
                         {
-                            if (direction == DirectionType.up)
+                            if (startSearch.Direction == DirectionType.up)
                             {
-                                if (points.Peek().Value == stackNodes.Peek().Peek().Vertex1.Designation)
+                                if (points.Peek().Value == stackNodes.Peek().Peek().SegTmp.Vertex1.Designation)
                                 {
                                     points.Pop();
                                 }
+                                tmpSigLocation -= stackNodes.Peek().Peek().SegTmp.length;
                             }
-                            else if (direction == DirectionType.down)
+                            else if (startSearch.Direction == DirectionType.down)
                             {
-                                if (points.Peek().Value == stackNodes.Peek().Peek().Vertex2.Designation)
+                                if (points.Peek().Value == stackNodes.Peek().Peek().SegTmp.Vertex2.Designation)
                                 {
                                     points.Pop();
                                 }
+                                tmpSigLocation += stackNodes.Peek().Peek().SegTmp.length;
                             }
-                        }
-                        if (IsLineChanging(stackNodes.Peek().Peek(), direction, 
-                            out DirectionType newDirBack1, out decimal kmGapBack1, out TrackSegmentTmp _, out Block _, true))
-                        {
-                            tmpSigLocation -= kmGapBack1;
-                            direction = newDirBack1;
                         }
                         stackNodes.Pop();
                         iterCount--;
@@ -5651,79 +5752,23 @@ namespace ExpPt1
                 }
                 else
                 {
-                    segNodes = new List<TrackSegmentTmp>();
-                    if (IsLineChanging(stackNodes.Peek().Peek(), direction, out DirectionType newDir, out decimal kmGap, out TrackSegmentTmp nextSeg, out Block changeVertex))
-                    {
-                        tmpSigLocation += kmGap;
-                        lineChange = true;
-                        segNodes.Add(nextSeg);
-                        ErrLogger.Error("Create routes: Line change on route path. Should be rechecked manually.", startSignal.Designation, nextSeg.Designation);
-                        ErrLogger.ErrorsFound = true;
-                    }
-                    
-                    if (direction == DirectionType.up)
-                    {
-                        if (stackNodes.Peek().Peek().ConnV2 == ConnectionBranchType.tip)
-                        {
-                            segNodes.AddRange(this.TrackSegmentsTmp
-                                       .Where(x => (x != stackNodes.Peek().Peek()) &&
-                                                   (x != nextSeg) &&
-                                                   (x.Vertex1 == stackNodes.Peek().Peek().Vertex2))
-                                       .ToList());
-                        }
-                        else
-                        {
-                            segNodes.AddRange(this.TrackSegmentsTmp
-                                       .Where(x => (x != stackNodes.Peek().Peek()) &&
-                                                   (x != nextSeg) &&
-                                                   (x.Vertex1 == stackNodes.Peek().Peek().Vertex2 && (x.ConnV1 == ConnectionBranchType.tip || x.ConnV1 == ConnectionBranchType.none) ||
-                                                    x.Vertex2 == stackNodes.Peek().Peek().Vertex2 && (x.ConnV2 == ConnectionBranchType.tip || x.ConnV2 == ConnectionBranchType.none)))
-                                       .ToList());
-                        }
-                    }
-                    else if (direction == DirectionType.down)
-                    {
-                        if (stackNodes.Peek().Peek().ConnV1 == ConnectionBranchType.tip)
-                        {
-                            segNodes.AddRange(this.TrackSegmentsTmp
-                                       .Where(x => (x != stackNodes.Peek().Peek()) &&
-                                                   (x != nextSeg) &&
-                                                   (x.Vertex2 == stackNodes.Peek().Peek().Vertex1))
-                                       .ToList());
-                        }
-                        else
-                        {
-                            segNodes.AddRange(this.TrackSegmentsTmp
-                                  .Where(x => (x != stackNodes.Peek().Peek()) &&
-                                              (x != nextSeg) &&
-                                              (x.Vertex1 == stackNodes.Peek().Peek().Vertex1 && (x.ConnV1 == ConnectionBranchType.tip || x.ConnV1 == ConnectionBranchType.none) ||
-                                               x.Vertex2 == stackNodes.Peek().Peek().Vertex1 && (x.ConnV2 == ConnectionBranchType.tip || x.ConnV2 == ConnectionBranchType.none)))
-                                  .ToList());
-                        }
-
-                    }
-                    if (lineChange)
-                    {
-                        direction = newDir;
-                    }
-                    segNodes = segNodes
-                               .OrderBy(x => x == nextSeg)
-                               .ToList();
+                    segNodes = new List<SearchSegment>();
+                    segNodes = GetSearchSegments(stackNodes.Peek().Peek());
                     iterCount++;
                     if (segNodes.Count == 0)
                     {
                         if (points.Count > 0)
                         {
-                            if (direction == DirectionType.up)
+                            if (startSearch.Direction == DirectionType.up)
                             {
-                                if (points.Peek().Value == stackNodes.Peek().Peek().Vertex1.Designation)
+                                if (points.Peek().Value == stackNodes.Peek().Peek().SegTmp.Vertex1.Designation)
                                 {
                                     points.Pop();
                                 }
                             }
-                            else if (direction == DirectionType.down)
+                            else if (startSearch.Direction == DirectionType.down)
                             {
-                                if (points.Peek().Value == stackNodes.Peek().Peek().Vertex2.Designation)
+                                if (points.Peek().Value == stackNodes.Peek().Peek().SegTmp.Vertex2.Designation)
                                 {
                                     points.Pop();
                                 }
@@ -5755,12 +5800,143 @@ namespace ExpPt1
                     {
                         if (segNodes.Count > 0)
                         {
-                            stackNodes.Push(new Stack<TrackSegmentTmp>(segNodes));
+                            stackNodes.Push(new Stack<SearchSegment>(segNodes));
                         }                     
                     }
                 }
             }
             return routes;
+        }
+
+        private decimal GetDistToVertex(decimal origin, Block vertex, ConnectionBranchType connection, int vertNumber, DirectionType direction)
+        {
+            decimal vertLocation = 0;
+            if (vertex.XsdName == "Point")
+            {
+                if (connection == ConnectionBranchType.tip)
+                {
+                    vertLocation = vertex.Location;
+                }
+                else if (connection == ConnectionBranchType.right)
+                {
+                    vertLocation = vertex.Location2;
+                }
+                else if (connection == ConnectionBranchType.left)
+                {
+                    vertLocation = vertex.Location3;
+                }
+            }
+            else if (vertex.XsdName == "Connector")
+            {
+                if (direction == DirectionType.up)
+                {
+                    if (vertNumber == 1)
+                    {
+                        vertLocation = vertex.Location2;
+                    }
+                    else if (vertNumber == 2)
+                    {
+                        vertLocation = vertex.Location;
+                    }
+                }
+                else if (direction == DirectionType.down)
+                {
+                    if (vertNumber == 1)
+                    {
+                        vertLocation = vertex.Location;
+                    }
+                    else if (vertNumber == 2)
+                    {
+                        vertLocation = vertex.Location2;
+                    }
+                }
+            }
+            else if (vertex.XsdName == "EndOfTrack")
+            {
+                vertLocation = vertex.Location;
+            }
+            return Math.Abs(origin -  vertLocation);
+        }
+
+        private List<SearchSegment> GetSearchSegments(SearchSegment startSegment)
+        {
+            List<SearchSegment> searchSegments = new List<SearchSegment>();
+            List<TrackSegmentTmp> foundSegments = new List<TrackSegmentTmp>();
+            Block changeVertex = null;
+            DirectionType startDirection = startSegment.Direction;
+            if (startDirection == DirectionType.up)
+            {
+                if (startSegment.SegTmp.ConnV2 == ConnectionBranchType.tip)
+                {
+                    foundSegments = this.TrackSegmentsTmp
+                          .Where(x => (x.Vertex1 == startSegment.SegTmp.Vertex2 ||
+                                       x.Vertex2 == startSegment.SegTmp.Vertex2) &&
+                                       x != startSegment.SegTmp)
+                          .ToList();
+                }
+                else
+                {
+                    foundSegments = this.TrackSegmentsTmp
+                          .Where(x => ((x.Vertex1 == startSegment.SegTmp.Vertex2 && (x.ConnV1 == ConnectionBranchType.tip || x.ConnV1 == ConnectionBranchType.none)) ||
+                                       (x.Vertex2 == startSegment.SegTmp.Vertex2 && (x.ConnV2 == ConnectionBranchType.tip || x.ConnV2 == ConnectionBranchType.none))) &&
+                                       x != startSegment.SegTmp)
+                          .ToList();
+                }
+                changeVertex = startSegment.SegTmp.Vertex2;
+            }
+            else if (startDirection == DirectionType.down)
+            {
+                if (startSegment.SegTmp.ConnV1 == ConnectionBranchType.tip)
+                {
+                    foundSegments = this.TrackSegmentsTmp
+                          .Where(x => (x.Vertex1 == startSegment.SegTmp.Vertex1 ||
+                                       x.Vertex2 == startSegment.SegTmp.Vertex1) &&
+                                       x != startSegment.SegTmp)
+                          .ToList();
+                }
+                else
+                {
+                    foundSegments = this.TrackSegmentsTmp
+                          .Where(x => ((x.Vertex1 == startSegment.SegTmp.Vertex1 && (x.ConnV1 == ConnectionBranchType.tip || x.ConnV1 == ConnectionBranchType.none)) ||
+                                       (x.Vertex2 == startSegment.SegTmp.Vertex1 && (x.ConnV2 == ConnectionBranchType.tip || x.ConnV2 == ConnectionBranchType.none))) &&
+                                       x != startSegment.SegTmp)
+                          .ToList();
+                }
+                changeVertex = startSegment.SegTmp.Vertex1;
+            }
+            foreach (TrackSegmentTmp seg in foundSegments)
+            {
+                SearchSegment searchSegment = new SearchSegment
+                {
+                    SegTmp = seg
+                };
+                if (startSegment.SegTmp.lineId == seg.lineId)
+                {
+                    searchSegment.Direction = startDirection;
+                }
+                else
+                {
+                    Block opositChangeVertex = null;
+                    if (seg.Vertex1 == changeVertex)
+                    {
+                        opositChangeVertex = seg.Vertex2;
+                    }
+                    else if (seg.Vertex2 == changeVertex)
+                    {
+                        opositChangeVertex = seg.Vertex1;
+                    }
+                    if (changeVertex.Location < opositChangeVertex.Location)
+                    {
+                        searchSegment.Direction = DirectionType.up;
+                    }
+                    else if (changeVertex.Location > opositChangeVertex.Location)
+                    {
+                        searchSegment.Direction = DirectionType.down;
+                    }
+                }
+                searchSegments.Add(searchSegment);
+            }
+            return searchSegments;
         }
 
         private bool IsLineChanging(TrackSegmentTmp segmentTmp, DirectionType direction, 
@@ -5938,7 +6114,7 @@ namespace ExpPt1
             {
                 var eots = this.blocks
                          .Where(x => x.XsdName == "EndOfTrack" &&
-                                     x.Location > refLocation &&
+                                     x.Location >= refLocation &&
                                      x.TrackSegId == segment.Designation)
                          .OrderBy(x => Convert.ToDecimal(x.Location))
                          .ToList();
@@ -5950,7 +6126,7 @@ namespace ExpPt1
             {
                 var eots = this.blocks
                          .Where(x => x.XsdName == "EndOfTrack" &&
-                                     x.Location < refLocation &&
+                                     x.Location <= refLocation &&
                                      x.TrackSegId == segment.Designation)
                          .OrderBy(x => Convert.ToDecimal(x.Location))
                          .ToList();
@@ -7034,7 +7210,7 @@ namespace ExpPt1
                         {
                             block.TrackSegId = designation;
                         }
-                        TrackSegmentsTmp.Add(new TrackSegmentTmp
+                        TrackSegmentTmp tmp = new TrackSegmentTmp
                         {
                             Designation = designation,
                             Vertex1 = Vertex1,
@@ -7049,7 +7225,9 @@ namespace ExpPt1
                             minY = MinY,
                             betweenLevels = betweenLevel,
                             lineId = Vertex1.LineID
-                        });
+                        };
+                        tmp.length = GetTmpSegLength(tmp);
+                        TrackSegmentsTmp.Add(tmp);
 
                         if (!(Vertex1.IsOnNextStation == true || Vertex2.IsOnNextStation == true))
                         {
@@ -9655,6 +9833,52 @@ namespace ExpPt1
                 }
             }
             return false;
+        }
+
+        private decimal GetTmpSegLength(TrackSegmentTmp segmentTmp)
+        {
+            decimal vert1Loc = 0;
+            decimal vert2Loc = 0;
+            if (segmentTmp.Vertex1.XsdName == "Connector" || segmentTmp.Vertex1.XsdName == "EndOfTrack")
+            {
+                vert1Loc = segmentTmp.Vertex1.Location;
+            }
+            else if (segmentTmp.Vertex1.XsdName == "Point")
+            {
+                if (segmentTmp.ConnV1 == ConnectionBranchType.tip)
+                {
+                    vert1Loc = segmentTmp.Vertex1.Location;
+                }
+                else if (segmentTmp.ConnV1 == ConnectionBranchType.right)
+                {
+                    vert1Loc = segmentTmp.Vertex1.Location2;
+                }
+                else if (segmentTmp.ConnV1 == ConnectionBranchType.left)
+                {
+                    vert1Loc = segmentTmp.Vertex1.Location3;
+                }
+            }
+
+            if (segmentTmp.Vertex2.XsdName == "Connector" || segmentTmp.Vertex2.XsdName == "EndOfTrack")
+            {
+                vert2Loc = segmentTmp.Vertex2.Location;
+            }
+            else if (segmentTmp.Vertex2.XsdName == "Point")
+            {
+                if (segmentTmp.ConnV2 == ConnectionBranchType.tip)
+                {
+                    vert2Loc = segmentTmp.Vertex2.Location;
+                }
+                else if (segmentTmp.ConnV2 == ConnectionBranchType.right)
+                {
+                    vert2Loc = segmentTmp.Vertex2.Location2;
+                }
+                else if (segmentTmp.ConnV2 == ConnectionBranchType.left)
+                {
+                    vert2Loc = segmentTmp.Vertex2.Location3;
+                }
+            }
+            return Math.Abs(vert1Loc - vert2Loc);
         }
 
         public void Dispose()

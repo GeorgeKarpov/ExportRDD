@@ -73,6 +73,27 @@ namespace ExpPt1
             return dataTable;
         }
 
+        public static DataTable ToDataTable(List<RoutesRoute> items)
+        {
+            DataTable dataTable = new DataTable("Routes");
+            dataTable.Columns.Add("Designation", typeof(string));
+            dataTable.Columns.Add("Start", typeof(string));
+            dataTable.Columns.Add("Destination", typeof(string));
+            //dataTable.Columns.Add("Track Segment", typeof(string));
+            //dataTable.Columns.Add("Line", typeof(string));
+            foreach (var item in items)
+            {
+                var values = new object[3];
+                values[0] = item.Designation;
+                values[1] = item.Start;
+                values[2] = item.Destination;
+                //values[3] = item.TrackSegmentID;
+                //values[4] = item.LineID;
+                dataTable.Rows.Add(values);
+            }
+            return dataTable;
+        }
+
         public static DataTable ToDataTable(TFileDescr siglayout)
         {
             DataTable dataTable = new DataTable("Sig Layout");

@@ -117,6 +117,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Register.cs" />
+    <Compile Include="SearchSegment.cs" />
     <Compile Include="ShiftCesBG.cs" />
     <Compile Include="SspSimp.cs" />
     <Compile Include="Verify.cs" />
@@ -192,6 +193,7 @@ if not exist $(TargetDir)\doc mkdir $(TargetDir)\doc
 cd $(TargetDir)\log
 del *.log
 xcopy /Y $(SolutionDir)AccessDatabaseEngine_X64.exe $(TargetDir)\drv
+xcopy /Y $(SolutionDir)AccessDatabaseEngine_16_X64.exe $(TargetDir)\drv
 xcopy /Y $(SolutionDir)mso.reg $(TargetDir)\drv
 xcopy /Y C:\3.TRDD\DynamicBlocks\Blks_Dynamic.dwg $(TargetDir)\cfg
 </PostBuildEvent>

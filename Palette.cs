@@ -19,6 +19,7 @@ namespace ExpPt1
         private static ElCntrl palCntrlSeg = null;
         private static ElCntrl palCntrlMb = null;
         private static ElCntrl palCntrlPt = null;
+        private static ElCntrl palCntrlRt = null;
         private static ErrCntrl errCntrl = null;
         public string DwgPath { get; set; }
         DocumentCollection Docs { get; set; }
@@ -44,11 +45,13 @@ namespace ExpPt1
                 palCntrlSeg.DataGridView.DataSource = "";
                 palCntrlMb.DataGridView.DataSource = "";
                 palCntrlPt.DataGridView.DataSource = "";
+                palCntrlRt.DataGridView.DataSource = "";
                 errCntrl.ListView.Items.Clear();
 
                 palCntrlSeg.LblInfo.Text = "";
                 palCntrlMb.LblInfo.Text = "";
                 palCntrlPt.LblInfo.Text = "";
+                palCntrlRt.LblInfo.Text = "";
             }
         }
 
@@ -59,6 +62,7 @@ namespace ExpPt1
                 palCntrlSeg = new ElCntrl();
                 palCntrlMb = new ElCntrl();
                 palCntrlPt = new ElCntrl();
+                palCntrlRt = new ElCntrl();
                 palCntrlSigLay = new ElCntrl();
                 errCntrl = new ErrCntrl();
                 palCntrlSeg.BtnLoad.Click += BtnLoad_Click;
@@ -72,6 +76,10 @@ namespace ExpPt1
                 palCntrlPt.BtnLoad.Click += BtnLoad_Click;
                 palCntrlPt.DataGridView.CellDoubleClick += Dgw_CellDoubleClick;
                 palCntrlPt.DataGridView.DataSourceChanged += Dgw_DataSourceChanged;
+
+                palCntrlRt.BtnLoad.Click += BtnLoad_Click;
+                palCntrlRt.DataGridView.CellDoubleClick += DgwRts_CellDoubleClick;
+                palCntrlRt.DataGridView.DataSourceChanged += Dgw_DataSourceChanged;
 
                 palCntrlSigLay.BtnLoad.Click += BtnLoad_Click;
                 palCntrlSigLay.DataGridView.DataSourceChanged += Dgw_DataSourceChanged;
@@ -90,6 +98,7 @@ namespace ExpPt1
                 _ps.Add("Track Segments", palCntrlSeg);
                 _ps.Add("Sinals", palCntrlMb);
                 _ps.Add("Points", palCntrlPt);
+                _ps.Add("Routes", palCntrlRt);
                 _ps.Add("Errors", errCntrl);
                 _ps.MinimumSize = new Size(200, 40);
                 _ps.DockEnabled = (DockSides.Left | DockSides.Right);
@@ -169,6 +178,35 @@ namespace ExpPt1
             }
         }
 
+        private void DgwRts_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            DataGridView dataGrid = (DataGridView)sender;
+            if (e.RowIndex != -1)
+            {
+                Entity[] entities = new Entity[2];
+                string designation = dataGrid.Rows[e.RowIndex].Cells[1].Value.ToString();
+                string designation1 = dataGrid.Rows[e.RowIndex].Cells[2].Value.ToString();
+                Block element = Blocks
+                                .Where(x => x.Designation == designation)
+                                .FirstOrDefault();
+                if (element != null)
+                {
+                    entities[0] = element.BlkRef;
+                }
+                element = Blocks
+                          .Where(x => x.Designation == designation1)
+                          .FirstOrDefault();
+                if (element != null)
+                {
+                    entities[1] = element.BlkRef;
+                }
+                if (entities[0] != null && entities[1] != null)
+                {
+                    AcadTools.ZoomToObjects(entities, 150);
+                }
+            }
+        }
+
         private void Dgw_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             DataGridView dataGrid = (DataGridView)sender;
@@ -223,6 +261,11 @@ namespace ExpPt1
                 System.Data.DataTable points = Data.ToDataTable(expDispl.Points);
                 palCntrlPt.DataGridView.DataSource = points;
                 palCntrlPt.LblInfo.Text = "Points count: " + points.Rows.Count;
+
+
+                System.Data.DataTable routes = Data.ToDataTable(expDispl.Routes);
+                palCntrlRt.DataGridView.DataSource = routes;
+                palCntrlRt.LblInfo.Text = "Routes count: " + routes.Rows.Count;
             }
             errCntrl.LoadList();
             if (ErrLogger.ErrorsFound)

@@ -18,6 +18,7 @@ namespace ExpPt1
         public List<TrackSegmentsTrackSegment> Segments { get; set; }
         public List<SignalsSignal> Signals { get; set; }
         public List<PointsPoint> Points { get; set; }
+        public List<RoutesRoute> Routes { get; set; }
 
         public Display(string dwgPath) : base(dwgPath)
         {
@@ -77,12 +78,13 @@ namespace ExpPt1
             };
 
             List<EmSG> emGs = GetEmGs().ToList();
-            ExportCigClosure = new List<string>();
+           // ExportCigClosure = new List<string>();
             GetDocIdVrs();
             ReadSigLayout(blocks, ref sigLayout, true);
             ReadPSAs(pSAs, ref areas);
             ReadSignals(blocks, ref signals);
             ReadPoints(blocks, ref points, speedProfiles, pSAs, emGs);
+            Routes = RoutesList();
             SigLayout = sigLayout;
             Segments = trcksegments;
             Signals = signals;
