@@ -102,8 +102,15 @@ namespace ExpPt1
         public bool betweenLevels;
         public string lineId;
         public decimal length;
+        public decimal Km1 { get; set; }
+        public decimal Km2 { get; set; }
     }
 
+    public enum VertexNumber
+    {
+        V1,
+        V2
+    }
     /// <summary>
     /// Track <SP>.
     /// </summary>

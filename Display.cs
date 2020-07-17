@@ -32,6 +32,7 @@ namespace ExpPt1
 
             RailwayLines = new List<RailwayLine>();
             BlocksToGet = new Dictionary<string, string>();
+            ConnLinesKm1 = new Dictionary<string, decimal>();
             Status = new TStatus { };
 
             TrackSegmentsTmp = new List<TrackSegmentTmp>();
@@ -42,6 +43,7 @@ namespace ExpPt1
             speedProfiles = new List<SpeedProfilesSpeedProfile>();
 
             ReadBlocksDefinitions();
+            ReadConnLinesDefinitions();
             blocksErr = false;
             blocks = GetBlocks(ref blocksErr);
             TracksLines = GetTracksLines();
