@@ -4987,47 +4987,106 @@ namespace ExpPt1
             {
                 return false;
             }
-            List<TrackSegmentTmp> segNodes = this.TrackSegmentsTmp
+            TrackSegmentTmp startNode = this.TrackSegmentsTmp
                               .Where(x => x.Designation == signal.TrackSegId)
-                              .ToList();
-            if (segNodes.Count == 0)
+                              .FirstOrDefault();
+            if (startNode == null)
             {
                 ErrLogger.Error("Start Segment(s) not found", signal.Designation, "Sig To PSA");
                 ErrLogger.ErrorsFound = true;
                 return false;
             }
-            Stack<Stack<TrackSegmentTmp>> stackNodes = new Stack<Stack<TrackSegmentTmp>>();
-            stackNodes.Push(new Stack<TrackSegmentTmp>(segNodes));
+            List<SearchSegment> segNodes = new List<SearchSegment>();
+            SearchSegment startSearch = new SearchSegment
+            {
+                Direction = direction,
+                SegTmp = startNode
+            };
+            bool error = false;
+            segNodes.Add(startSearch);
+            Stack<Stack<SearchSegment>> stackNodes = new Stack<Stack<SearchSegment>>();
+            stackNodes.Push(new Stack<SearchSegment>(segNodes));
             int iterCount = 0;
-            bool sigDirError = false;
+            //bool sigDirError = false;
             decimal tmpSigLocation = signal.Location;
-            decimal kmGap = 0;
+            //decimal kmGap = 0;
             while (stackNodes.Count > 0)
             {
                 Block nextSignal = null;
                 if (direction == DirectionType.up)
                 {
-                    nextSignal = this.blocks
+                    if (stackNodes.Peek().Peek().SegTmp.Designation == signal.TrackSegId)
+                    {
+                        decimal dist = GetDistToVertex(signal.Location, stackNodes.Peek().Peek().SegTmp, VertexNumber.V2);
+                        tmpSigLocation += dist;
+                        nextSignal = this.blocks
                              .Where(x => x.XsdName == "Signal" &&
-                                         x.Location > tmpSigLocation &&
-                                         GetSignalDirection(x, ref sigDirError, true) == direction &&
-                                         x.TrackSegId == stackNodes.Peek().Peek().Designation)
+                                         x.Designation != signal.Designation &&
+                                         GetSignalDirection(x, ref error) == stackNodes.Peek().Peek().Direction &&
+                                         GetDistToVertex(x.Location, stackNodes.Peek().Peek().SegTmp, VertexNumber.V2) < dist &&
+                                         x.TrackSegId == stackNodes.Peek().Peek().SegTmp.Designation)
                              .OrderBy(x => Convert.ToDecimal(x.Location))
                              .FirstOrDefault();
-                }
-                else
-                {
-                    nextSignal = this.blocks
+                    }
+                    else
+                    {
+                        nextSignal = this.blocks
                              .Where(x => x.XsdName == "Signal" &&
-                                         x.Location < tmpSigLocation &&
-                                         GetSignalDirection(x, ref sigDirError, true) == direction &&
-                                         x.TrackSegId == stackNodes.Peek().Peek().Designation)
+                                         x.Designation != signal.Designation &&
+                                         GetSignalDirection(x, ref error) == stackNodes.Peek().Peek().Direction &&
+                                         //x.Location > stackNodes.Peek().Peek().Vertex1.Location &&
+                                         x.TrackSegId == stackNodes.Peek().Peek().SegTmp.Designation)
+                             .OrderBy(x => Convert.ToDecimal(x.Location))
+                             .FirstOrDefault();
+                        tmpSigLocation += stackNodes.Peek().Peek().SegTmp.length;
+                    }
+                    //nextSignal = this.blocks
+                    //         .Where(x => x.XsdName == "Signal" &&
+                    //                     x.Location > tmpSigLocation &&
+                    //                     GetSignalDirection(x, ref sigDirError, true) == direction &&
+                    //                     x.TrackSegId == stackNodes.Peek().Peek().SegTmp.Designation)
+                    //         .OrderBy(x => Convert.ToDecimal(x.Location))
+                    //         .FirstOrDefault();
+                    //tmpSigLocation += stackNodes.Peek().Peek().SegTmp.length;
+                }
+                else if (direction == DirectionType.down)
+                {
+                    if (stackNodes.Peek().Peek().SegTmp.Designation == signal.TrackSegId)
+                    {
+                        decimal dist = GetDistToVertex(signal.Location, stackNodes.Peek().Peek().SegTmp, VertexNumber.V1);
+                        tmpSigLocation -= dist;
+                        nextSignal = this.blocks
+                             .Where(x => x.XsdName == "Signal" &&
+                                         x.Designation != signal.Designation &&
+                                         GetSignalDirection(x, ref error) == stackNodes.Peek().Peek().Direction &&
+                                         GetDistToVertex(x.Location, stackNodes.Peek().Peek().SegTmp, VertexNumber.V1) < dist &&
+                                         x.TrackSegId == stackNodes.Peek().Peek().SegTmp.Designation)
                              .OrderByDescending(x => Convert.ToDecimal(x.Location))
                              .FirstOrDefault();
+                    }
+                    else
+                    {
+                        nextSignal = this.blocks
+                             .Where(x => x.XsdName == "Signal" &&
+                                         x.Designation != signal.Designation &&
+                                         GetSignalDirection(x, ref error) == stackNodes.Peek().Peek().Direction &&
+                                         //x.Location < stackNodes.Peek().Peek().Vertex2.Location &&
+                                         x.TrackSegId == stackNodes.Peek().Peek().SegTmp.Designation)
+                             .OrderByDescending(x => Convert.ToDecimal(x.Location))
+                             .FirstOrDefault();
+                        tmpSigLocation -= stackNodes.Peek().Peek().SegTmp.length;
+                    }
+                    //nextSignal = this.blocks
+                    //         .Where(x => x.XsdName == "Signal" &&
+                    //                     x.Location < tmpSigLocation &&
+                    //                     GetSignalDirection(x, ref sigDirError, true) == direction &&
+                    //                     x.TrackSegId == stackNodes.Peek().Peek().SegTmp.Designation)
+                    //         .OrderByDescending(x => Convert.ToDecimal(x.Location))
+                    //         .FirstOrDefault();
                 }
                 PSA pSA = null;
                 pSA = pSAs
-                      .Where(x => stackNodes.Peek().Peek().TrackLines
+                      .Where(x => stackNodes.Peek().Peek().SegTmp.TrackLines
                                   .Any(l => ObjectsIntersects(l, x.PsaPolyLine, Intersect.OnBothOperands)))
                       .FirstOrDefault();
                 if (pSA != null)
@@ -5048,39 +5107,7 @@ namespace ExpPt1
                 if (nextSignal == null)
                 {
                     iterCount++;
-                    segNodes = new List<TrackSegmentTmp>();
-                    if (IsLineChanging(stackNodes.Peek().Peek(), direction, out DirectionType newDirection, out kmGap, out TrackSegmentTmp changeSeg, out Block _))
-                    {
-                        segNodes.Add(changeSeg);
-                        tmpSigLocation += kmGap;
-                        direction = newDirection;
-                        ErrLogger.Error("Check Signal to PSA: Line change detected. Should be rechecked manually.", signal.Designation, "");
-                        ErrLogger.ErrorsFound = true;
-                    }
-                    if (direction == DirectionType.up)
-                    {
-                        if (stackNodes.Peek().Peek().Vertex2.XsdName == "Point" ||
-                            stackNodes.Peek().Peek().Vertex2.XsdName == "EndOfTrack")
-                        {
-                            return false;
-                        }
-                        segNodes = this.TrackSegmentsTmp
-                                   .Where(x => x.Vertex1 == stackNodes.Peek().Peek().Vertex2 &&
-                                                x != changeSeg)
-                                   .ToList();
-                    }
-                    else
-                    {
-                        if (stackNodes.Peek().Peek().Vertex1.XsdName == "Point" ||
-                            stackNodes.Peek().Peek().Vertex1.XsdName == "EndOfTrack")
-                        {
-                            return false;
-                        }
-                        segNodes = this.TrackSegmentsTmp
-                                   .Where(x => x.Vertex2 == stackNodes.Peek().Peek().Vertex1 &&
-                                               x != changeSeg)
-                                   .ToList();
-                    }
+                    segNodes = GetSearchSegments(stackNodes.Peek().Peek());
                     iterCount++;
                     if (segNodes.Count == 0 || Constants.dpIterLimit == iterCount)
                     {
@@ -5097,7 +5124,7 @@ namespace ExpPt1
                     }
                     else
                     {
-                        stackNodes.Push(new Stack<TrackSegmentTmp>(segNodes));
+                        stackNodes.Push(new Stack<SearchSegment>(segNodes));
                     }
                 }
                 else
