@@ -37,6 +37,7 @@ namespace ExpPt1
     {
         public BlockReference BlkRef;
         public string BlockName;
+        public string Name;
         public string XsdName;
         public string Designation;
         public string ElType;
@@ -70,6 +71,9 @@ namespace ExpPt1
         public int Ac_angle;
         public int PlatformTrack;
         public bool Virtual { get; set; }
+        public decimal KmGap { get; set; }
+        public decimal KmGapR { get; set; }
+        public decimal KmGapL { get; set; }
     }
 
     /// <summary>
