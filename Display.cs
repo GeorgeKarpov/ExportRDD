@@ -1,4 +1,5 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.Runtime;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -18,6 +19,7 @@ namespace ExpPt1
         public List<TrackSegmentsTrackSegment> Segments { get; set; }
         public List<SignalsSignal> Signals { get; set; }
         public List<PointsPoint> Points { get; set; }
+        public List<RoutesRoute> Routes { get; set; }
 
         public Display(string dwgPath) : base(dwgPath)
         {
@@ -31,6 +33,7 @@ namespace ExpPt1
 
             RailwayLines = new List<RailwayLine>();
             BlocksToGet = new Dictionary<string, string>();
+            ConnLinesKm1 = new Dictionary<string, decimal>();
             Status = new TStatus { };
 
             TrackSegmentsTmp = new List<TrackSegmentTmp>();
@@ -41,6 +44,7 @@ namespace ExpPt1
             speedProfiles = new List<SpeedProfilesSpeedProfile>();
 
             ReadBlocksDefinitions();
+            ReadConnLinesDefinitions();
             blocksErr = false;
             blocks = GetBlocks(ref blocksErr);
             TracksLines = GetTracksLines();
@@ -56,6 +60,13 @@ namespace ExpPt1
 
         public void LoadData()
         {
+            ProgressMeter pm = new ProgressMeter();
+
+            
+            pm.Start("Loading Data");
+            pm.SetLimit(100);
+            pm.MeterProgress();
+            System.Windows.Forms.Application.DoEvents();
             SetBlocksNextStations(blocks);
             SetBlocksExclude(blocks);
             pSAs = GetPsas().ToList();
@@ -66,6 +77,12 @@ namespace ExpPt1
                 ErrLogger.ErrorsFound = true;
                 //return;
             }
+            for (int i = 0; i < 50; i++)
+            {
+                pm.MeterProgress();
+                System.Windows.Forms.Application.DoEvents();
+            }
+            
             checkData = new Dictionary<string, bool> {
                 { "checkBoxRts", false },
                 { "checkBoxSC", false },
@@ -77,17 +94,26 @@ namespace ExpPt1
             };
 
             List<EmSG> emGs = GetEmGs().ToList();
-            ExportCigClosure = new List<string>();
+            // ExportCigClosure = new List<string>();
             GetDocIdVrs();
+            
             ReadSigLayout(blocks, ref sigLayout, true);
             ReadPSAs(pSAs, ref areas);
             ReadSignals(blocks, ref signals);
             ReadPoints(blocks, ref points, speedProfiles, pSAs, emGs);
+            
+            for (int i = 0; i < 50; i++)
+            {
+                pm.MeterProgress();
+                System.Windows.Forms.Application.DoEvents();
+            }
+            Routes = RoutesList();
             SigLayout = sigLayout;
             Segments = trcksegments;
             Signals = signals;
             Points = points;
             Blocks = blocks;
+            pm.Stop();
         }
     }
 }
