@@ -1,7 +1,6 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Runtime;
 using System.IO;
-using System.Runtime.CompilerServices;
 
 [assembly: CommandClass(typeof(ExpPt1.MyAcadCommands))]
 
@@ -50,6 +49,14 @@ namespace ExpPt1
             {
                 Pl.Reload();
             }
+        }
+
+        [CommandMethod("RDDEXPROUTES")]
+        public static void ExportRoutes()
+        {
+            Display display = new Display(DwgPath);
+            display.ExportRoutes();
+            display.Dispose();
         }
 
         //[CommandMethod("ExportBlocks")]

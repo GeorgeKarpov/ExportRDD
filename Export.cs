@@ -4374,14 +4374,14 @@ namespace ExpPt1
                 IndentChars = "\t",
                 Indent = true
             };
-            using (StreamWriter stream = new StreamWriter(dwgDir + @"/routest_test.xml"))
-            {
-                XmlWriter writer = XmlWriter.Create(stream, settings);
-                writer.WriteStartDocument();
-                serializer.Serialize(writer, new Routes { Route = routes.DistinctBy(x => x.Designation).OrderBy(x => x.Designation).ToArray() });
-                writer.WriteEndDocument();
-                writer.Flush();
-            }
+            //using (StreamWriter stream = new StreamWriter(dwgDir + @"/routest_test.xml"))
+            //{
+            //    XmlWriter writer = XmlWriter.Create(stream, settings);
+            //    writer.WriteStartDocument();
+            //    serializer.Serialize(writer, new Routes { Route = routes.DistinctBy(x => x.Designation).OrderBy(x => x.Designation).ToArray() });
+            //    writer.WriteEndDocument();
+            //    writer.Flush();
+            //}
             return routes;
         }
 
@@ -5299,6 +5299,15 @@ namespace ExpPt1
                         }
                     }
                 }
+                if (stackNodes.Count > 1)
+                {
+                    var tmp = stackNodes.Pop();
+                    TrackSegmentTmp segmentTmp1 = stackNodes.Peek().Peek().SegTmp;
+                    TrackSegmentTmp segmentTmp2 = tmp.Peek().SegTmp;
+                    stackNodes.Push(tmp);
+                    kmGap += GetKmGapBetweenSegments(segmentTmp1, segmentTmp2);
+
+                }
                 if (nextDp != null)
                 {
                     decimal dpLocation = nextDp.Location;
@@ -5367,11 +5376,8 @@ namespace ExpPt1
                         break;
                     }
                     else
-                    {
-                        TrackSegmentTmp segmentTmp1 = stackNodes.Peek().Peek().SegTmp;
+                    {                 
                         stackNodes.Push(new Stack<SearchSegment>(segNodes));
-                        TrackSegmentTmp segmentTmp2 = stackNodes.Peek().Peek().SegTmp;
-                        kmGap += GetKmGapBetweenSegments(segmentTmp1, segmentTmp2);
                     }
                 }
             }
@@ -5440,7 +5446,6 @@ namespace ExpPt1
                     if (stackNodes.Peek().Peek().SegTmp.Designation == signal.TrackSegId)
                     {
                         decimal dist = GetDistToVertex(signal.Location, stackNodes.Peek().Peek().SegTmp, VertexNumber.V2);
-                        //tmpSigLocation += dist;
                         nextBg = this.blocks
                              .Where(x => x.XsdName == "BaliseGroup" &&
                                          GetDistToVertex(x.Location, stackNodes.Peek().Peek().SegTmp, VertexNumber.V2) <= dist &&
@@ -5455,7 +5460,6 @@ namespace ExpPt1
                                          x.TrackSegId == stackNodes.Peek().Peek().SegTmp.Designation)
                              .OrderBy(x => Convert.ToDecimal(x.Location))
                              .FirstOrDefault();
-                        //tmpSigLocation += stackNodes.Peek().Peek().SegTmp.length;
                     }
                 }
                 else if (stackNodes.Peek().Peek().Direction == DirectionType.down)
@@ -5463,7 +5467,6 @@ namespace ExpPt1
                     if (stackNodes.Peek().Peek().SegTmp.Designation == signal.TrackSegId)
                     {
                         decimal dist = GetDistToVertex(signal.Location, stackNodes.Peek().Peek().SegTmp, VertexNumber.V1);
-                        //tmpSigLocation -= dist;
                         nextBg = this.blocks
                              .Where(x => x.XsdName == "BaliseGroup" &&
                                          GetDistToVertex(x.Location, stackNodes.Peek().Peek().SegTmp, VertexNumber.V1) <= dist &&
@@ -5478,7 +5481,6 @@ namespace ExpPt1
                                          x.TrackSegId == stackNodes.Peek().Peek().SegTmp.Designation)
                              .OrderByDescending(x => Convert.ToDecimal(x.Location))
                              .FirstOrDefault();
-                        //tmpSigLocation -= stackNodes.Peek().Peek().SegTmp.length;
                     }
                 }
                 if (stackNodes.Peek().Peek().SegTmp.Designation != signal.TrackSegId)
@@ -5531,6 +5533,15 @@ namespace ExpPt1
                         }
                     }
                 }
+                if (stackNodes.Count > 1)
+                {
+                    var tmp = stackNodes.Pop();
+                    TrackSegmentTmp segmentTmp1 = stackNodes.Peek().Peek().SegTmp;
+                    TrackSegmentTmp segmentTmp2 = tmp.Peek().SegTmp;
+                    stackNodes.Push(tmp);
+                    kmGap += GetKmGapBetweenSegments(segmentTmp1, segmentTmp2);
+
+                }
                 if (nextBg != null)
                 {
                     decimal bgLocation = nextBg.Location;
@@ -5582,10 +5593,10 @@ namespace ExpPt1
                     }
                     else
                     {
-                        TrackSegmentTmp segmentTmp1 = stackNodes.Peek().Peek().SegTmp;
+                        //TrackSegmentTmp segmentTmp1 = stackNodes.Peek().Peek().SegTmp;
                         stackNodes.Push(new Stack<SearchSegment>(segNodes));
-                        TrackSegmentTmp segmentTmp2 = stackNodes.Peek().Peek().SegTmp;
-                        kmGap += GetKmGapBetweenSegments(segmentTmp1, segmentTmp2);
+                        //TrackSegmentTmp segmentTmp2 = stackNodes.Peek().Peek().SegTmp;
+                        //kmGap += GetKmGapBetweenSegments(segmentTmp1, segmentTmp2);
                     }
                 }
             }
@@ -5711,7 +5722,7 @@ namespace ExpPt1
                 Block nextSig = null;
                 if (stackNodes.Peek().Peek().Direction == DirectionType.up)
                 {
-                    if (stackNodes.Peek().Peek().SegTmp.Vertex1.Location > tmpSigLocation &&
+                    if (stackNodes.Peek().Peek().SegTmp.Vertex1.Location >= tmpSigLocation &&
                        stackNodes.Peek().Peek().SegTmp.Vertex1.XsdName == "Point" &&
                                stackNodes.Peek().Peek().SegTmp.ConnV1 != ConnectionBranchType.tip)
                     {
@@ -5751,7 +5762,7 @@ namespace ExpPt1
                 }
                 else if (stackNodes.Peek().Peek().Direction == DirectionType.down)
                 {
-                    if (stackNodes.Peek().Peek().SegTmp.Vertex2.Location < tmpSigLocation &&
+                    if (stackNodes.Peek().Peek().SegTmp.Vertex2.Location <= tmpSigLocation &&
                         stackNodes.Peek().Peek().SegTmp.Vertex2.XsdName == "Point" &&
                                 stackNodes.Peek().Peek().SegTmp.ConnV2 != ConnectionBranchType.tip)
                     {
@@ -5815,7 +5826,7 @@ namespace ExpPt1
                     {
                         if (stackNodes.Peek().Count == 2)
                         {
-                            if (startSearch.Direction == DirectionType.up)
+                            if (stackNodes.Peek().Peek().Direction == DirectionType.up)
                             {
                                 if (points.Count > 0)
                                 {
@@ -5826,7 +5837,7 @@ namespace ExpPt1
                                 }
                                 tmpSigLocation -= stackNodes.Peek().Peek().SegTmp.length;
                             }
-                            else if (startSearch.Direction == DirectionType.down)
+                            else if (stackNodes.Peek().Peek().Direction == DirectionType.down)
                             {
                                 if (points.Count > 0)
                                 {
@@ -5842,7 +5853,7 @@ namespace ExpPt1
                         }
                         if (points.Count > 0)
                         {
-                            if (startSearch.Direction == DirectionType.up)
+                            if (stackNodes.Peek().Peek().Direction == DirectionType.up)
                             {
                                 if (points.Peek().Value == stackNodes.Peek().Peek().SegTmp.Vertex1.Designation)
                                 {
@@ -5850,7 +5861,7 @@ namespace ExpPt1
                                 }
                                 tmpSigLocation -= stackNodes.Peek().Peek().SegTmp.length;
                             }
-                            else if (startSearch.Direction == DirectionType.down)
+                            else if (stackNodes.Peek().Peek().Direction == DirectionType.down)
                             {
                                 if (points.Peek().Value == stackNodes.Peek().Peek().SegTmp.Vertex2.Designation)
                                 {

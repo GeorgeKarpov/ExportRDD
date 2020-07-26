@@ -1,5 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Runtime;
+using Autodesk.AutoCAD.Windows;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -60,9 +61,7 @@ namespace ExpPt1
 
         public void LoadData()
         {
-            ProgressMeter pm = new ProgressMeter();
-
-            
+            ProgressMeter pm = new ProgressMeter();           
             pm.Start("Loading Data");
             pm.SetLimit(100);
             pm.MeterProgress();
@@ -114,6 +113,31 @@ namespace ExpPt1
             Points = points;
             Blocks = blocks;
             pm.Stop();
+        }
+
+        public void ExportRoutes()
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog("Export distances", this.dwgDir + @"\" + "Routes_exp.xlsx" + ".xlsx", "xlsx", "Export routes",
+                   SaveFileDialog.SaveFileDialogFlags.NoUrls);
+            if (saveFileDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+            {
+                return;
+            }
+            try
+            {
+                SetBlocksNextStations(blocks);
+                SetBlocksExclude(blocks);
+                if (!GetSegments(blocks, TracksLines, Tracks, pSAs, true))
+                {
+                    AcadApp.ShowAlertDialog("Track Segments errors. See Errors Tab");
+                    ErrLogger.ErrorsFound = true;
+                }
+                WriteData.ExpRoutes(RoutesList(), saveFileDialog.Filename);
+            }
+            catch (IOException e)
+            {
+                AcadApp.ShowAlertDialog(e.Message);
+            }
         }
     }
 }
