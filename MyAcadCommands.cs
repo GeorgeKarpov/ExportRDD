@@ -59,6 +59,22 @@ namespace ExpPt1
             display.Dispose();
         }
 
+        [CommandMethod("RDDTSEGSSP")]
+        public static void ExportTSegs()
+        {
+            Display display = new Display(DwgPath);
+            display.ExportTsegs();
+            display.Dispose();
+        }
+
+        [CommandMethod("RDDTDLPTS")]
+        public static void ExportPoints()
+        {
+            Display display = new Display(DwgPath);
+            display.ExportPoints();
+            display.Dispose();
+        }
+
         //[CommandMethod("ExportBlocks")]
         public static void ExportBlocks()
         {

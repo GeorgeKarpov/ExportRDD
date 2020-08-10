@@ -62,11 +62,11 @@ namespace ExpPt1
         protected List<Block> blocks;
         public List<Block> Blocks { get; set; }
         protected bool blocksErr;
-        private FrmStation frmStation;
+        protected FrmStation frmStation;
         protected List<PointsPoint> points;
         protected List<SignalsSignal> signals;
         protected List<SpeedProfilesSpeedProfile> speedProfiles;
-        private List<AxleCounterSectionsAxleCounterSection> acsections;
+        protected List<AxleCounterSectionsAxleCounterSection> acsections;
         protected List<PSA> pSAs;
 
         public Export(string dwgPath)
@@ -2433,7 +2433,7 @@ namespace ExpPt1
             }
         }
 
-        private bool ReadAcSections(List<Block> blocks,
+        protected bool ReadAcSections(List<Block> blocks,
                                ref List<AxleCounterSectionsAxleCounterSection> axleCounterSections)
         {
             bool error = false;
@@ -4357,7 +4357,7 @@ namespace ExpPt1
             return !error;
         }
 
-        public List<RoutesRoute> RoutesList()
+        public List<RoutesRoute> GetRoutesList()
         {
             List<RoutesRoute> routes = new List<RoutesRoute>();
             foreach (Block signalBlk in this.blocks.Where(x => x.XsdName == "Signal" && !x.Virtual && x.TrackSegId != null))
@@ -4374,14 +4374,6 @@ namespace ExpPt1
                 IndentChars = "\t",
                 Indent = true
             };
-            //using (StreamWriter stream = new StreamWriter(dwgDir + @"/routest_test.xml"))
-            //{
-            //    XmlWriter writer = XmlWriter.Create(stream, settings);
-            //    writer.WriteStartDocument();
-            //    serializer.Serialize(writer, new Routes { Route = routes.DistinctBy(x => x.Designation).OrderBy(x => x.Designation).ToArray() });
-            //    writer.WriteEndDocument();
-            //    writer.Flush();
-            //}
             return routes;
         }
 

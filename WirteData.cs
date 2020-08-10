@@ -3,17 +3,12 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace ExpPt1
 {
     public static class WriteData
     {
-        //public static string CsvName { get; set; }
-        //public static string TmpId { get; set; }
-        //public static string SheetId { get; set; }
-        //public static string TemplatesPath { get; set; }
-        //public static string DwgPath { get; set; }
-
         public static void ReportExcel(RailwayDesignDataMetaData metaData, string fileName)
         {
             using (var spreadsheet = SpreadsheetDocument.Create(fileName, SpreadsheetDocumentType.Workbook))
@@ -318,9 +313,7 @@ namespace ExpPt1
                 columns.Append(column1);
                 column1 = new Column() { Min = 2U, Max = 2U, Width = 10.57D, CustomWidth = true };
                 columns.Append(column1);
-                column1 = new Column() { Min = 3U, Max = 3U, Width = 15D, CustomWidth = true };
-                columns.Append(column1);
-                column1 = new Column() { Min = 4U, Max = 4U, Width = 15D, CustomWidth = true };
+                column1 = new Column() { Min = 3U, Max = 4U, Width = 15D, CustomWidth = true };
                 columns.Append(column1);
                 column1 = new Column() { Min = 5U, Max = 5U, Width = 10.8D, CustomWidth = true };
                 columns.Append(column1);
@@ -419,18 +412,467 @@ namespace ExpPt1
                 mergeCells.Append(new MergeCell() { Reference = new StringValue("N1:T1") });
                 wsPart.Worksheet.InsertAfter(mergeCells, wsPart.Worksheet.Elements<SheetData>().First());
 
-                SheetView sheetView = new SheetView { TabSelected = true, WorkbookViewId = 0 };
-                //Selection sel = new Selection { Pane = PaneValues.BottomLeft, ActiveCell = "F" + (index -1) };
-                //sel.SequenceOfReferences = new ListValue<StringValue> { Items = { "F" + (index - 1) } };             
-                wsPart.Worksheet.SheetViews = new SheetViews(sheetView);
-                Pane pane = new Pane { VerticalSplit = 1D, TopLeftCell = "A3", ActivePane = PaneValues.BottomLeft, State = PaneStateValues.Frozen };
+                //SheetView sheetView = new SheetView { TabSelected = true, WorkbookViewId = 0 };
+                //Selection sel = new Selection { /*Pane = PaneValues.BottomLeft,*/ ActiveCell = "A3" };
+                //sel.SequenceOfReferences = new ListValue<StringValue> { Items = { "A3" } };             
+                
+                //Pane pane = new Pane { VerticalSplit = 2D, TopLeftCell = "A3", ActivePane = PaneValues.BottomLeft, State = PaneStateValues.Frozen };
                 //sheetView.Append(pane);
                 //sheetView.Append(sel);
-
+                //wsPart.Worksheet.SheetViews = new SheetViews(sheetView);
                 wsPart.Worksheet.Save();
 
                 var sheets = spreadsheet.WorkbookPart.Workbook.AppendChild(new Sheets());
                 sheets.AppendChild(new Sheet() { Id = spreadsheet.WorkbookPart.GetIdOfPart(wsPart), SheetId = 1, Name = "Routes" });
+                spreadsheet.WorkbookPart.Workbook.Save();
+            }
+        }
+
+        public static void ExpSegments(List<TrackSegmentTmp> segments, string fileName)
+        {
+            using (var spreadsheet = SpreadsheetDocument.Create(fileName, SpreadsheetDocumentType.Workbook))
+            {
+                spreadsheet.AddWorkbookPart();
+                spreadsheet.WorkbookPart.Workbook = new Workbook();
+                var wsPart = spreadsheet.WorkbookPart.AddNewPart<WorksheetPart>();
+                wsPart.Worksheet = new Worksheet();
+
+                var stylesPart = spreadsheet.WorkbookPart.AddNewPart<WorkbookStylesPart>();
+                stylesPart.Stylesheet = new Stylesheet
+                {
+
+                    // blank font list
+                    Fonts = new Fonts()
+                };
+                stylesPart.Stylesheet.Fonts.AppendChild(new Font { FontName = new FontName { Val = "Calibri" } });
+
+                Font font = new Font
+                {
+                    Bold = new Bold(),
+                    FontSize = new FontSize { Val = 9 },
+                    FontName = new FontName { Val = "Calibri" }
+                };
+                stylesPart.Stylesheet.Fonts.AppendChild(font);
+                font = new Font
+                {
+                    FontSize = new FontSize { Val = 9 },
+                    FontName = new FontName { Val = "Calibri" }
+                };
+                stylesPart.Stylesheet.Fonts.AppendChild(font);
+                font = new Font
+                {
+                    FontSize = new FontSize { Val = 9 },
+                    Color = new Color { Rgb = HexBinaryValue.FromString("FF9C0006") },
+                    FontName = new FontName { Val = "Calibri" }
+                };
+                stylesPart.Stylesheet.Fonts.AppendChild(font);
+
+                var solidRed = new PatternFill() { PatternType = PatternValues.Solid };
+                solidRed.ForegroundColor = new ForegroundColor { Rgb = HexBinaryValue.FromString("FFFFC7CE") };
+                solidRed.BackgroundColor = new BackgroundColor { Indexed = 64 };
+                // create fills
+                stylesPart.Stylesheet.Fills = new Fills();
+
+                stylesPart.Stylesheet.Fills.AppendChild(new Fill { PatternFill = new PatternFill { PatternType = PatternValues.None } }); // required, reserved by Excel
+                stylesPart.Stylesheet.Fills.AppendChild(new Fill { PatternFill = new PatternFill { PatternType = PatternValues.Gray125 } }); // required, reserved by Excel
+                stylesPart.Stylesheet.Fills.AppendChild(new Fill { PatternFill = solidRed });
+
+                // blank border list
+                stylesPart.Stylesheet.Borders = new Borders();
+                stylesPart.Stylesheet.Borders.AppendChild(new Border());
+                Border border = new Border
+                {
+                    BottomBorder = new BottomBorder { Style = BorderStyleValues.Medium, Color = new Color { Indexed = 64 } },
+                    TopBorder = new TopBorder { Style = BorderStyleValues.Medium, Color = new Color { Indexed = 64 } },
+                    LeftBorder = new LeftBorder { Style = BorderStyleValues.Medium, Color = new Color { Indexed = 64 } },
+                    RightBorder = new RightBorder { Style = BorderStyleValues.Medium, Color = new Color { Indexed = 64 } }
+                };
+                stylesPart.Stylesheet.Borders.AppendChild(border);
+                border = new Border
+                {
+                    BottomBorder = new BottomBorder { Style = BorderStyleValues.Thin, Color = new Color { Indexed = 64 } },
+                    TopBorder = new TopBorder { Style = BorderStyleValues.Thin, Color = new Color { Indexed = 64 } },
+                    LeftBorder = new LeftBorder { Style = BorderStyleValues.Thin, Color = new Color { Indexed = 64 } },
+                    RightBorder = new RightBorder { Style = BorderStyleValues.Thin, Color = new Color { Indexed = 64 } }
+                };
+                stylesPart.Stylesheet.Borders.AppendChild(border);
+
+                // blank cell format list
+                stylesPart.Stylesheet.CellStyleFormats = new CellStyleFormats();
+                stylesPart.Stylesheet.CellStyleFormats.AppendChild(new CellFormat());
+
+                // cell format list
+                stylesPart.Stylesheet.CellFormats = new CellFormats();
+                // empty one for index 0, seems to be required
+                stylesPart.Stylesheet.CellFormats.AppendChild(new CellFormat());
+
+                //style 1
+                stylesPart.Stylesheet.CellFormats.AppendChild(new CellFormat
+                {
+                    FormatId = 0,
+                    FontId = 1,
+                    BorderId = 1,
+                }).AppendChild(new Alignment
+                {
+                    Horizontal = HorizontalAlignmentValues.Center,
+                    Vertical = VerticalAlignmentValues.Center,
+                    WrapText = true
+                });
+
+                //style 2
+                stylesPart.Stylesheet.CellFormats.AppendChild(new CellFormat
+                {
+                    FormatId = 0,
+                    FontId = 2,
+                    BorderId = 2,
+                }).AppendChild(new Alignment
+                {
+                    Horizontal = HorizontalAlignmentValues.Center,
+                    Vertical = VerticalAlignmentValues.Center
+                });
+
+                //style 3
+                stylesPart.Stylesheet.CellFormats.AppendChild(new CellFormat
+                {
+                    FormatId = 0,
+                    FontId = 2,
+                    BorderId = 0,
+                }).AppendChild(new Alignment
+                {
+                    Horizontal = HorizontalAlignmentValues.Center
+                });
+
+                //style 4
+                stylesPart.Stylesheet.CellFormats.AppendChild(new CellFormat
+                {
+                    FormatId = 0,
+                    FontId = 3,
+                    BorderId = 0,
+                    FillId = 2
+                }).AppendChild(new Alignment
+                {
+                    Horizontal = HorizontalAlignmentValues.Left
+                });
+
+                //style 5
+                stylesPart.Stylesheet.CellFormats.AppendChild(new CellFormat
+                {
+                    FormatId = 0,
+                    FontId = 2,
+                    BorderId = 2,
+                }).AppendChild(new Alignment
+                {
+                    Horizontal = HorizontalAlignmentValues.Center,
+                    Vertical = VerticalAlignmentValues.Center,
+                    WrapText = true
+                });
+
+                stylesPart.Stylesheet.Save();
+
+                Columns columns = new Columns();
+                Column column1 = new Column() { Min = 1U, Max = 1U, Width = 17.57D, CustomWidth = true };
+                columns.Append(column1);
+                column1 = new Column() { Min = 2U, Max = 3U, Width = 18.86D, CustomWidth = true };
+                columns.Append(column1);
+                column1 = new Column() { Min = 4U, Max = 4U, Width = 6.29D, CustomWidth = true };
+                columns.Append(column1);
+                column1 = new Column() { Min = 5U, Max = 10U, Width = 13.71D, CustomWidth = true };
+                columns.Append(column1);
+                column1 = new Column() { Min = 11U, Max = 11U, Width = 10.57D, CustomWidth = true };
+                columns.Append(column1);
+                column1 = new Column() { Min = 12U, Max = 12U, Width = 13.57D, CustomWidth = true };
+                columns.Append(column1);
+
+                wsPart.Worksheet.AppendChild(columns);
+                var sheetData = wsPart.Worksheet.AppendChild(new SheetData());
+
+                uint index = 1;
+     
+                var row = sheetData.AppendChild(new Row { RowIndex = index, Height = 75, CustomHeight = true, ThickBot = true });
+                row.AppendChild(new Cell() { CellValue = new CellValue("TrackSegments"), DataType = CellValues.String, StyleIndex = 1, CellReference = "A1" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("OperationalKm1"), DataType = CellValues.String, StyleIndex = 1, CellReference = "B1" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("OperationalKm2"), DataType = CellValues.String, StyleIndex = 1, CellReference = "C1" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("Basic"), DataType = CellValues.String, StyleIndex = 1, CellReference = "D1" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("CD=100mm"), DataType = CellValues.String, StyleIndex = 1, CellReference = "E1" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("Axle Load Category C2"), DataType = CellValues.String, StyleIndex = 1, CellReference = "F1" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("Other, Freight P, not replacing CD"), DataType = CellValues.String, StyleIndex = 1, CellReference = "G1" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("Other, Freight G, not replacing CD"), DataType = CellValues.String, StyleIndex = 1, CellReference = "H1" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("CD=130mm"), DataType = CellValues.String, StyleIndex = 1, CellReference = "I1" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("CD=150mm"), DataType = CellValues.String, StyleIndex = 1, CellReference = "J1" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("Direction"), DataType = CellValues.String, StyleIndex = 1, CellReference = "K1" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("Remarks"), DataType = CellValues.String, StyleIndex = 1, CellReference = "L1" });
+                index++;
+
+                uint style = 2;
+                foreach (var seg in segments)
+                { 
+                    row = sheetData.AppendChild(new Row { RowIndex = index, ThickBot = true, Height = 25D, CustomHeight = true });
+                    row.AppendChild(new Cell() { CellValue = new CellValue(seg.Designation), DataType = CellValues.String, StyleIndex = style, CellReference = "A" + index });
+                    char col = 'B';
+                    do
+                    {
+                        row.AppendChild(new Cell() { CellValue = new CellValue(), DataType = CellValues.String, StyleIndex = style, CellReference = col + index.ToString() });
+                        col++;
+                    } while (col != 'M');
+                    index++;
+                }
+
+                //MergeCells mergeCells = new MergeCells();
+                //mergeCells.Append(new MergeCell() { Reference = new StringValue("A1:M1") });
+                //mergeCells.Append(new MergeCell() { Reference = new StringValue("N1:T1") });
+                //wsPart.Worksheet.InsertAfter(mergeCells, wsPart.Worksheet.Elements<SheetData>().First());
+
+                //SheetView sheetView = new SheetView { TabSelected = true, WorkbookViewId = 0 };
+                //Selection sel = new Selection { /*Pane = PaneValues.BottomLeft,*/ ActiveCell = "A3" };
+                //sel.SequenceOfReferences = new ListValue<StringValue> { Items = { "A3" } };             
+
+                //Pane pane = new Pane { VerticalSplit = 2D, TopLeftCell = "A3", ActivePane = PaneValues.BottomLeft, State = PaneStateValues.Frozen };
+                //sheetView.Append(pane);
+                //sheetView.Append(sel);
+                //wsPart.Worksheet.SheetViews = new SheetViews(sheetView);
+                wsPart.Worksheet.Save();
+
+                var sheets = spreadsheet.WorkbookPart.Workbook.AppendChild(new Sheets());
+                sheets.AppendChild(new Sheet() { Id = spreadsheet.WorkbookPart.GetIdOfPart(wsPart), SheetId = 1, Name = "Ssp" });
+                spreadsheet.WorkbookPart.Workbook.Save();
+            }
+        }
+
+        public static void ExpTdls(List<ExpTdlPt> tdls, string fileName)
+        {
+            using (var spreadsheet = SpreadsheetDocument.Create(fileName, SpreadsheetDocumentType.Workbook))
+            {
+                spreadsheet.AddWorkbookPart();
+                spreadsheet.WorkbookPart.Workbook = new Workbook();
+                var wsPart = spreadsheet.WorkbookPart.AddNewPart<WorksheetPart>();
+                wsPart.Worksheet = new Worksheet();
+
+                var stylesPart = spreadsheet.WorkbookPart.AddNewPart<WorkbookStylesPart>();
+                stylesPart.Stylesheet = new Stylesheet
+                {
+
+                    // blank font list
+                    Fonts = new Fonts()
+                };
+                stylesPart.Stylesheet.Fonts.AppendChild(new Font { FontName = new FontName { Val = "Calibri" } });
+
+                Font font = new Font
+                {
+                    Bold = new Bold(),
+                    FontSize = new FontSize { Val = 12 },
+                    FontName = new FontName { Val = "Calibri" }
+                };
+                stylesPart.Stylesheet.Fonts.AppendChild(font);
+                font = new Font
+                {
+                    FontSize = new FontSize { Val = 12 },
+                    FontName = new FontName { Val = "Calibri" }
+                };
+                stylesPart.Stylesheet.Fonts.AppendChild(font);
+                font = new Font
+                {
+                    FontSize = new FontSize { Val = 12 },
+                    Color = new Color { Rgb = HexBinaryValue.FromString("FF9C0006") },
+                    FontName = new FontName { Val = "Calibri" }
+                };
+                stylesPart.Stylesheet.Fonts.AppendChild(font);
+
+                var solidRed = new PatternFill() { PatternType = PatternValues.Solid };
+                solidRed.ForegroundColor = new ForegroundColor { Rgb = HexBinaryValue.FromString("FFFFC7CE") };
+                solidRed.BackgroundColor = new BackgroundColor { Indexed = 64 };
+                var solidGray = new PatternFill() { PatternType = PatternValues.Solid };
+                solidGray.ForegroundColor = new ForegroundColor { Rgb = HexBinaryValue.FromString("FFD9D9D9") };
+                solidGray.BackgroundColor = new BackgroundColor { Indexed = 64 };
+                //D9D9D9
+                // create fills
+                stylesPart.Stylesheet.Fills = new Fills();
+
+                stylesPart.Stylesheet.Fills.AppendChild(new Fill { PatternFill = new PatternFill { PatternType = PatternValues.None } }); // required, reserved by Excel
+                stylesPart.Stylesheet.Fills.AppendChild(new Fill { PatternFill = new PatternFill { PatternType = PatternValues.Gray125 } }); // required, reserved by Excel
+                stylesPart.Stylesheet.Fills.AppendChild(new Fill { PatternFill = solidRed });
+                stylesPart.Stylesheet.Fills.AppendChild(new Fill { PatternFill = solidGray });
+
+                // blank border list
+                stylesPart.Stylesheet.Borders = new Borders();
+                stylesPart.Stylesheet.Borders.AppendChild(new Border());
+                Border border = new Border
+                {
+                    BottomBorder = new BottomBorder { Style = BorderStyleValues.Medium, Color = new Color { Indexed = 64 } },
+                    TopBorder = new TopBorder { Style = BorderStyleValues.Medium, Color = new Color { Indexed = 64 } },
+                    LeftBorder = new LeftBorder { Style = BorderStyleValues.Medium, Color = new Color { Indexed = 64 } },
+                    RightBorder = new RightBorder { Style = BorderStyleValues.Medium, Color = new Color { Indexed = 64 } }
+                };
+                stylesPart.Stylesheet.Borders.AppendChild(border);
+                border = new Border
+                {
+                    BottomBorder = new BottomBorder { Style = BorderStyleValues.Thin, Color = new Color { Indexed = 64 } },
+                    TopBorder = new TopBorder { Style = BorderStyleValues.Thin, Color = new Color { Indexed = 64 } },
+                    LeftBorder = new LeftBorder { Style = BorderStyleValues.Thin, Color = new Color { Indexed = 64 } },
+                    RightBorder = new RightBorder { Style = BorderStyleValues.Thin, Color = new Color { Indexed = 64 } }
+                };
+                stylesPart.Stylesheet.Borders.AppendChild(border);
+
+                // blank cell format list
+                stylesPart.Stylesheet.CellStyleFormats = new CellStyleFormats();
+                stylesPart.Stylesheet.CellStyleFormats.AppendChild(new CellFormat());
+
+                // cell format list
+                stylesPart.Stylesheet.CellFormats = new CellFormats();
+                // empty one for index 0, seems to be required
+                stylesPart.Stylesheet.CellFormats.AppendChild(new CellFormat());
+
+                //style 1
+                stylesPart.Stylesheet.CellFormats.AppendChild(new CellFormat
+                {
+                    FormatId = 0,
+                    FontId = 1,
+                    BorderId = 2,
+                }).AppendChild(new Alignment
+                {
+                    Horizontal = HorizontalAlignmentValues.Center,
+                    Vertical = VerticalAlignmentValues.Bottom,
+                    WrapText = true
+                });
+
+                //style 2
+                stylesPart.Stylesheet.CellFormats.AppendChild(new CellFormat
+                {
+                    FormatId = 0,
+                    FontId = 2,
+                    BorderId = 2
+                }).AppendChild(new Alignment
+                {
+                    Horizontal = HorizontalAlignmentValues.Center,
+                    Vertical = VerticalAlignmentValues.Bottom
+                });
+
+                //style 3
+                stylesPart.Stylesheet.CellFormats.AppendChild(new CellFormat
+                {
+                    FormatId = 0,
+                    FontId = 1,
+                    BorderId = 2,
+                    FillId = 3
+                }).AppendChild(new Alignment
+                {
+                    Horizontal = HorizontalAlignmentValues.Center
+                });
+
+                //style 4
+                stylesPart.Stylesheet.CellFormats.AppendChild(new CellFormat
+                {
+                    FormatId = 0,
+                    FontId = 2,
+                    BorderId = 2,
+                    FillId =3
+                }).AppendChild(new Alignment
+                {
+                    Horizontal = HorizontalAlignmentValues.Center,
+                    Vertical = VerticalAlignmentValues.Bottom
+                });
+
+                //style 5
+                stylesPart.Stylesheet.CellFormats.AppendChild(new CellFormat
+                {
+                    FormatId = 0,
+                    FontId = 2,
+                    BorderId = 2,
+                }).AppendChild(new Alignment
+                {
+                    Horizontal = HorizontalAlignmentValues.Center,
+                    Vertical = VerticalAlignmentValues.Center,
+                    WrapText = true
+                });
+
+                stylesPart.Stylesheet.Save();
+
+                Columns columns = new Columns();
+                Column column1 = new Column() { Min = 1U, Max = 9U, Width = 20.57D, CustomWidth = true };
+                columns.Append(column1);
+                //column1 = new Column() { Min = 2U, Max = 3U, Width = 18.86D, CustomWidth = true };
+                //columns.Append(column1);
+                //column1 = new Column() { Min = 4U, Max = 4U, Width = 6.29D, CustomWidth = true };
+                //columns.Append(column1);
+                //column1 = new Column() { Min = 5U, Max = 10U, Width = 13.71D, CustomWidth = true };
+                //columns.Append(column1);
+                //column1 = new Column() { Min = 11U, Max = 11U, Width = 10.57D, CustomWidth = true };
+                //columns.Append(column1);
+                //column1 = new Column() { Min = 12U, Max = 12U, Width = 13.57D, CustomWidth = true };
+                //columns.Append(column1);
+
+                wsPart.Worksheet.AppendChild(columns);
+                var sheetData = wsPart.Worksheet.AppendChild(new SheetData());
+
+                uint index = 1;
+
+                var row = sheetData.AppendChild(new Row { RowIndex = index, Height = 28.25, CustomHeight = true, ThickBot = true });
+                row.AppendChild(new Cell() { CellValue = new CellValue("Point"), DataType = CellValues.String, StyleIndex = 1, CellReference = "A1" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("Own\r\nTdt"), DataType = CellValues.String, StyleIndex = 1, CellReference = "B1" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("Adjacent\r\nTip"), DataType = CellValues.String, StyleIndex = 1, CellReference = "C1" });
+                row.AppendChild(new Cell() { CellValue = new CellValue(""), DataType = CellValues.String, StyleIndex = 1, CellReference = "D1" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("Adjacent\r\nLeft"), DataType = CellValues.String, StyleIndex = 1, CellReference = "E1" });
+                row.AppendChild(new Cell() { CellValue = new CellValue(""), DataType = CellValues.String, StyleIndex = 1, CellReference = "F1" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("Adjacent\r\nRight"), DataType = CellValues.String, StyleIndex = 1, CellReference = "G1" });
+                row.AppendChild(new Cell() { CellValue = new CellValue(""), DataType = CellValues.String, StyleIndex = 1, CellReference = "H1" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("Notes"), DataType = CellValues.String, StyleIndex = 1, CellReference = "I1" });
+                index++;
+
+                row = sheetData.AppendChild(new Row { RowIndex = index, Height = 28.25, CustomHeight = true, ThickBot = true });
+                row.AppendChild(new Cell() { CellValue = new CellValue(""), DataType = CellValues.String, StyleIndex = 1, CellReference = "A2" });
+                row.AppendChild(new Cell() { CellValue = new CellValue(""), DataType = CellValues.String, StyleIndex = 1, CellReference = "B2" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("Tdt"), DataType = CellValues.String, StyleIndex = 1, CellReference = "C2" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("Point/Tdt"), DataType = CellValues.String, StyleIndex = 3, CellReference = "D2" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("Tdt"), DataType = CellValues.String, StyleIndex = 1, CellReference = "E2" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("Point/Tdt"), DataType = CellValues.String, StyleIndex = 3, CellReference = "F2" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("Tdt"), DataType = CellValues.String, StyleIndex = 1, CellReference = "G2" });
+                row.AppendChild(new Cell() { CellValue = new CellValue("Point/Tdt"), DataType = CellValues.String, StyleIndex = 3, CellReference = "H2" });
+                row.AppendChild(new Cell() { CellValue = new CellValue(""), DataType = CellValues.String, StyleIndex = 1, CellReference = "I2" });
+                index++;
+
+                uint style = 2;
+                foreach (var seg in tdls)
+                {
+                    row = sheetData.AppendChild(new Row { RowIndex = index, ThickBot = true, Height = 70.75D, CustomHeight = true });
+                    row.AppendChild(new Cell() { CellValue = new CellValue(seg.Designation), DataType = CellValues.String, StyleIndex = style, CellReference = "A" + index });
+                    row.AppendChild(new Cell() { CellValue = new CellValue(seg.OwnTdt), DataType = CellValues.String, StyleIndex = style, CellReference = "B" + index });
+                    char col = 'C';
+                    do
+                    {
+                        if (col == 'D' || col == 'F' || col == 'H')
+                        {
+                            style = 4;
+                        }
+                        else
+                        {
+                            style = 2;
+                        }
+                        row.AppendChild(new Cell() { CellValue = new CellValue(), DataType = CellValues.String, StyleIndex = style, CellReference = col + index.ToString() });
+                        col++;
+                    } while (col != 'J');
+                    index++;
+                }
+
+                MergeCells mergeCells = new MergeCells();
+                mergeCells.Append(new MergeCell() { Reference = new StringValue("A1:A2") });
+                mergeCells.Append(new MergeCell() { Reference = new StringValue("B1:B2") });
+                mergeCells.Append(new MergeCell() { Reference = new StringValue("I1:I2") });
+                mergeCells.Append(new MergeCell() { Reference = new StringValue("C1:D1") });
+                mergeCells.Append(new MergeCell() { Reference = new StringValue("E1:F1") });
+                mergeCells.Append(new MergeCell() { Reference = new StringValue("G1:H1") });
+                wsPart.Worksheet.InsertAfter(mergeCells, wsPart.Worksheet.Elements<SheetData>().First());
+
+                //SheetView sheetView = new SheetView { TabSelected = true, WorkbookViewId = 0 };
+                //Selection sel = new Selection { /*Pane = PaneValues.BottomLeft,*/ ActiveCell = "A3" };
+                //sel.SequenceOfReferences = new ListValue<StringValue> { Items = { "A3" } };             
+
+                //Pane pane = new Pane { VerticalSplit = 2D, TopLeftCell = "A3", ActivePane = PaneValues.BottomLeft, State = PaneStateValues.Frozen };
+                //sheetView.Append(pane);
+                //sheetView.Append(sel);
+                //wsPart.Worksheet.SheetViews = new SheetViews(sheetView);
+                wsPart.Worksheet.Save();
+
+                var sheets = spreadsheet.WorkbookPart.Workbook.AppendChild(new Sheets());
+                sheets.AppendChild(new Sheet() { Id = spreadsheet.WorkbookPart.GetIdOfPart(wsPart), SheetId = 1, Name = "TracksForDetectorLocking" });
                 spreadsheet.WorkbookPart.Workbook.Save();
             }
         }

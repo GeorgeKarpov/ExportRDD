@@ -43,6 +43,7 @@ namespace ExpPt1
             signals = new List<SignalsSignal>();
             points = new List<PointsPoint>();
             speedProfiles = new List<SpeedProfilesSpeedProfile>();
+            acsections = new List<AxleCounterSectionsAxleCounterSection>();
 
             ReadBlocksDefinitions();
             ReadConnLinesDefinitions();
@@ -106,7 +107,7 @@ namespace ExpPt1
                 pm.MeterProgress();
                 System.Windows.Forms.Application.DoEvents();
             }
-            Routes = RoutesList();
+            Routes = GetRoutesList();
             SigLayout = sigLayout;
             Segments = trcksegments;
             Signals = signals;
@@ -117,7 +118,7 @@ namespace ExpPt1
 
         public void ExportRoutes()
         {
-            SaveFileDialog saveFileDialog = new SaveFileDialog("Export distances", this.dwgDir + @"\" + "Routes_exp.xlsx" + ".xlsx", "xlsx", "Export routes",
+            SaveFileDialog saveFileDialog = new SaveFileDialog("Export routes", this.dwgDir + @"\" + "Routes_exp" + ".xlsx", "xlsx", "Export routes",
                    SaveFileDialog.SaveFileDialogFlags.NoUrls);
             if (saveFileDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
             {
@@ -129,10 +130,91 @@ namespace ExpPt1
                 SetBlocksExclude(blocks);
                 if (!GetSegments(blocks, TracksLines, Tracks, pSAs, true))
                 {
-                    AcadApp.ShowAlertDialog("Track Segments errors. See Errors Tab");
+                    AcadApp.ShowAlertDialog("Track Segments errors. See Errors Log");
                     ErrLogger.ErrorsFound = true;
                 }
-                WriteData.ExpRoutes(RoutesList(), saveFileDialog.Filename);
+                WriteData.ExpRoutes(GetRoutesList(), saveFileDialog.Filename);
+            }
+            catch (IOException e)
+            {
+                AcadApp.ShowAlertDialog(e.Message);
+            }
+        }
+
+        public void ExportTsegs()
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog("Export routes", this.dwgDir + @"\" + "SSP_Tseg_exp" + ".xlsx", "xlsx", "Export Tsegs",
+                   SaveFileDialog.SaveFileDialogFlags.NoUrls);
+            if (saveFileDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+            {
+                return;
+            }
+            try
+            {
+                SetBlocksNextStations(blocks);
+                SetBlocksExclude(blocks);
+                if (!GetSegments(blocks, TracksLines, Tracks, pSAs, true))
+                {
+                    AcadApp.ShowAlertDialog("Track Segments errors. See Errors Log");
+                    ErrLogger.ErrorsFound = true;
+                }
+                WriteData.ExpSegments(this.TrackSegmentsTmp, saveFileDialog.Filename);
+            }
+            catch (IOException e)
+            {
+                AcadApp.ShowAlertDialog(e.Message);
+            }
+        }
+
+        public void ExportPoints()
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog("Export points", this.dwgDir + @"\" + "TDL_Points_exp" + ".xlsx", "xlsx", "Export TDL",
+                   SaveFileDialog.SaveFileDialogFlags.NoUrls);
+            bool error = false;
+            if (saveFileDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+            {
+                return;
+            }
+            try
+            {
+                SetBlocksNextStations(blocks);
+                SetBlocksExclude(blocks);
+                if (!GetSegments(blocks, TracksLines, Tracks, pSAs, true))
+                {
+                    AcadApp.ShowAlertDialog("Track Segments errors. See Errors Log");
+                    ErrLogger.ErrorsFound = true;
+                }
+                var points = blocks
+                            .Where(x => x.XsdName == "Point" && x.IsOnCurrentArea)
+                            .ToList();
+                frmStation = new FrmStation
+                {
+                    AutoAC = true
+                };
+                error = !ReadAcSections(blocks, ref acsections);
+                List<ExpTdlPt> Tdls = new List<ExpTdlPt>();
+                foreach (var pt in points)
+                {
+                    var ownsect = acsections
+                                  .Where(x => x.Elements.Element
+                                  .Any(e => e.Value == pt.Designation))
+                                  .FirstOrDefault();
+                    if (ownsect == null)
+                    {
+                        ErrLogger.Error("Own Tdl not found", pt.Designation, "Tdl export");
+                        ErrLogger.ErrorsFound = true;
+                        ownsect = new AxleCounterSectionsAxleCounterSection 
+                        { 
+                            Designation = ""
+                        };
+                    }
+                    Tdls.Add(new ExpTdlPt 
+                    {
+                        Designation = pt.Attributes["NAME"].Value,
+                        OwnTdt = ownsect.Designation.Split('-').Last() 
+                    });
+                }
+                WriteData.ExpTdls(Tdls, saveFileDialog.Filename);
             }
             catch (IOException e)
             {
