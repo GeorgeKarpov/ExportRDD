@@ -1,5 +1,5 @@
 # usage: Km1 config for connectors on lines changes
 # format:
-#<Line Id>	<connector designation>	<KM1>
+#<Line Id>	<Connector Id>	<KM1>
 31	conn-ho-019	186.593
 33	conn-ho-019	0
