@@ -1999,9 +1999,9 @@ namespace ExpPt1
                     }
                     bool toPsa = IsSignalToPSA(BlkSignal, signal, BlkSignals);
                     if (signal.KindOfSignal == TKindOfSignal.eotmb ||
-                    signal.KindOfSignal == TKindOfSignal.foreignSignal ||
-                    toPsa ||
-                    signal.KindOfSignal == TKindOfSignal.L2ExitSignal)
+                        signal.KindOfSignal == TKindOfSignal.foreignSignal ||
+                        toPsa ||
+                        signal.KindOfSignal == TKindOfSignal.L2ExitSignal)
                     {
                         signal.ShiftCESLocation = 0;
                     }
@@ -2022,7 +2022,7 @@ namespace ExpPt1
                 signalsSignal.Add(signal);
             }
 
-            if (this.GetType() == typeof(Display))
+            if (GetType() == typeof(Display))
             {
                 return !error;
             }
