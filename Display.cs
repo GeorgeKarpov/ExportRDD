@@ -22,8 +22,11 @@ namespace ExpPt1
         public List<PointsPoint> Points { get; set; }
         public List<RoutesRoute> Routes { get; set; }
 
+        public bool InitError { get; set; }
+
         public Display(string dwgPath) : base(dwgPath)
         {
+            InitError = false;
             assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             acDocMgr = AcadApp.DocumentManager;
             acDoc = acDocMgr.MdiActiveDocument;
@@ -50,6 +53,12 @@ namespace ExpPt1
             blocksErr = false;
             blocks = GetBlocks(ref blocksErr);
             TracksLines = GetTracksLines();
+            stationID = GetStationId(blocks);
+            if (stationID == null)
+            {
+                InitError = true;
+                return;
+            }
             RailwayLines = GetRailwayLines(TracksLines, blocks);
             blckProp = new BlockProperties(stationID);
             excel = new ReadExcel.Excel(stationID);

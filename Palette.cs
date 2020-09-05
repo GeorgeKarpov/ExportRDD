@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
-using System.IO;
+using AcadApp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -244,6 +244,14 @@ namespace ExpPt1
                 return;
             }
             Display expDispl = new Display(this.DwgPath);
+            if (expDispl.InitError)
+            {
+                AcadApp.ShowAlertDialog("Data Initialization error. See Errors Tab");
+                ErrLogger.ErrorsFound = true;
+                errCntrl.LoadList();
+                _ps.Activate(_ps.Count - 1);
+                return;
+            }
             expDispl.LoadData();
             if (expDispl.Segments != null && expDispl.Segments.Count > 0)
             {

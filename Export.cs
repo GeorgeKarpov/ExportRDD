@@ -68,6 +68,7 @@ namespace ExpPt1
         protected List<SpeedProfilesSpeedProfile> speedProfiles;
         protected List<AxleCounterSectionsAxleCounterSection> acsections;
         protected List<PSA> pSAs;
+        protected Dictionary<string, string> stations;
 
         public Export(string dwgPath)
         {
@@ -93,6 +94,7 @@ namespace ExpPt1
             ErrLogger.Error(Path.GetFileNameWithoutExtension(dwgPath), "Processed SL", "");
             ReadBlocksDefinitions();
             ReadConnLinesDefinitions();
+            stations = ReadStations();
             this.blocksErr = false;
             this.blocks = this.GetBlocks(ref this.blocksErr);
             this.acSections = new List<AcSection>();
@@ -364,7 +366,12 @@ namespace ExpPt1
                 "<Left km>"
             };
 
-
+            stationID = GetStationId(blocks);
+            if (stationID == null)
+            {
+                AcadApp.ShowAlertDialog("Unable to get Station ID from stamp block.");
+                return;
+            }
             SaveFileDialog saveFile = new SaveFileDialog("Save RDD", dwgDir + "\\" + Constants.defaultFileName, "xml", "SaveRdd",
                                                 SaveFileDialog.SaveFileDialogFlags.NoUrls);
 
@@ -388,6 +395,7 @@ namespace ExpPt1
             };
             GetDocIdVrs();
             TracksLines = GetTracksLines();
+            
             RailwayLines = GetRailwayLines(TracksLines, blocks);
             blckProp = new BlockProperties(stationID);
             excel = new ReadExcel.Excel(stationID);
@@ -1079,15 +1087,10 @@ namespace ExpPt1
             List<DBText> linesTexts = new List<DBText>();
             List<MText> linesMTexts = new List<MText>();
             Dictionary<string, string> LinesDefinitions = ReadLinesDefinitions();
-            stationID = GetStationId(blocks);
-            if (stationID == null)
-            {
-                return null;
-            }
-            string tmpLine = ReadStations()
-                                  .Where(x => x.Key.ToLower() == stationID)
-                                  .Select(x => x.Value)
-                                  .FirstOrDefault();
+            string tmpLine = stations
+                             .Where(x => x.Key.ToLower() == stationID)
+                             .Select(x => x.Value)
+                             .FirstOrDefault();
             string DefaultLine = LinesDefinitions
                                  .Where(x => x.Key == tmpLine.Split('\t')[1])
                                  .Select(x => x.Value)
@@ -1227,29 +1230,34 @@ namespace ExpPt1
             return railwayLines.OrderBy(x => x.designation).ToList();
         }
 
-        private string GetStationId(List<Block> blocks)
+        protected string GetStationId(List<Block> blocks)
         {
             List<Block> BlkSigLayouts = blocks.Where(x => x.XsdName == "SignallingLayout")
                                     .Select(x => x).ToList();
             foreach (Block BlkSigLayout in BlkSigLayouts)
             {
-                //string tmpCreator = BlkSigLayout.Attributes
-                //       .Where(x => x.Key.Contains("KONSTRUERET") && x.Value.Value != "")
-                //       .Select(y => y.Value.Value)
-                //       .FirstOrDefault();
-                //if (BlkSigLayout.Attributes["1-ST.NAVN"].Value.Split('(').Length > 1)
-                //{
-                return BlkSigLayout.Attributes["1-ST.NAVN"].Value
-                       .Split(new char[] { '(', '-' }, StringSplitOptions.RemoveEmptyEntries)[1]
-                       .Split(new char[] { ')', '-', ' ' }, StringSplitOptions.RemoveEmptyEntries)[0]
-                       .Trim()
-                       .ToLower();
-                //}
-                //if (BlkSigLayout.Attributes["1-ST.NAVN"].Value.Split('-').Length > 1)
-                //{
-                //    return BlkSigLayout.Attributes["1-ST.NAVN"].Value.Split('-')[1].Trim().ToLower();
-                //}
+
+                if (!BlkSigLayout.Attributes.ContainsKey("1-ST.NAVN"))
+                {
+                    continue;
+                }
+                if (BlkSigLayout.Attributes["1-ST.NAVN"].Value
+                       .Split(new char[] { '(', '-' }, StringSplitOptions.RemoveEmptyEntries).Count() < 1)
+                {
+                    continue;
+                }
+                string station = BlkSigLayout.Attributes["1-ST.NAVN"].Value
+                                 .Split(new char[] { '(', '-' }, StringSplitOptions.RemoveEmptyEntries)[1]
+                                 .Split(new char[] { ')', '-', ' ' }, StringSplitOptions.RemoveEmptyEntries)[0]
+                                 .Trim()
+                                 .ToLower();
+                if (stations.ContainsKey(station.ToUpper()))
+                {
+                    return station;
+                }
             }
+            ErrLogger.Error("Unable to get Station ID from stamp block", "", "");
+            ErrLogger.ErrorsFound = true;
             return null;
         }
 
@@ -8563,7 +8571,8 @@ namespace ExpPt1
         private Dictionary<string, string> ReadStations()
         {
             Dictionary<string, string> dictionary = new Dictionary<string, string>();
-            foreach (string str in ((IEnumerable<string>)File.ReadAllLines(this.assemblyPath + Constants.cfgFolder + "//Stations.dat")).Where((Func<string, bool>)(arg => !string.IsNullOrWhiteSpace(arg) && arg[0] != '#')))
+            foreach (string str in ((IEnumerable<string>)File.ReadAllLines(this.assemblyPath + Constants.cfgFolder + "//Stations.dat"))
+                                    .Where(arg => !string.IsNullOrWhiteSpace(arg) && arg[0] != '#'))
             {
                 if (!dictionary.ContainsKey(str.Split('\t')[0]))
                     dictionary.Add(str.Split('\t')[0], str);
@@ -8574,7 +8583,9 @@ namespace ExpPt1
         private Dictionary<string, string> ReadMainTracks()
         {
             //Dictionary<string, string> dictionary = new Dictionary<string, string>();
-            return ((IEnumerable<string>)File.ReadAllLines(this.assemblyPath + Constants.cfgFolder + "//MainTracks.dat")).Where((Func<string, bool>)(arg => !string.IsNullOrWhiteSpace(arg) && arg[0] != '#')).ToDictionary((Func<string, string>)(arg => arg.Split('\t')[0]), (Func<string, string>)(arg => arg.Split('\t')[1]));
+            return ((IEnumerable<string>)File.ReadAllLines(this.assemblyPath + Constants.cfgFolder + "//MainTracks.dat"))
+                                        .Where(arg => !string.IsNullOrWhiteSpace(arg) && arg[0] != '#')
+                                        .ToDictionary(arg => arg.Split('\t')[0], arg => arg.Split('\t')[1]);
         }
 
         private bool GetBlocksWithoutSegment(List<Block> blocks)
