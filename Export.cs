@@ -69,6 +69,7 @@ namespace ExpPt1
         protected List<AxleCounterSectionsAxleCounterSection> acsections;
         protected List<PSA> pSAs;
         protected Dictionary<string, string> stations;
+        protected Block blkSigLayout;
 
         public Export(string dwgPath)
         {
@@ -1253,6 +1254,7 @@ namespace ExpPt1
                                  .ToLower();
                 if (stations.ContainsKey(station.ToUpper()))
                 {
+                    blkSigLayout = BlkSigLayout;
                     return station;
                 }
             }
@@ -1715,8 +1717,8 @@ namespace ExpPt1
 
         protected bool ReadSigLayout(List<Block> blocks, ref TFileDescr siglayout, bool display = false)
         {
-            Block BlkSigLayout = blocks.Where(x => x.XsdName == "SignallingLayout").Select(x => x).First();
-            string tmpCreator = BlkSigLayout.Attributes
+            //Block BlkSigLayout = blocks.Where(x => x.XsdName == "SignallingLayout").Select(x => x).First();
+            string tmpCreator = blkSigLayout.Attributes
                        .Where(x => x.Key.Contains("KONSTRUERET") && x.Value.Value != "")
                        .Select(y => y.Value.Value)
                        .FirstOrDefault();
@@ -1725,11 +1727,11 @@ namespace ExpPt1
                 siglayout.creator = tmpCreator
                     .Split(new char[] { ' ', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries)[1].Trim();
             }
-            string inputDate = Regex.Split(BlkSigLayout.Attributes["UDGAVE"].Value, @"\s{1,}")[1];
+            string inputDate = Regex.Split(blkSigLayout.Attributes["UDGAVE"].Value, @"\s{1,}")[1];
 
             siglayout.date = Calc.StringToDate(inputDate, out DateTime date, out bool flag);
-            siglayout.title = BlkSigLayout.Attributes["2-TEGN.NAVN"].Value + " - " +
-                              BlkSigLayout.Attributes["1-ST.NAVN"].Value;
+            siglayout.title = blkSigLayout.Attributes["2-TEGN.NAVN"].Value + " - " +
+                              blkSigLayout.Attributes["1-ST.NAVN"].Value;
             //siglayout.title += " (rev. " + Regex.Split(BlkSigLayout.Attributes["UDGAVE"].Value, @"\s{1,}")[0] + ")";
             siglayout.version = docVrs; //+ " (rev. " + Regex.Split(BlkSigLayout.Attributes["UDGAVE"].Value, @"\s{1,}")[0] + ")"; 
             siglayout.docID = docId.ToUpper();
@@ -1740,7 +1742,7 @@ namespace ExpPt1
 
             char[] split = new char[] { '-', '(' };
             stationName =
-                BlkSigLayout.Attributes["1-ST.NAVN"].Value.Split(split)[0].TrimEnd(')').Trim();
+                blkSigLayout.Attributes["1-ST.NAVN"].Value.Split(split)[0].TrimEnd(')').Trim();
             TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
             stationName = textInfo.ToTitleCase(stationName.ToLower());
             frmStation = new FrmStation
@@ -1937,7 +1939,7 @@ namespace ExpPt1
                     error = true;
                 }
                 signal.LineID = BlkSignal.LineID;
-                signal.Location = Convert.ToDecimal(BlkSignal.Attributes["KMP"].Value);
+                signal.Location = Convert.ToDecimal(BlkSignal.Location);
                 signal.Direction = GetSignalDirection(BlkSignal, ref error);
                 signal.TrackPosition = GetSignalTrackPosition(BlkSignal, ref error);
 
@@ -5227,7 +5229,7 @@ namespace ExpPt1
             {
                 ErrLogger.Error("Start Segment(s) not found", signal.Designation, "Danger point");
                 ErrLogger.ErrorsFound = true;
-                return null;
+                return dangerPoint;
             }
             List<SearchSegment> segNodes = new List<SearchSegment>();
             SearchSegment startSearch = new SearchSegment
