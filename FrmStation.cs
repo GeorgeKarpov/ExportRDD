@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using AcadWindows = Autodesk.AutoCAD.Windows;
+using System.Text.RegularExpressions;
 //using ExportPt1;
 
 namespace ExpPt1
@@ -202,6 +203,7 @@ namespace ExpPt1
             }
             loadFiles.Add("VersId", null);
             loadFiles.Add("DocId", null);
+            TxtBoxVersion_TextChanged(txtBoxVersion, new EventArgs());
         }
 
         private void FrmStation_FormClosing(object sender, FormClosingEventArgs e)
@@ -470,6 +472,7 @@ namespace ExpPt1
         private void FrmStation_Load(object sender, EventArgs e)
         {
             dgwLines.ClearSelection();
+            
         }
 
         private void BtnRdd_Click(object sender, EventArgs e)
@@ -496,6 +499,15 @@ namespace ExpPt1
         {
             SetVersion(txtBoxVersion.Text);
             loadFiles["VersId"] = txtBoxVersion.Text;
+            Regex version = new Regex("^[0-9]{2}[P]{0,1}[0-9]{0,2}");
+            if (txtBoxVersion.Text == "01P01" || txtBoxVersion.Text == "" || !version.IsMatch(txtBoxVersion.Text))
+            {
+                lblxlsOrderRdd.Enabled = false;
+            }
+            else 
+            {
+                lblxlsOrderRdd.Enabled = true;
+            }
         }
 
         private void CheckBoxBGN_CheckedChanged(object sender, EventArgs e)
@@ -598,5 +610,6 @@ namespace ExpPt1
         {
             AutoAC = checkBoxAc.Checked;
         }
+
     }
 }
