@@ -2037,8 +2037,18 @@ namespace ExpPt1
                 return !error;
             }
 
+            if (xlsRoutes != null)
+            {
+                signalsSignal.AddRange(GetEotVirtSignals(xlsRoutes, signalsSignal, ref error));
+            }          
+            return !error;
+        }
+
+        private List<SignalsSignal> GetEotVirtSignals(List<ReadExcel.XlsRoute> xlsRoutes, List<SignalsSignal> signalsSignal, ref bool error)
+        {
             Regex spstSig = new Regex("^(spst-[a-zæøåÆØÅ]{2,3}-)S([0-9]{1,3})");
             List<ReadExcel.XlsRoute> checkSpsts = xlsRoutes.Where(x => spstSig.IsMatch(x.Start)).ToList();
+            List<SignalsSignal> signalsVirtEot = new List<SignalsSignal>();
             foreach (ReadExcel.XlsRoute route in checkSpsts)
             {
                 Block spstBlock = blocks
@@ -2084,9 +2094,9 @@ namespace ExpPt1
                 signalVirtualEot.DangerPointDistance = 0;
                 signalVirtualEot.DangerPointID = null;
 
-                signalsSignal.Add(signalVirtualEot);
+                signalsVirtEot.Add(signalVirtualEot);
             }
-            return !error;
+            return signalsVirtEot;
         }
 
         protected bool ReadPoints(List<Block> blocks, ref List<PointsPoint> pointsPoints,
