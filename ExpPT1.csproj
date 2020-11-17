@@ -195,6 +195,10 @@
       <Project>{220c1cd1-6b9a-42aa-9d1e-e1c51b1a0d69}</Project>
       <Name>Logger</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\OpexXmlLibs\ExcelLib\ExcelLib.csproj">
+      <Project>{66218022-8880-4ad2-a72b-9ce2dd486be1}</Project>
+      <Name>ExcelLib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\6.CompareRddXml\RddXmlLib\RddXmlLib.csproj">
       <Project>{ba13dcda-ac1f-4a6b-bc89-6db4cd35413d}</Project>
       <Name>RddXmlLib</Name>
