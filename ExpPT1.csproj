@@ -62,9 +62,6 @@
     <Reference Include="DocumentFormat.OpenXml, Version=2.11.3.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
       <HintPath>..\packages\DocumentFormat.OpenXml.2.11.3\lib\net46\DocumentFormat.OpenXml.dll</HintPath>
     </Reference>
-    <Reference Include="RddXmlLib">
-      <HintPath>..\..\..\7.CompareRddXml\RddXmlLib\bin\Release\RddXmlLib.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -194,9 +191,13 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\9.Logger\Logger\Logger.csproj">
+    <ProjectReference Include="..\..\..\4_Logger\Logger\Logger.csproj">
       <Project>{220c1cd1-6b9a-42aa-9d1e-e1c51b1a0d69}</Project>
       <Name>Logger</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\6.CompareRddXml\RddXmlLib\RddXmlLib.csproj">
+      <Project>{ba13dcda-ac1f-4a6b-bc89-6db4cd35413d}</Project>
+      <Name>RddXmlLib</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
@@ -208,7 +209,7 @@ cd $(TargetDir)\log
 del *.log
 xcopy /Y $(SolutionDir)AccessDatabaseEngine_X64.exe $(TargetDir)\drv
 xcopy /Y $(SolutionDir)mso.reg $(TargetDir)\drv
-xcopy /Y C:\3.TRDD\DynamicBlocks\Blks_Dynamic.dwg $(TargetDir)\cfg
+xcopy /Y C:\2_TRDD\DynamicBlocks\Blks_Dynamic.dwg $(TargetDir)\cfg
 </PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\Fody.6.2.0\build\Fody.targets" Condition="Exists('..\packages\Fody.6.2.0\build\Fody.targets')" />
