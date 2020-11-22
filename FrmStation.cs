@@ -24,6 +24,7 @@ namespace ExpPt1
         AcadWindows.OpenFileDialog OpenFile;
         public bool CopyLevel { set; get; }
         public bool AutoAC { set; get; }
+        public bool OrderRdd { set; get; }
 
         public string StationId
         {
@@ -227,21 +228,21 @@ namespace ExpPt1
                 loadFiles[box.Key] = box.Value.Checked.ToString();
             }
 
-            if (version != "01P01" && !loadFiles.ContainsKey(nameof(lblxlsOrderRdd)))
-            {
-                e.Cancel = true;
-                Autodesk.AutoCAD.ApplicationServices.Application
-                    .ShowAlertDialog("Please select Ordered Rdd");
-                return;
-            }
+            //if (version != "01P01" && !loadFiles.ContainsKey(nameof(lblxlsOrderRdd)))
+            //{
+            //    e.Cancel = true;
+            //    Autodesk.AutoCAD.ApplicationServices.Application
+            //        .ShowAlertDialog("Please select Ordered Rdd");
+            //    return;
+            //}
 
-            if (version != "01P01" && !File.Exists(loadFiles[nameof(lblxlsOrderRdd)]))
-            {
-                e.Cancel = true;
-                Autodesk.AutoCAD.ApplicationServices.Application
-                    .ShowAlertDialog("Ordered Rdd not found '" + "'" + loadFiles[nameof(lblxlsOrderRdd)]);
-                return;
-            }
+            //if (version != "01P01" && !File.Exists(loadFiles[nameof(lblxlsOrderRdd)]))
+            //{
+            //    e.Cancel = true;
+            //    Autodesk.AutoCAD.ApplicationServices.Application
+            //        .ShowAlertDialog("Ordered Rdd not found '" + "'" + loadFiles[nameof(lblxlsOrderRdd)]);
+            //    return;
+            //}
 
             if (InputFileNamesError())
             {
@@ -503,10 +504,22 @@ namespace ExpPt1
             if (txtBoxVersion.Text == "01P01" || txtBoxVersion.Text == "" || !version.IsMatch(txtBoxVersion.Text))
             {
                 lblxlsOrderRdd.Enabled = false;
+                btnOrderRdd.Enabled = false;
+                checkBoxLevel.Enabled = false;
+                groupBox5.Enabled = false;
+                groupBox3.Enabled = false;
+                checkBoxRdd.Checked = false;
+                OrderRdd = false;
             }
             else 
             {
                 lblxlsOrderRdd.Enabled = true;
+                btnOrderRdd.Enabled = true;
+                checkBoxLevel.Enabled = true;
+                groupBox5.Enabled = true;
+                groupBox3.Enabled = true;
+                checkBoxRdd.Checked = true;
+                OrderRdd = true;
             }
         }
 

@@ -18,6 +18,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using AcadApp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 using LXactSection = LevelCrossingsLevelCrossingLevelCrossingTracksLevelCrossingTrackActivationSectionsActivationSection;
+using ExpPt1.dataMapping;
 
 namespace ExpPt1
 {
@@ -411,6 +412,19 @@ namespace ExpPt1
                 return;
             }
 
+            DataProcessor.checkData = checkData;
+            DataProcessor.loadFiles = loadFiles;
+            DataProcessor.lxList = blocks
+                                   .Where(x => x.XsdName == "LevelCrossing")
+                                   .Select(x => blckProp.GetElemDesignation(x, true))
+                                   .ToList();
+            DataProcessor.pwsList = blocks
+                                   .Where(x => x.XsdName == "StaffPassengerCrossing")
+                                   .Select(x => blckProp.GetElemDesignation(x))
+                                   .ToList();
+            DataProcessor.LoadData(this.dwgDir);
+            this.Documents = DataProcessor.docsDescrs;
+
             err.Add(!CollectTrustedAreas(TrustedAreaLines, TracksLines));
 
             // Get PSAs
@@ -588,24 +602,25 @@ namespace ExpPt1
                           Version + ".xml";
             }
 
-            if (!File.Exists(orderRddFileName))
-            {
-                err.Add(true);
-                ErrLogger.Error("Order Rdd not found", orderRddFileName, "");
-            }
-            else
+            //if (!File.Exists(orderRddFileName))
+            //{
+            //    err.Add(true);
+            //    ErrLogger.Error("Order Rdd not found", orderRddFileName, "");
+            //}
+            //else
+            if (frmStation.OrderRdd)
             {
                 RDD = rddOrder.OrderRdd(RDD, rddXmlIO.GetRdd(orderRddFileName), true, copyLevel);
             }
 
             if (checkData["checkBoxRdd"])
             {
-                if (!File.Exists(loadFiles["lblxlsRdd"]))
-                {
-                    err.Add(true);
-                    ErrLogger.Error("Previous Rdd version not found", loadFiles["lblxlsRdd"], "");
-                }
-                else
+                //if (!File.Exists(loadFiles["lblxlsRdd"]))
+                //{
+                //    err.Add(true);
+                //    ErrLogger.Error("Previous Rdd version not found", loadFiles["lblxlsRdd"], "");
+                //}
+                //else
                 {
                     RailwayDesignData PrevRdd = rddXmlIO.GetRdd(loadFiles["lblxlsRdd"]);
                     Compare compare = new Compare();
@@ -624,17 +639,17 @@ namespace ExpPt1
                 //RddR5.RailwayDesignData rddR5 = rddXmlIO.GetRddR5(saveTo);
                 rddXmlIO.WriteRddXml(rddR5, saveTo,
                     new List<string> { "Created with ExpPt1 v" + Assembly.GetExecutingAssembly().GetName().Version.ToString(3)
-                                        + " (Thales Latvia) - " + DateTime.Now });
+                                        + " (Georgijs Karpovs) - " + DateTime.Now });
             }
             else
             {
                 rddXmlIO.WriteRddXml(RDD, saveTo,
                     new List<string> { "Created with ExpPt1 v" + Assembly.GetExecutingAssembly().GetName().Version.ToString(3)
-                                        + " (Thales Latvia) - " + DateTime.Now });
+                                        + " (Georgijs Karpovs) - " + DateTime.Now });
             }
             try
             {
-                WriteData.ReportExcel(RDD.MetaData, Path.GetDirectoryName(saveTo) + "//" +
+                ExcelLib.WriteExcel.ReportExcel(RDD.MetaData, Path.GetDirectoryName(saveTo) + "//" +
                               Path.GetFileNameWithoutExtension(saveTo) + "_Report.xlsx");
             }
             catch (System.Exception e)
@@ -1879,10 +1894,8 @@ namespace ExpPt1
             TFileDescr document;
             if (checkData["checkBoxRts"])
             {
-                document =
-               new TFileDescr();
                 xlsRoutes =
-                    excel.Routes(loadFiles["lblxlsRoutes"], ref document, ref error)
+                    excel.Routes(loadFiles["lblxlsRoutes"], ref error)
                     //.Where(x => x.Overlaps.Count > 0)
                     .ToList();
             }
@@ -1892,7 +1905,7 @@ namespace ExpPt1
             {
                 CesLocs =
                     excel.DangerPoints(loadFiles["lblxlsSigClos"], ref document);
-                Documents.Add(document);
+                //Documents.Add(document);
                 if (CesLocs == null)
                 {
                     ErrLogger.Error("Can't get data from file",  "Signals closure table", "");
@@ -2116,7 +2129,7 @@ namespace ExpPt1
             {
                 document = new TFileDescr();
                 FlankProtection = excel.FlankProtection(loadFiles["lblxlsFP"], ref document);
-                Documents.Add(document);
+                //Documents.Add(document);
             }
             else
             {
@@ -2129,7 +2142,7 @@ namespace ExpPt1
                 document = new TFileDescr();
                 emergStopGroups =
                     excel.EmergStops(loadFiles["lblxlsEmSg"], ref document);
-                Documents.Add(document);
+                //Documents.Add(document);
             }
             else
             {
@@ -2915,13 +2928,13 @@ namespace ExpPt1
             if (this.checkData["checkBoxBG"])
             {
                 source = this.excel.BaliseGroups(this.loadFiles["lblxlsBgs"], ref document1);
-                this.Documents.Add(document1);
+                //this.Documents.Add(document1);
             }
             if (this.checkData["checkBoxBGN"])
             {
                 TFileDescr document2 = new TFileDescr();
                 this.excel.BaliseGroups(this.loadFiles["lblxlsBgsN"], ref document2);
-                this.Documents.Add(document2);
+                //this.Documents.Add(document2);
             }
             foreach (Block block in list1)
             {
@@ -3042,7 +3055,7 @@ namespace ExpPt1
                     new TFileDescr();
                     xlsPwsActivation =
                     excel.PwsActivation(firstTextFile.FullName, ref documentPwsAct, BlkPws, "PWS");
-                    Documents.Add(documentPwsAct);
+                    //Documents.Add(documentPwsAct);
                 }
                 else
                 {
@@ -3312,7 +3325,7 @@ namespace ExpPt1
                     new TFileDescr();
                     xlsPwsActivation =
                     excel.PwsActivation(firstTextFile.FullName, ref documentPwsAct, BlkSx, "SX");
-                    Documents.Add(documentPwsAct);
+                    //Documents.Add(documentPwsAct);
                 }
                 else
                 {
@@ -3593,7 +3606,7 @@ namespace ExpPt1
                         ErrLogger.Error("Activations not found in table", blckProp.GetElemDesignation(BlkLx, true, false), "");
                         error = true;
                     }
-                    Documents.Add(LxsActivations[BlkLx.Attributes["NAME"].Value].Document);
+                    //Documents.Add(LxsActivations[BlkLx.Attributes["NAME"].Value].Document);
                 }
                 else
                 {
@@ -4127,7 +4140,7 @@ namespace ExpPt1
             }
             if (checkData["checkBoxLX"])
             {
-                Documents.Add(document);
+                //Documents.Add(document);
             }
             return !error;
         }
@@ -4210,9 +4223,14 @@ namespace ExpPt1
                 ErrLogger.Information("Speed profiles data skipped", "Read SSP");
                 return !error;
             }
-            TFileDescr document = new TFileDescr();
-            speedprofiles = this.excel.SpeedProfiles(this.loadFiles["lblxlsSpProf"], ref document, this.stationID, ref error);
-            this.Documents.Add(document);
+            //TFileDescr document = new TFileDescr();
+            //if (dataMapping.DataProcessor.docsDescrs.ContainsKey(dataMapping.RddDocType.SSP))
+            //{
+            //    document = dataMapping.DataProcessor.docsDescrs[dataMapping.RddDocType.SSP];
+            //}
+            speedprofiles = this.excel.SpeedProfiles(this.loadFiles["lblxlsSpProf"], this.stationID, ref error);
+            //document.title = this.stationName + " Speed Profile";
+            //this.Documents.Add(document);
             return !error;
         }
 
@@ -4227,13 +4245,18 @@ namespace ExpPt1
             }
             TFileDescr document =
                new TFileDescr();
+            //if (dataMapping.DataProcessor.docsDescrs.ContainsKey(dataMapping.RddDocType.RT))
+            //{
+            //    document = dataMapping.DataProcessor.docsDescrs[dataMapping.RddDocType.RT];
+            //}
             List<ReadExcel.XlsRoute> xlsRoutes =
-                excel.Routes(loadFiles["lblxlsRoutes"], ref document, ref error);
+                excel.Routes(loadFiles["lblxlsRoutes"], ref error);
             if (xlsRoutes == null)
             {
                 return false;
             }
-            Documents.Add(document);
+            //document.title = this.stationName + " Routes Table";
+            //Documents.Add(document);
             foreach (ReadExcel.XlsRoute route in xlsRoutes)
             {
 
@@ -9727,9 +9750,14 @@ namespace ExpPt1
             bool error = false;
             if (this.checkData["checkBoxDL"])
             {
-                TFileDescr document = new TFileDescr();
-                List<ReadExcel.DetLock> source = this.excel.DetectorLockings(this.loadFiles["lblxlsDetLock"], ref document, ref error);
-                this.Documents.Add(document);
+                //TFileDescr document = new TFileDescr();
+                //if (dataMapping.DataProcessor.docsDescrs.ContainsKey(dataMapping.RddDocType.TDL))
+                //{
+                //    document = dataMapping.DataProcessor.docsDescrs[dataMapping.RddDocType.TDL];
+                //}
+                List<ReadExcel.DetLock> source = this.excel.DetectorLockings(this.loadFiles["lblxlsDetLock"], ref error);
+                //document.title = this.stationName + " Tracks for detector locking";
+                //this.Documents.Add(document);
                 foreach (Block block in this.blocks
                                             .Where(x => x.XsdName == "Point" &&
                                                    x.IsOnCurrentArea && !x.IsOnNextStation && x.Visible))

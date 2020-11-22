@@ -142,7 +142,7 @@ namespace ExpPt1
                     AcadApp.ShowAlertDialog("Track Segments errors. See Errors Log");
                     ErrLogger.ErrorsFound = true;
                 }
-                WriteData.ExpRoutes(GetRoutesList(), saveFileDialog.Filename);
+                ExcelLib.WriteExcel.ExpRoutes(GetRoutesList(), saveFileDialog.Filename);
             }
             catch (IOException e)
             {
@@ -167,7 +167,10 @@ namespace ExpPt1
                     AcadApp.ShowAlertDialog("Track Segments errors. See Errors Log");
                     ErrLogger.ErrorsFound = true;
                 }
-                WriteData.ExpSegments(this.TrackSegmentsTmp, saveFileDialog.Filename);
+                List<ExcelLib.elements.ExpTseg> expTsegs = this.TrackSegmentsTmp
+                                                           .Select(x => new ExcelLib.elements.ExpTseg { Designation = x.Designation })
+                                                           .ToList();
+                ExcelLib.WriteExcel.ExpSegments(expTsegs, saveFileDialog.Filename);
             }
             catch (IOException e)
             {
@@ -201,7 +204,7 @@ namespace ExpPt1
                     AutoAC = true
                 };
                 error = !ReadAcSections(blocks, ref acsections);
-                List<ExpTdlPt> Tdls = new List<ExpTdlPt>();
+                List<ExcelLib.ExpTdlPt> Tdls = new List<ExcelLib.ExpTdlPt>();
                 foreach (var pt in points)
                 {
                     var ownsect = acsections
@@ -217,13 +220,13 @@ namespace ExpPt1
                             Designation = ""
                         };
                     }
-                    Tdls.Add(new ExpTdlPt 
+                    Tdls.Add(new ExcelLib.ExpTdlPt
                     {
                         Designation = pt.Attributes["NAME"].Value,
                         OwnTdt = ownsect.Designation.Split('-').Last() 
                     });
                 }
-                WriteData.ExpTdls(Tdls, saveFileDialog.Filename);
+                ExcelLib.WriteExcel.ExpTdls(Tdls, saveFileDialog.Filename);
             }
             catch (IOException e)
             {

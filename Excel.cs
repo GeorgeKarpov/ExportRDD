@@ -540,16 +540,14 @@ namespace ReadExcel
             return null;
         }
 
-        public List<DetLock> DetectorLockings(string dataSource,
-             ref TFileDescr document, ref bool error)
+        public List<DetLock> DetectorLockings(string dataSource, ref bool error)
         {
             DataSet ds = new DataSet();
             string connectionString = GetConnectionString(dataSource, "'Excel 12.0;HDR=NO;IMEX=1'");
-            ReadWord.Word Word = new ReadWord.Word();
             string path =
                 Directory.GetFiles(Path.GetDirectoryName(dataSource),
                                    Path.GetFileNameWithoutExtension(dataSource) + "*.doc*").FirstOrDefault();
-            document.title = "Tracks for detector locking";
+            
             using (OleDbConnection conn = new OleDbConnection(connectionString))
             {
                 conn.Open();
@@ -579,8 +577,8 @@ namespace ReadExcel
                             if (dt.Rows[a][i] != DBNull.Value && (((string)dt.Rows[a][i]).Contains("Document Number") ||
                                                                  ((string)dt.Rows[a][i]).Contains("Tegningsnr")))
                             {
-                                document.docID = dt.Rows[a][i + 3].ToString();
-                                document.version = dt.Rows[a][i + 7].ToString();
+                                //document.docID = dt.Rows[a][i + 3].ToString();
+                                //document.version = dt.Rows[a][i + 7].ToString();
                             }
                             //if (dt.Rows[a][i] != DBNull.Value && ((string)dt.Rows[a][i]).Contains("Version"))
                             //{
@@ -588,9 +586,9 @@ namespace ReadExcel
                             //}
                             if (dt.Rows[a][i] != DBNull.Value && ((string)dt.Rows[a][i]).Contains("Udarbejdet"))
                             {
-                                document.creator = dt.Rows[a][i + 2].ToString().Split(' ')[1];
-                                document.date =
-                                ExpPt1.Calc.StringToDate(dt.Rows[a][i + 2].ToString().Split(' ')[0], out DateTime date, out bool flag);
+                                //document.creator = dt.Rows[a][i + 2].ToString().Split(' ')[1];
+                                //document.date =
+                                //ExpPt1.Calc.StringToDate(dt.Rows[a][i + 2].ToString().Split(' ')[0], out DateTime date, out bool flag);
                                 //document.date = Convert.ToDateTime(dt.Rows[a][i + 2].ToString().Split(' ')[0]);
                                 found = true;
                                 break;
@@ -603,11 +601,11 @@ namespace ReadExcel
                     }
                 }
             }
-            if (document.docID == null)
-            {
-                document = Word.GetCoverData(path, ref error);
-                document.title = "Tracks for Detector Locking";
-            }
+            //if (document.docID == null)
+            //{
+            //    document = Word.GetCoverData(path, ref error);
+            //    document.title = "Tracks for Detector Locking";
+            //}
 
             using (OleDbConnection conn = new OleDbConnection(connectionString))
             {
@@ -714,19 +712,18 @@ namespace ReadExcel
             return null;
         }
 
-        public List<SpeedProfilesSpeedProfile> SpeedProfiles(string dataSource,
-            ref TFileDescr document, string stationID, ref bool error)
+        public List<SpeedProfilesSpeedProfile> SpeedProfiles(string dataSource, string stationID, ref bool error)
         {
             DataSet ds = new DataSet();
 
             string connectionString = GetConnectionString(dataSource,
                 "'Excel 12.0;IMEX=1;HDR=NO'");
-            ReadWord.Word Word = new ReadWord.Word();
+            //ReadWord.Word Word = new ReadWord.Word();
             string path =
                 Directory.GetFiles(Path.GetDirectoryName(dataSource),
                                    Path.GetFileNameWithoutExtension(dataSource) + "*.doc?").FirstOrDefault();
-            document = Word.GetCoverData(path, ref error);
-            document.title = "Speed Profile";
+            //document = Word.GetCoverData(path, ref error);
+            
 
             List<SpeedProfilesSpeedProfile> speedProfiles = new List<SpeedProfilesSpeedProfile>();
             if (!File.Exists(dataSource))
@@ -1042,17 +1039,16 @@ namespace ReadExcel
             return speedProfiles;
         }
 
-        public List<XlsRoute> Routes(string dataSource,
-           ref TFileDescr document, ref bool error)
+        public List<XlsRoute> Routes(string dataSource, ref bool error)
         {
             DataSet ds = new DataSet();
             string connectionString = GetConnectionString(dataSource, "'Excel 12.0;HDR=NO;IMEX=1'");
-            ReadWord.Word Word = new ReadWord.Word();
+            //ReadWord.Word Word = new ReadWord.Word();
             string path =
                 Directory.GetFiles(Path.GetDirectoryName(dataSource),
                                    Path.GetFileNameWithoutExtension(dataSource) + "*.doc*").FirstOrDefault();
-            document = Word.GetCoverData(path, ref error);
-            document.title = "Routes Table";
+            //document = Word.GetCoverData(path, ref error);
+            //document.title = "Routes Table";
 
             using (OleDbConnection conn = new OleDbConnection(connectionString))
             {
