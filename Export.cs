@@ -18,14 +18,14 @@ using System.Xml;
 using System.Xml.Serialization;
 using AcadApp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 using LXactSection = LevelCrossingsLevelCrossingLevelCrossingTracksLevelCrossingTrackActivationSectionsActivationSection;
-using ExpPt1.dataMapping;
+using Refact.dataMapping;
 
 namespace ExpPt1
 {
     public class Export : IDisposable
     {
-        private string docId = "";
-        private string docVrs = "";
+        protected string docId = "";
+        protected string docVrs = "";
         public string stationID = "";
         private string Version = "";
         private string DocID = "";
@@ -53,7 +53,6 @@ namespace ExpPt1
         protected List<TrustedArea> TrustedAreas;
         protected List<TrackLine> TracksLines;
         protected List<string> ExportCigClosure;
-        private List<string> ExportPoints;
         protected ReadExcel.Excel excel;
         private Dictionary<string, string> loadFiles;
         private List<TFileDescr> Documents;
@@ -94,9 +93,10 @@ namespace ExpPt1
             ErrLogger.StartTmpLog(this.dwgDir);
             ErrLogger.Information(Path.GetFileNameWithoutExtension(dwgPath), "Processed SL");
             ErrLogger.Error(Path.GetFileNameWithoutExtension(dwgPath), "Processed SL", "");
+
             ReadBlocksDefinitions();
             ReadConnLinesDefinitions();
-            stations = ReadStations();
+            stations = GetStations();
             this.blocksErr = false;
             this.blocks = this.GetBlocks(ref this.blocksErr);
             this.acSections = new List<AcSection>();
@@ -349,25 +349,6 @@ namespace ExpPt1
             trcksegments = new List<TrackSegmentsTrackSegment>();
             Documents = new List<TFileDescr>();
 
-            ExportCigClosure = new List<string>
-            {
-                "<Signal ID>\t"+
-                "<Signal km>\t"+
-                "<BG ID>\t" +
-                "<BG km>\t" +
-                "<Ac ID>\t" +
-                "<Ac km>\t" +
-                "<Connectors>"
-            };
-            ExportPoints = new List<string>
-            {
-                "<Station name>\t"+
-                "<Point ID>\t" +
-                "<Tip km>\t"+
-                "<Right km>\t" +
-                "<Left km>"
-            };
-
             stationID = GetStationId(blocks);
             if (stationID == null)
             {
@@ -395,7 +376,8 @@ namespace ExpPt1
             {
                 blocksErr
             };
-            GetDocIdVrs();
+            docId = GetDocId(out bool docError);
+            docVrs = GetDocVers(out docError);
             TracksLines = GetTracksLines();
             
             RailwayLines = GetRailwayLines(TracksLines, blocks);
@@ -412,18 +394,18 @@ namespace ExpPt1
                 return;
             }
 
-            DataProcessor.checkData = checkData;
-            DataProcessor.loadFiles = loadFiles;
-            DataProcessor.lxList = blocks
-                                   .Where(x => x.XsdName == "LevelCrossing")
-                                   .Select(x => blckProp.GetElemDesignation(x, true))
-                                   .ToList();
-            DataProcessor.pwsList = blocks
-                                   .Where(x => x.XsdName == "StaffPassengerCrossing")
-                                   .Select(x => blckProp.GetElemDesignation(x))
-                                   .ToList();
-            DataProcessor.LoadData(this.dwgDir);
-            this.Documents = DataProcessor.docsDescrs;
+            //DataProcessor.checkData = checkData;
+            //DataProcessor.loadFiles = loadFiles;
+            //DataProcessor.lxList = blocks
+            //                       .Where(x => x.XsdName == "LevelCrossing")
+            //                       .Select(x => blckProp.GetElemDesignation(x, true))
+            //                       .ToList();
+            //DataProcessor.pwsList = blocks
+            //                       .Where(x => x.XsdName == "StaffPassengerCrossing")
+            //                       .Select(x => blckProp.GetElemDesignation(x))
+            //                       .ToList();
+            //DataProcessor.LoadData(this.dwgDir);
+            //this.Documents = DataProcessor.docsDescrs;
 
             err.Add(!CollectTrustedAreas(TrustedAreaLines, TracksLines));
 
@@ -517,8 +499,6 @@ namespace ExpPt1
 
             RailwayDesignData RDD = new RailwayDesignData
             {
-                version = "1.6.18",
-                SchemaDocId = "7HA700001014_109EN",
                 MetaData = new RailwayDesignDataMetaData
                 {
                     FileDescription = new TFileDescr
@@ -649,8 +629,8 @@ namespace ExpPt1
             }
             try
             {
-                ExcelLib.WriteExcel.ReportExcel(RDD.MetaData, Path.GetDirectoryName(saveTo) + "//" +
-                              Path.GetFileNameWithoutExtension(saveTo) + "_Report.xlsx");
+                //ExcelLib.WriteExcel.ReportExcel(RDD.MetaData, Path.GetDirectoryName(saveTo) + "//" +
+                //              Path.GetFileNameWithoutExtension(saveTo) + "_Report.xlsx");
             }
             catch (System.Exception e)
             {
@@ -686,39 +666,39 @@ namespace ExpPt1
             }
         }
 
-        protected void GetDocIdVrs()
-        {
-            using (Transaction trans = db.TransactionManager.StartTransaction())
-            {
-                var Textsids = GetObjectsOfType(db, RXObject.GetClass(typeof(MText)));
-                foreach (ObjectId ObjId in Textsids)
-                {
-                    var mtext = (MText)trans.GetObject(ObjId, OpenMode.ForRead);
-                    if (mtext.Text.Contains("Internt Thales tegningsnr"))
-                    {
-                        docId = mtext.Text.Split(':')[1].Trim().Split(new char[0], StringSplitOptions.RemoveEmptyEntries)[0];
-                        docVrs = mtext.Text.Split(':')[1].Trim()
-                            .Split(new Char[] { ' ', ',', '.', ':', '\n', '\t', '/', 'v', 'V' },
-                                       StringSplitOptions.RemoveEmptyEntries).Last();
-                        break;
-                    }
-                }
-                Textsids = GetObjectsOfType(db, RXObject.GetClass(typeof(DBText)));
-                foreach (ObjectId ObjId in Textsids)
-                {
-                    var text = (DBText)trans.GetObject(ObjId, OpenMode.ForRead);
-                    if (text.TextString.Contains("Internt Thales tegningsnr")) // Internt Thales tegningsnr
-                    {
-                        docId = text.TextString.Split(':')[1].Trim().Split(new char[0], StringSplitOptions.RemoveEmptyEntries)[0];
-                        docVrs = text.TextString.Split(':')[1].Trim()
-                            .Split(new Char[] { ' ', ',', '.', ':', '\n', '\t', '/', 'v', 'V' },
-                                       StringSplitOptions.RemoveEmptyEntries).Last();
-                        break;
-                    }
-                }
-                trans.Commit();
-            }
-        }
+        //protected void GetDocIdVrs()
+        //{
+        //    using (Transaction trans = db.TransactionManager.StartTransaction())
+        //    {
+        //        var Textsids = GetObjectsOfType(db, RXObject.GetClass(typeof(MText)));
+        //        foreach (ObjectId ObjId in Textsids)
+        //        {
+        //            var mtext = (MText)trans.GetObject(ObjId, OpenMode.ForRead);
+        //            if (mtext.Text.Contains("Internt Thales tegningsnr"))
+        //            {
+        //                docId = mtext.Text.Split(':')[1].Trim().Split(new char[0], StringSplitOptions.RemoveEmptyEntries)[0];
+        //                docVrs = mtext.Text.Split(':')[1].Trim()
+        //                    .Split(new Char[] { ' ', ',', '.', ':', '\n', '\t', '/', 'v', 'V' },
+        //                               StringSplitOptions.RemoveEmptyEntries).Last();
+        //                break;
+        //            }
+        //        }
+        //        Textsids = GetObjectsOfType(db, RXObject.GetClass(typeof(DBText)));
+        //        foreach (ObjectId ObjId in Textsids)
+        //        {
+        //            var text = (DBText)trans.GetObject(ObjId, OpenMode.ForRead);
+        //            if (text.TextString.Contains("Internt Thales tegningsnr")) // Internt Thales tegningsnr
+        //            {
+        //                docId = text.TextString.Split(':')[1].Trim().Split(new char[0], StringSplitOptions.RemoveEmptyEntries)[0];
+        //                docVrs = text.TextString.Split(':')[1].Trim()
+        //                    .Split(new Char[] { ' ', ',', '.', ':', '\n', '\t', '/', 'v', 'V' },
+        //                               StringSplitOptions.RemoveEmptyEntries).Last();
+        //                break;
+        //            }
+        //        }
+        //        trans.Commit();
+        //    }
+        //}
 
         protected List<TrackLine> GetTracksLines()
         {
@@ -1361,8 +1341,11 @@ namespace ExpPt1
                             {
                                 continue;
                             }
-                            Enum.TryParse(BlocksToGet[btr.Name].Split('\t')[1], out XType xType);
-
+                            if(Enum.TryParse(BlocksToGet[btr.Name].Split('\t')[1], out XType xType))
+                            {
+                                //newBlocks.Add(new Refact.elements.Block {BlockReference =  blkRef, Xtype = xType });
+                            }
+                            
                             Dictionary<string, Attribute> Attributes = GetAttributes(blkRef);
                             Block block = new Block
                             {
@@ -1806,6 +1789,23 @@ namespace ExpPt1
                     Direction = railwayLine.direction,
                     Status = this.Status
                 });
+        }
+
+        public Dictionary<string, string> GetStations()
+        {
+            if (!File.Exists(assemblyPath + Constants.cfgFolder + "//Stations.dat"))
+            {
+                ErrLogger.Error("Input file not found", assemblyPath + Constants.cfgFolder + "//Stations.dat", "");
+                return null;
+            }
+            Dictionary<string, string> dictionary = new Dictionary<string, string>();
+            foreach (string str in ((IEnumerable<string>)File.ReadAllLines(assemblyPath + Constants.cfgFolder + "//Stations.dat"))
+                                    .Where(arg => !string.IsNullOrWhiteSpace(arg) && arg[0] != '#'))
+            {
+                if (!dictionary.ContainsKey(str.Split('\t')[0]))
+                    dictionary.Add(str.Split('\t')[0], str);
+            }
+            return dictionary;
         }
 
         private void ReadStationsStops(ref List<StationsAndStopsStationsAndStop> stationsAndStops,
@@ -4438,16 +4438,24 @@ namespace ExpPt1
             return !error;
         }
 
-        public List<RoutesRoute> GetRoutesList()
+        public List<ExcelLib.ExpRoute> GetRoutesList()
         {
-            List<RoutesRoute> routes = new List<RoutesRoute>();
+            List<ExcelLib.ExpRoute> routes = new List<ExcelLib.ExpRoute>();
             foreach (Block signalBlk in this.blocks.Where(x => x.XsdName == "Signal" && !x.Virtual && x.TrackSegId != null))
             {
                 var signal = this.signals
                              .Where(x => x.Designation == signalBlk.Designation &&
                                          x.KindOfSignal != TKindOfSignal.eotmb)
                              .FirstOrDefault();
-                routes.AddRange(GetDestSignals(signalBlk));
+                routes.AddRange(GetDestSignals(signalBlk)
+                                .Select(r => new ExcelLib.ExpRoute
+                                {
+                                    Start = r.Start,
+                                    Destination = r.Destination,
+                                    Points = r.PointGroup.Point
+                                             .Select(p => p.Value.Split('-').Last() + "-" + p.RequiredPosition.ToString().ToUpper().First())
+                                             .ToList()
+                                }));
             }         
             XmlSerializer serializer = new XmlSerializer(typeof(Routes));
             XmlWriterSettings settings = new XmlWriterSettings
@@ -4939,41 +4947,12 @@ namespace ExpPt1
             }
         }
 
-        private Point2d GetBlockCross(Block block)
-        {
-            DBObjectCollection entset = new DBObjectCollection();
-            block.BlkRef.Explode(entset);
-            List<Line> tmpCross = new List<Line>();
-            // if cross not found take insertion point of block
-            Point2d cross = new Point2d(block.BlkRef.Position.X, block.BlkRef.Position.Y);
-            foreach (DBObject obj in entset)
-            {
-                if (obj.GetType() == typeof(Line))
-                {
-                    if (((Line)obj).Layer == "Cross")
-                    {
-                        tmpCross.Add((Line)obj);
-                        if (tmpCross.Count == 2)
-                        {
-                            Point3dCollection intersections = new Point3dCollection();
-                            tmpCross[0].IntersectWith(tmpCross[1], Intersect.OnBothOperands, intersections, IntPtr.Zero, IntPtr.Zero);
-                            if (intersections != null && intersections.Count > 0)
-                            {
-                                return cross =
-                                    new Point2d(intersections[0].X, intersections[0].Y);
-                            }
-                        }
-                    }
 
-                }
-            }
-            return cross;
-        }
 
         private LeftRightOthersType GetSignalTrackPosition(Block BlkSignal, ref bool error)
         {
-            List<Line> lines = GetBlockLines(BlkSignal);
-            Point2d cross = GetBlockCross(BlkSignal);
+            List<Line> lines = AcadTools.GetBlockLines(BlkSignal);
+            Point2d cross = AcadTools.GetBlockCross(BlkSignal);
             Point2d fromTrackY = new Point2d(0, 0);
             fromTrackY = AcadTools.GetMiddlPoint2d(lines.Where(x => x.Length > 5 &&
                                                 (x.StartPoint.X != cross.X) &&
@@ -5011,8 +4990,8 @@ namespace ExpPt1
         {
             DirectionType sigDir;
 
-            List<Line> lines = GetBlockLines(BlkSignal);
-            Point2d cross = GetBlockCross(BlkSignal);
+            List<Line> lines = AcadTools.GetBlockLines(BlkSignal);
+            Point2d cross = AcadTools.GetBlockCross(BlkSignal);
 
             RailwayLine Line = RailwayLines
                 .Where(x => x.designation == BlkSignal.LineID)
@@ -8230,37 +8209,6 @@ namespace ExpPt1
                 // SW agreement: derailer derails always in right
                 branchType = ConnectionBranchType.left;
                 return branchType;
-
-                //Point3dCollection intersections = new Point3dCollection();
-                //baseLine.IntersectWith(branchLine, Intersect.ExtendThis, intersections, IntPtr.Zero, IntPtr.Zero);
-                //Vector2d AflBranch = new Vector2d();
-                //if (intersections != null && intersections.Count > 0)
-                //{
-                //    if (intersections[0].DistanceTo(branchLine.EndPoint) >
-                //        intersections[0].DistanceTo(branchLine.StartPoint))
-                //    {
-                //        AflBranch =
-                //            new Point2d(branchLine.EndPoint.X, branchLine.EndPoint.Y) -
-                //            new Point2d(branchLine.StartPoint.X, branchLine.StartPoint.Y);
-                //    }
-                //    else
-                //    {
-                //        AflBranch =
-                //            new Point2d(branchLine.StartPoint.X, branchLine.StartPoint.Y) -
-                //            new Point2d(branchLine.EndPoint.X, branchLine.EndPoint.Y);
-                //    }
-                //}
-                //Vector2d baseVector = cross.GetVectorTo(baseCross);
-                //branchAngle = AflBranch.GetAngleTo(baseVector);
-                //if (Calc.Between(Calc.RadToDeg(branchAngle), 44, 46, true))
-                //{
-                //    branchType = ConnectionBranchType.left;
-                //}
-                //else
-                //{
-                //    branchType = ConnectionBranchType.right;
-                //}
-                //return branchType;
             }
 
             if (branchAngle > 0 && branchAngle < deltaBranch && cross.Y < branchCross.Y)
@@ -8603,17 +8551,7 @@ namespace ExpPt1
             })).ToList();
         }
 
-        private Dictionary<string, string> ReadStations()
-        {
-            Dictionary<string, string> dictionary = new Dictionary<string, string>();
-            foreach (string str in ((IEnumerable<string>)File.ReadAllLines(this.assemblyPath + Constants.cfgFolder + "//Stations.dat"))
-                                    .Where(arg => !string.IsNullOrWhiteSpace(arg) && arg[0] != '#'))
-            {
-                if (!dictionary.ContainsKey(str.Split('\t')[0]))
-                    dictionary.Add(str.Split('\t')[0], str);
-            }
-            return dictionary;
-        }
+        
 
         private Dictionary<string, string> ReadMainTracks()
         {
@@ -9307,29 +9245,7 @@ namespace ExpPt1
             return false;
         }
 
-        private List<Line> GetBlockLines(Block BlkSignal)
-        {
-            DBObjectCollection entset = new DBObjectCollection();
-            BlkSignal.BlkRef.Explode(entset);
-            List<Line> lines = new List<Line>();
-            foreach (DBObject obj in entset)
-            {
-                if (obj.GetType() == typeof(Line))
-                {
-                    lines.Add((Line)obj);
-                }
-                if (obj.GetType() == typeof(Polyline))
-                {
-                    DBObjectCollection entsetPoly = new DBObjectCollection();
-                    ((Polyline)obj).Explode(entsetPoly);
-                    foreach (DBObject objPoly in entsetPoly)
-                    {
-                        lines.Add((Line)objPoly);
-                    }
-                }
-            }
-            return lines;
-        }
+        
 
         public void CheckAttSameKm(List<Block> blocks)
         {
@@ -9991,6 +9907,70 @@ namespace ExpPt1
                 }
             }
             return Math.Abs(vert1Loc - vert2Loc);
+        }
+
+        protected string GetDocId(out bool error)
+        {
+            error = false;
+            using (Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                var Textsids = AcadTools.GetObjectsOfType(db, RXObject.GetClass(typeof(MText)));
+                foreach (ObjectId ObjId in Textsids)
+                {
+                    var mtext = (MText)trans.GetObject(ObjId, OpenMode.ForRead);
+                    if (mtext.Text.Contains("Internt Thales tegningsnr"))
+                    {
+                        return mtext.Text.Split(':')[1].Trim().Split(new char[0], StringSplitOptions.RemoveEmptyEntries)[0];
+                    }
+                }
+                Textsids = AcadTools.GetObjectsOfType(db, RXObject.GetClass(typeof(DBText)));
+                foreach (ObjectId ObjId in Textsids)
+                {
+                    var text = (DBText)trans.GetObject(ObjId, OpenMode.ForRead);
+                    if (text.TextString.Contains("Internt Thales tegningsnr")) // Internt Thales tegningsnr
+                    {
+                        return text.TextString.Split(':')[1].Trim().Split(new char[0], StringSplitOptions.RemoveEmptyEntries)[0];
+                    }
+                }
+                trans.Commit();
+            }
+            ErrLogger.Error("Unable to get document Id from drawing", "", "");
+            error = true;
+            return null;
+        }
+
+        protected string GetDocVers( out bool error)
+        {
+            error = false;
+            using (Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                var Textsids = AcadTools.GetObjectsOfType(db, RXObject.GetClass(typeof(MText)));
+                foreach (ObjectId ObjId in Textsids)
+                {
+                    var mtext = (MText)trans.GetObject(ObjId, OpenMode.ForRead);
+                    if (mtext.Text.Contains("Internt Thales tegningsnr"))
+                    {
+                        return mtext.Text.Split(':')[1].Trim()
+                            .Split(new Char[] { ' ', ',', '.', ':', '\n', '\t', '/', 'v', 'V' },
+                                       StringSplitOptions.RemoveEmptyEntries).Last();
+                    }
+                }
+                Textsids = AcadTools.GetObjectsOfType(db, RXObject.GetClass(typeof(DBText)));
+                foreach (ObjectId ObjId in Textsids)
+                {
+                    var text = (DBText)trans.GetObject(ObjId, OpenMode.ForRead);
+                    if (text.TextString.Contains("Internt Thales tegningsnr")) // Internt Thales tegningsnr
+                    {
+                        return text.TextString.Split(':')[1].Trim()
+                            .Split(new Char[] { ' ', ',', '.', ':', '\n', '\t', '/', 'v', 'V' },
+                                       StringSplitOptions.RemoveEmptyEntries).Last();
+                    }
+                }
+                trans.Commit();
+            }
+            ErrLogger.Error("Unable to get document Version from drawing", "", "");
+            error = true;
+            return null;
         }
 
         public void Dispose()

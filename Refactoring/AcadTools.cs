@@ -9,11 +9,77 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace ExpPt1
+namespace Refact
 {
     public static class AcadTools
     {
         
+        public static List<Block> GetNewBlocks(ref bool error, Database db, Dictionary<string, string> blocksToGet)
+        {
+            List<Block> Blocks = new List<Block>();
+
+            using (Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                BlockTable bt = (BlockTable)trans.GetObject(db.BlockTableId, OpenMode.ForRead);
+                foreach (ObjectId btrId in bt)
+                {
+                    BlockTableRecord btr = (BlockTableRecord)trans.GetObject(btrId, OpenMode.ForRead);
+                    if (!btr.IsLayout && blocksToGet.ContainsKey(btr.Name))
+                    {
+                        ObjectIdCollection aRefIds = new ObjectIdCollection();
+                        if (btr.IsDynamicBlock)
+                        {
+                            var blockIds = btr.GetAnonymousBlockIds();
+                            foreach (ObjectId BlkId in blockIds)
+                            {
+                                BlockTableRecord btr2 =
+                                    (BlockTableRecord)trans.GetObject(BlkId, OpenMode.ForRead, false, false);
+                                ObjectIdCollection aRefIds2 = btr2.GetBlockReferenceIds(true, true);
+                                foreach (ObjectId id in aRefIds2)
+                                {
+                                    aRefIds.Add(id);
+                                }
+                            }
+                            foreach (ObjectId id in btr.GetBlockReferenceIds(false, true))
+                            {
+                                aRefIds.Add(id);
+                            }
+                        }
+                        else
+                        {
+                            aRefIds = btr.GetBlockReferenceIds(false, true);
+                        }
+                        foreach (ObjectId RefId in aRefIds)
+                        {
+
+                            BlockReference blkRef = (BlockReference)trans.GetObject(RefId, OpenMode.ForRead);
+                            LayerTableRecord layer =
+                                (LayerTableRecord)trans.GetObject(blkRef.LayerId, OpenMode.ForRead);
+
+                            if (Enum.TryParse(blocksToGet[btr.Name].Split('\t')[1], out XType xType))
+                            {
+                                Blocks.Add(new Block
+                                {
+                                    BlockReference = blkRef,
+                                    Xtype = xType,
+                                    Visible = !layer.IsFrozen,
+                                    BlkMap = blocksToGet[btr.Name]
+                                });
+                            }
+                            else
+                            {
+                                ErrLogger.Error("Unable to parse block xType", blocksToGet[btr.Name].Split('\t')[1], "");
+                                ErrLogger.ErrorsFound = true;
+                                error = true;
+                            }
+                        }
+                    }
+                }
+                trans.Commit();
+            }
+            return Blocks;
+        }
+
         public static Point2d GetMiddlPoint2d(Extents3d extents3)
         {
             Point3d point3 = extents3.MinPoint +
@@ -363,7 +429,10 @@ namespace ExpPt1
         public static bool ObjectsIntersects(Entity Ent1, Entity Ent2, Intersect intersect, bool checkWholeBlock = false)
         {
             Point3dCollection intersections;
-
+            if (Ent1.GetType() == typeof(BlockReference))
+            {
+                throw new WrongArgUsageException("First entity must be not block reference");
+            }
             if (Ent2.GetType() == typeof(BlockReference))
             {
                 if (checkWholeBlock)
@@ -483,30 +552,6 @@ namespace ExpPt1
             return false;
         }
 
-        public static List<Line> GetBlockLines(Block BlkSignal)
-        {
-            DBObjectCollection entset = new DBObjectCollection();
-            BlkSignal.BlkRef.Explode(entset);
-            List<Line> lines = new List<Line>();
-            foreach (DBObject obj in entset)
-            {
-                if (obj.GetType() == typeof(Line))
-                {
-                    lines.Add((Line)obj);
-                }
-                if (obj.GetType() == typeof(Polyline))
-                {
-                    DBObjectCollection entsetPoly = new DBObjectCollection();
-                    ((Polyline)obj).Explode(entsetPoly);
-                    foreach (DBObject objPoly in entsetPoly)
-                    {
-                        lines.Add((Line)objPoly);
-                    }
-                }
-            }
-            return lines;
-        }
-
         public static List<Line> GetBlockLines(BlockReference blkRef)
         {
             DBObjectCollection entset = new DBObjectCollection();
@@ -529,37 +574,6 @@ namespace ExpPt1
                 }
             }
             return lines;
-        }
-
-        public static Point2d GetBlockCross(Block block)
-        {
-            DBObjectCollection entset = new DBObjectCollection();
-            block.BlkRef.Explode(entset);
-            List<Line> tmpCross = new List<Line>();
-            // if cross not found take insertion point of block
-            Point2d cross = new Point2d(block.BlkRef.Position.X, block.BlkRef.Position.Y);
-            foreach (DBObject obj in entset)
-            {
-                if (obj.GetType() == typeof(Line))
-                {
-                    if (((Line)obj).Layer == "Cross")
-                    {
-                        tmpCross.Add((Line)obj);
-                        if (tmpCross.Count == 2)
-                        {
-                            Point3dCollection intersections = new Point3dCollection();
-                            tmpCross[0].IntersectWith(tmpCross[1], Intersect.OnBothOperands, intersections, IntPtr.Zero, IntPtr.Zero);
-                            if (intersections != null && intersections.Count > 0)
-                            {
-                                return cross =
-                                    new Point2d(intersections[0].X, intersections[0].Y);
-                            }
-                        }
-                    }
-
-                }
-            }
-            return cross;
         }
 
         public static Point2d GetBlockCross(BlockReference block)
@@ -664,6 +678,126 @@ namespace ExpPt1
                 newLines.Add((Line)item);                         
             }
             return newLines;
+        }
+
+        public static IEnumerable<MText> GetMtextsByRegex(string regexString, Database db)
+        {
+            Regex regex = new Regex(regexString);
+            using (Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                var Textsids = GetObjectsOfType(db, RXObject.GetClass(typeof(MText)));
+                foreach (ObjectId ObjId in Textsids)
+                {
+                    var mtext = (MText)trans.GetObject(ObjId, OpenMode.ForRead);
+                    if (regex.IsMatch(mtext.Text))
+                    {
+                        yield return mtext;
+                    }
+                }
+                Textsids = GetObjectsOfType(db, RXObject.GetClass(typeof(DBText)));
+                foreach (ObjectId ObjId in Textsids)
+                {
+                    var dbtext = (DBText)trans.GetObject(ObjId, OpenMode.ForRead);
+                    if (regex.IsMatch(dbtext.TextString))
+                    {
+                        MText mText = new MText();
+                        mText.SetDatabaseDefaults();
+                        mText.Contents = dbtext.TextString;
+                        mText.Location = dbtext.Position;
+                        yield return mText;
+                    }
+                }
+                trans.Commit();
+            }
+        }
+
+        public static IEnumerable<Line> GetLinesByLayer(string layer, Database db, double length = 0)
+        {
+            using (Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                var Linesids = GetObjectsOfType(db, RXObject.GetClass(typeof(Line)));
+                foreach (ObjectId ObjId in Linesids)
+                {
+                    Line line = (Line)trans.GetObject(ObjId, OpenMode.ForRead);
+                    if (line.Layer == layer && line.Length > length)
+                    {
+                        yield return line;
+                    }
+                }
+
+                var PolyLines = GetObjectsOfType(db, RXObject.GetClass(typeof(Polyline)));
+                foreach (ObjectId ObjId in PolyLines)
+                {
+                    Polyline polyline = (Polyline)trans.GetObject(ObjId, OpenMode.ForRead);
+                    if (polyline.Layer == layer)
+                    {
+                        DBObjectCollection entset = new DBObjectCollection();
+                        polyline.Explode(entset);
+                        foreach (DBObject obj in entset)
+                        {
+                            if (obj.GetType() == typeof(Line))
+                            {
+                                Line line = (Line)obj;
+                                if (line.Layer == layer && line.Length > length)
+                                {
+                                    yield return line;
+                                }
+                            }
+                        }
+                    }
+                }
+                trans.Commit();
+            }
+        }
+
+        public static IEnumerable<Line> GetLinesByLayer(Regex layer, Database db, double length = 0)
+        {
+            using (Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                var Linesids = GetObjectsOfType(db, RXObject.GetClass(typeof(Line)));
+                foreach (ObjectId ObjId in Linesids)
+                {
+                    Line line = (Line)trans.GetObject(ObjId, OpenMode.ForRead);
+                    if (layer.IsMatch(line.Layer) && line.Length > length)
+                    {
+                        yield return line;
+                    }
+                }
+
+                var PolyLines = GetObjectsOfType(db, RXObject.GetClass(typeof(Polyline)));
+                foreach (ObjectId ObjId in PolyLines)
+                {
+                    Polyline polyline = (Polyline)trans.GetObject(ObjId, OpenMode.ForRead);
+                    if (layer.IsMatch(polyline.Layer))
+                    {
+                        DBObjectCollection entset = new DBObjectCollection();
+                        polyline.Explode(entset);
+                        foreach (DBObject obj in entset)
+                        {
+                            if (obj.GetType() == typeof(Line))
+                            {
+                                Line line = (Line)obj;
+                                if (layer.IsMatch(line.Layer) && line.Length > length)
+                                {
+                                    yield return line;
+                                }
+                            }
+                        }
+                    }
+                }
+                trans.Commit();
+            }
+        }
+
+        public static LayerTableRecord GetLayerById(ObjectId id, Database db)
+        {
+            using (Transaction trans = db.TransactionManager.StartTransaction())
+            {
+                LayerTableRecord layer =
+                        (LayerTableRecord)trans.GetObject(id, OpenMode.ForRead);
+                trans.Commit();
+                return layer;
+            }          
         }
 
         public static void Message(string msg)

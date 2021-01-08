@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Runtime;
 using System;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 using AcadApp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 using Application = System.Windows.Forms.Application;
@@ -15,10 +16,12 @@ namespace ExpPt1
     {
         public void Initialize()
         {
+            Commands.AssemblyDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             ErrLogger.Configure(logDirApp: Directory.GetCurrentDirectory() + "\\log", startExplicitly: false, createDirectory: true);
-            MyAcadCommands.DwgPath = AcadApp.DocumentManager.CurrentDocument.Name;
-            MyAcadCommands.Docs = AcadApp.DocumentManager;
-            MyAcadCommands.AddPalette();
+            Commands.DwgPath = AcadApp.DocumentManager.CurrentDocument.Name;
+            Commands.DwgDir = Path.GetDirectoryName(Commands.DwgPath);
+            Commands.Docs = AcadApp.DocumentManager;
+            Commands.AddPalette();
             AcadApp.DocumentManager.DocumentActivated += new DocumentCollectionEventHandler(DocColDocAct);
             AcadApp.DocumentManager.DocumentCreated += new DocumentCollectionEventHandler(DocColDocAct);
             AcadApp.DocumentManager.DocumentDestroyed += DocumentManager_DocumentDestroyed;
@@ -33,50 +36,30 @@ namespace ExpPt1
         {
             if (((DocumentCollection)sender).Count == 1)
             {
-                MyAcadCommands.Pl.Reset();
+                Commands.Pl.Reset();
             }
         }
 
         private void CurrentDomain_FirstChanceException(object sender, System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs e)
         {
             ErrLogger.Fatal(e.Exception.Message);
-            //using (StreamWriter streamWriter =
-            //    new StreamWriter(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) +
-            //    Constants.logFolder + @"\error.log", append: true))
-            //{
-            //    streamWriter.WriteLine(DateTime.Now.ToString("MM.dd.yyyy HH:mm:ss") + ": " + e.Exception.Message + " " + e.Exception.StackTrace);
-            //    streamWriter.Close();
-            //}
         }
 
         static void MyHandler(object sender, UnhandledExceptionEventArgs args)
         {
             System.Exception e = (System.Exception)args.ExceptionObject;
             ErrLogger.Fatal(e.Message);
-            //using (StreamWriter streamWriter =
-            //    new StreamWriter(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) +
-            //    Constants.logFolder + @"\error.log", append: true))
-            //{
-            //    streamWriter.WriteLine(DateTime.Now.ToString("MM.dd.yyyy HH:mm:ss") + " " + e.Message + " " + e.StackTrace);
-            //    streamWriter.Close();
-            //}
         }
 
         static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
         {
             ErrLogger.Fatal(e.Exception.Message);
-            //using (StreamWriter streamWriter =
-            //    new StreamWriter(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) +
-            //    Constants.logFolder + @"\error.log", append: true))
-            //{
-            //    streamWriter.WriteLine(DateTime.Now.ToString("MM.dd.yyyy HH:mm:ss") + ": " + e.Exception.Message + " " + e.Exception.StackTrace);
-            //    streamWriter.Close();
-            //}
         }
 
         public void DocSave(object senderObj, DatabaseIOEventArgs docColDocActEvtArgs)
         {
-            MyAcadCommands.DwgPath = ((Database)senderObj).Filename;
+            Commands.DwgPath = ((Database)senderObj).Filename;
+            Commands.DwgDir = Path.GetDirectoryName(Commands.DwgPath);
         }
 
         public void Terminate()
@@ -86,11 +69,12 @@ namespace ExpPt1
 
         public void DocColDocAct(object senderObj, DocumentCollectionEventArgs docColDocActEvtArgs)
         {
-            MyAcadCommands.DwgPath = docColDocActEvtArgs.Document.Database.Filename;
-            if (MyAcadCommands.Pl != null)
+            Commands.DwgPath = docColDocActEvtArgs.Document.Database.Filename;
+            Commands.DwgDir = Path.GetDirectoryName(Commands.DwgPath);
+            if (Commands.Pl != null)
             {
-                MyAcadCommands.Pl.DwgPath = docColDocActEvtArgs.Document.Database.Filename;
-                MyAcadCommands.Pl.Reset();
+                Commands.Pl.DwgPath = docColDocActEvtArgs.Document.Database.Filename;
+                Commands.Pl.Reset();
             }
             docColDocActEvtArgs.Document.Database.SaveComplete += new DatabaseIOEventHandler(DocSave);
         }

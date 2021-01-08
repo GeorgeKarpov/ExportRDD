@@ -88,6 +88,41 @@
     <Compile Include="CRs.cs" />
     <Compile Include="Data.cs" />
     <Compile Include="Display.cs" />
+    <Compile Include="elements\DangerPoint.cs" />
+    <Compile Include="elements\FoulingPoint.cs" />
+    <Compile Include="elements\Hht.cs" />
+    <Compile Include="elements\LevelCrossing.cs" />
+    <Compile Include="elements\LxTrack.cs" />
+    <Compile Include="elements\OcesBg.cs" />
+    <Compile Include="elements\Platform.cs" />
+    <Compile Include="elements\Pws.cs" />
+    <Compile Include="elements\SearchElement.cs" />
+    <Compile Include="elements\StationStop.cs" />
+    <Compile Include="elements\Track.cs" />
+    <Compile Include="elements\TrustedArea.cs" />
+    <Compile Include="Refactoring\AcadTools.cs" />
+    <Compile Include="Refactoring\AcLayout.cs" />
+    <Compile Include="elements\AcSection.cs" />
+    <Compile Include="elements\BaliseGroup.cs" />
+    <Compile Include="elements\BgType.cs" />
+    <Compile Include="Refactoring\Block.cs" />
+    <Compile Include="elements\BlockInterface.cs" />
+    <Compile Include="elements\Connector.cs" />
+    <Compile Include="elements\DetectionPoint.cs" />
+    <Compile Include="elements\Element.cs" />
+    <Compile Include="elements\EndOfTrack.cs" />
+    <Compile Include="Refactoring\Calc.cs" />
+    <Compile Include="Refactoring\Constants.cs" />
+    <Compile Include="Refactoring\Enums.cs" />
+    <Compile Include="elements\EnclosedArea.cs" />
+    <Compile Include="elements\Point.cs" />
+    <Compile Include="elements\PointMachine.cs" />
+    <Compile Include="elements\Psa.cs" />
+    <Compile Include="elements\SigLayout.cs" />
+    <Compile Include="elements\Signal.cs" />
+    <Compile Include="elements\TrackLine.cs" />
+    <Compile Include="elements\TSeg.cs" />
+    <Compile Include="elements\Vertex.cs" />
     <Compile Include="ErrorsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -104,7 +139,17 @@
       <DependentUpon>FrmStation.cs</DependentUpon>
     </Compile>
     <Compile Include="Init.cs" />
-    <Compile Include="MyAcadCommands.cs" />
+    <Compile Include="Refactoring\WrongArgUsageException.cs" />
+    <Compile Include="Refactoring\ExpRDD.cs" />
+    <Compile Include="Refactoring\Extensions.cs" />
+    <Compile Include="Refactoring\FrmStation.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Refactoring\FrmStation.Designer.cs">
+      <DependentUpon>FrmStation.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Refactoring\InputData.cs" />
+    <Compile Include="Commands.cs" />
     <Compile Include="Palette.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -112,12 +157,14 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Refactoring\RailwayLine.cs" />
     <Compile Include="Register.cs" />
     <Compile Include="SearchDP.cs" />
     <Compile Include="SearchBG.cs" />
     <Compile Include="SearchSegment.cs" />
     <Compile Include="ShiftCesBG.cs" />
     <Compile Include="SspSimp.cs" />
+    <Compile Include="Utils.cs" />
     <Compile Include="Verify.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -151,6 +198,9 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <EmbeddedResource Include="Refactoring\FrmStation.resx">
+      <DependentUpon>FrmStation.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="Microsoft.Office.Core">
@@ -183,6 +233,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="cfg\Authors.dat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
@@ -192,7 +245,7 @@ if not exist $(TargetDir)\drv mkdir $(TargetDir)\drv
 if not exist $(TargetDir)\doc mkdir $(TargetDir)\doc
 cd $(TargetDir)\log
 del *.log
-xcopy /Y C:\2_TRDD\DynamicBlocks\Blks_Dynamic.dwg $(TargetDir)\cfg
+REM xcopy /Y C:\2_TRDD\DynamicBlocks\Blks_Dynamic.dwg $(TargetDir)\cfg
 </PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\Fody.6.0.0\build\Fody.targets" Condition="Exists('..\packages\Fody.6.0.0\build\Fody.targets')" />

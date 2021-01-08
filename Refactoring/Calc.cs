@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace ExpPt1
+namespace Refact
 {
     /// <summary>
     /// Basic class for math operations and conversions.

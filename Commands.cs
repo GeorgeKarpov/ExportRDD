@@ -2,32 +2,34 @@
 using Autodesk.AutoCAD.Runtime;
 using System.IO;
 
-[assembly: CommandClass(typeof(ExpPt1.MyAcadCommands))]
+[assembly: CommandClass(typeof(ExpPt1.Commands))]
 
 namespace ExpPt1
 {
-    public static class MyAcadCommands
+    public static class Commands
     {
         public static string DwgPath { get; set; }
+
+        public static string DwgDir { get; set; }
+
+        public static string AssemblyDir { get; set; }
 
         public static DocumentCollection Docs { get; set; }
         public static Palette Pl { get; set; }
 
+        [CommandMethod("TESTREFACT")]
+        public static void TestRefact()
+        {
+            Refact.ExpRDD expRDD = new Refact.ExpRDD();
+            expRDD.ExportRDD();
+        }
+
         [CommandMethod("RDDERRORLOG")]
         public static void Test()
         {
-            System.Windows.Forms.Form frmErrors = new System.Windows.Forms.Form
-            {
-                Text = "RDD errors List"
-            };
-            ErrCntrl err = new ErrCntrl();
-            err.BtnLoad.Visible = false;
-            err.ListView.Dock = System.Windows.Forms.DockStyle.Fill;
-            err.Dock = System.Windows.Forms.DockStyle.Fill;
-            ErrLogger.Configure(logDirTmp: Path.GetDirectoryName(DwgPath));
-            err.LoadList();
-            frmErrors.Controls.Add(err);
-            Application.ShowModelessDialog(null, frmErrors, true);
+            Refact.Utils.ShowErrList(Path.GetDirectoryName(DwgPath),
+               "RDD errors List", "Following errors were found.",
+               System.Drawing.SystemIcons.Information, false);
         }
 
         [CommandMethod("ExportRDD")]

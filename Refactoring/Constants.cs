@@ -1,4 +1,4 @@
-﻿namespace ExpPt1
+﻿namespace Refact
 {
     /// <summary>
     /// Constants class.
@@ -23,5 +23,21 @@
         public const string cfgFolder = @"/cfg";
         public const string logFolder = @"/log";
         public const double insidePsaToler = 1.0;
-    }
+        public const double mTrackDist = 6;
+
+        public const string trackLinesLayer = "_Spor";
+        public const string trustAreaLayer = "(?i)trusted.*area(?-i)";
+
+        public const string trackRegex = @"^\s*[Ss][Pp]\s*\d{1,3}\s*$";
+
+        public const string lxTrackLoc = @"^\s*KMP(_*TSEG\d){0,1}$\s*";
+        public const string lxTrackBeginReg = @"^\s*(BEGIN|START)_*(LCA|KMP){0,1}(_*TSEG\d){0,1}$\s*";
+        public const string lxTrackEndReg = @"^\s*END_*(LCA|KMP){0,1}(_*TSEG\d){0,1}$\s*";
+        public const string lxTrackLengthReg = @"^\s*LENG(HT|TH)_*(LCA|\d){0,1}(_*TSEG\d){0,1}$\s*";
+        public const string stationsStopsTextReg = @"^[a-zæøåÆØÅA-Z].*\(([a-zæøåÆØÅA-Z]{2,3})\)";
+        /// <summary>
+        /// Separator includes: space, coma, colon, semicolon, new line, new paragraph, tab.
+        /// </summary>
+        public static string[] splitSepar = { "\r\n", ":", ";", ",", "\n", "\t", " " };
+}
 }

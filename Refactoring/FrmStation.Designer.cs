@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace ExpPt1
+namespace Refact
 {
     partial class FrmStation
     {
@@ -33,7 +33,7 @@ namespace ExpPt1
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.txtBoxStationId = new System.Windows.Forms.TextBox();
             this.lblStationId = new System.Windows.Forms.Label();
             this.btnOK = new System.Windows.Forms.Button();
@@ -89,6 +89,8 @@ namespace ExpPt1
             this.BtnBgsN = new System.Windows.Forms.Button();
             this.checkBoxCmRts = new System.Windows.Forms.CheckBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.cmbAuthor = new System.Windows.Forms.ComboBox();
             this.lblDocId = new System.Windows.Forms.Label();
             this.txtBoxDocId = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
@@ -127,7 +129,7 @@ namespace ExpPt1
             // txtBoxStationId
             // 
             this.txtBoxStationId.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.txtBoxStationId.Location = new System.Drawing.Point(349, 46);
+            this.txtBoxStationId.Location = new System.Drawing.Point(349, 41);
             this.txtBoxStationId.Margin = new System.Windows.Forms.Padding(2);
             this.txtBoxStationId.MaxLength = 2;
             this.txtBoxStationId.Name = "txtBoxStationId";
@@ -138,7 +140,7 @@ namespace ExpPt1
             // 
             this.lblStationId.AutoSize = true;
             this.lblStationId.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.lblStationId.Location = new System.Drawing.Point(4, 46);
+            this.lblStationId.Location = new System.Drawing.Point(4, 44);
             this.lblStationId.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblStationId.Name = "lblStationId";
             this.lblStationId.Size = new System.Drawing.Size(82, 17);
@@ -149,7 +151,7 @@ namespace ExpPt1
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(776, 464);
+            this.btnOK.Location = new System.Drawing.Point(776, 472);
             this.btnOK.Margin = new System.Windows.Forms.Padding(2);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(90, 27);
@@ -161,7 +163,7 @@ namespace ExpPt1
             // 
             this.lblLine.AutoSize = true;
             this.lblLine.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.lblLine.Location = new System.Drawing.Point(4, 125);
+            this.lblLine.Location = new System.Drawing.Point(4, 156);
             this.lblLine.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblLine.Name = "lblLine";
             this.lblLine.Size = new System.Drawing.Size(52, 17);
@@ -172,7 +174,7 @@ namespace ExpPt1
             // 
             this.lblStationName.AutoSize = true;
             this.lblStationName.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.lblStationName.Location = new System.Drawing.Point(4, 72);
+            this.lblStationName.Location = new System.Drawing.Point(5, 71);
             this.lblStationName.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblStationName.Name = "lblStationName";
             this.lblStationName.Size = new System.Drawing.Size(110, 17);
@@ -182,7 +184,7 @@ namespace ExpPt1
             // txtBoxStationName
             // 
             this.txtBoxStationName.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.txtBoxStationName.Location = new System.Drawing.Point(349, 73);
+            this.txtBoxStationName.Location = new System.Drawing.Point(349, 68);
             this.txtBoxStationName.Margin = new System.Windows.Forms.Padding(2);
             this.txtBoxStationName.MaxLength = 256;
             this.txtBoxStationName.Name = "txtBoxStationName";
@@ -395,14 +397,14 @@ namespace ExpPt1
             this.dgwLines.AllowUserToDeleteRows = false;
             this.dgwLines.AllowUserToResizeRows = false;
             this.dgwLines.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dgwLines.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dgwLines.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.dgwLines.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgwLines.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Line,
@@ -412,7 +414,7 @@ namespace ExpPt1
             this.Direction});
             this.dgwLines.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
             this.dgwLines.Enabled = false;
-            this.dgwLines.Location = new System.Drawing.Point(8, 144);
+            this.dgwLines.Location = new System.Drawing.Point(8, 176);
             this.dgwLines.Margin = new System.Windows.Forms.Padding(2);
             this.dgwLines.Name = "dgwLines";
             this.dgwLines.ReadOnly = true;
@@ -810,6 +812,8 @@ namespace ExpPt1
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.label4);
+            this.groupBox2.Controls.Add(this.cmbAuthor);
             this.groupBox2.Controls.Add(this.lblDocId);
             this.groupBox2.Controls.Add(this.txtBoxDocId);
             this.groupBox2.Controls.Add(this.label1);
@@ -824,16 +828,38 @@ namespace ExpPt1
             this.groupBox2.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox2.Size = new System.Drawing.Size(451, 263);
+            this.groupBox2.Size = new System.Drawing.Size(451, 296);
             this.groupBox2.TabIndex = 36;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "RDD";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.label4.Location = new System.Drawing.Point(5, 125);
+            this.label4.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(61, 17);
+            this.label4.TabIndex = 39;
+            this.label4.Text = "Author:";
+            // 
+            // cmbAuthor
+            // 
+            this.cmbAuthor.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbAuthor.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.cmbAuthor.FormattingEnabled = true;
+            this.cmbAuthor.Location = new System.Drawing.Point(260, 122);
+            this.cmbAuthor.Name = "cmbAuthor";
+            this.cmbAuthor.Size = new System.Drawing.Size(182, 21);
+            this.cmbAuthor.TabIndex = 38;
+            this.cmbAuthor.SelectedIndexChanged += new System.EventHandler(this.CmbAuthor_SelectedIndexChanged);
             // 
             // lblDocId
             // 
             this.lblDocId.AutoSize = true;
             this.lblDocId.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.lblDocId.Location = new System.Drawing.Point(5, 23);
+            this.lblDocId.Location = new System.Drawing.Point(5, 17);
             this.lblDocId.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblDocId.Name = "lblDocId";
             this.lblDocId.Size = new System.Drawing.Size(59, 17);
@@ -844,7 +870,7 @@ namespace ExpPt1
             // 
             this.txtBoxDocId.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
             this.txtBoxDocId.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.txtBoxDocId.Location = new System.Drawing.Point(260, 17);
+            this.txtBoxDocId.Location = new System.Drawing.Point(260, 14);
             this.txtBoxDocId.Margin = new System.Windows.Forms.Padding(2);
             this.txtBoxDocId.MaxLength = 20;
             this.txtBoxDocId.Name = "txtBoxDocId";
@@ -856,7 +882,7 @@ namespace ExpPt1
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.label1.Location = new System.Drawing.Point(4, 98);
+            this.label1.Location = new System.Drawing.Point(5, 98);
             this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(68, 17);
@@ -867,7 +893,7 @@ namespace ExpPt1
             // 
             this.txtBoxVersion.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
             this.txtBoxVersion.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.txtBoxVersion.Location = new System.Drawing.Point(349, 100);
+            this.txtBoxVersion.Location = new System.Drawing.Point(349, 95);
             this.txtBoxVersion.Margin = new System.Windows.Forms.Padding(2);
             this.txtBoxVersion.MaxLength = 5;
             this.txtBoxVersion.Name = "txtBoxVersion";
@@ -880,11 +906,11 @@ namespace ExpPt1
             this.groupBox3.Controls.Add(this.lblxlsRdd);
             this.groupBox3.Controls.Add(this.btnRdd);
             this.groupBox3.Controls.Add(this.checkBoxRdd);
-            this.groupBox3.Location = new System.Drawing.Point(9, 296);
+            this.groupBox3.Location = new System.Drawing.Point(9, 333);
             this.groupBox3.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox3.Size = new System.Drawing.Size(451, 62);
+            this.groupBox3.Size = new System.Drawing.Size(451, 42);
             this.groupBox3.TabIndex = 52;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Compare With";
@@ -892,7 +918,7 @@ namespace ExpPt1
             // lblxlsRdd
             // 
             this.lblxlsRdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblxlsRdd.Location = new System.Drawing.Point(4, 24);
+            this.lblxlsRdd.Location = new System.Drawing.Point(4, 13);
             this.lblxlsRdd.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblxlsRdd.Name = "lblxlsRdd";
             this.lblxlsRdd.Size = new System.Drawing.Size(320, 22);
@@ -904,7 +930,7 @@ namespace ExpPt1
             // btnRdd
             // 
             this.btnRdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnRdd.Location = new System.Drawing.Point(381, 24);
+            this.btnRdd.Location = new System.Drawing.Point(381, 13);
             this.btnRdd.Margin = new System.Windows.Forms.Padding(2);
             this.btnRdd.Name = "btnRdd";
             this.btnRdd.Size = new System.Drawing.Size(66, 22);
@@ -918,7 +944,7 @@ namespace ExpPt1
             this.checkBoxRdd.AutoSize = true;
             this.checkBoxRdd.Checked = true;
             this.checkBoxRdd.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxRdd.Location = new System.Drawing.Point(339, 29);
+            this.checkBoxRdd.Location = new System.Drawing.Point(339, 18);
             this.checkBoxRdd.Margin = new System.Windows.Forms.Padding(2);
             this.checkBoxRdd.Name = "checkBoxRdd";
             this.checkBoxRdd.Size = new System.Drawing.Size(15, 14);
@@ -931,7 +957,7 @@ namespace ExpPt1
             this.cmbLines.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbLines.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.cmbLines.FormattingEnabled = true;
-            this.cmbLines.Location = new System.Drawing.Point(412, 274);
+            this.cmbLines.Location = new System.Drawing.Point(412, 311);
             this.cmbLines.Name = "cmbLines";
             this.cmbLines.Size = new System.Drawing.Size(48, 21);
             this.cmbLines.TabIndex = 36;
@@ -940,7 +966,7 @@ namespace ExpPt1
             // label3
             // 
             this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label3.Location = new System.Drawing.Point(148, 273);
+            this.label3.Location = new System.Drawing.Point(148, 310);
             this.label3.Margin = new System.Windows.Forms.Padding(0);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(260, 22);
@@ -952,7 +978,7 @@ namespace ExpPt1
             // 
             this.groupBox4.Controls.Add(this.lblAcSections);
             this.groupBox4.Controls.Add(this.checkBoxAc);
-            this.groupBox4.Location = new System.Drawing.Point(9, 443);
+            this.groupBox4.Location = new System.Drawing.Point(9, 453);
             this.groupBox4.Name = "groupBox4";
             this.groupBox4.Size = new System.Drawing.Size(451, 48);
             this.groupBox4.TabIndex = 57;
@@ -988,7 +1014,7 @@ namespace ExpPt1
             this.groupBox5.Controls.Add(this.checkBoxR5);
             this.groupBox5.Controls.Add(this.lblxlsOrderRdd);
             this.groupBox5.Controls.Add(this.btnOrderRdd);
-            this.groupBox5.Location = new System.Drawing.Point(9, 365);
+            this.groupBox5.Location = new System.Drawing.Point(9, 375);
             this.groupBox5.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox5.Name = "groupBox5";
             this.groupBox5.Padding = new System.Windows.Forms.Padding(2);
@@ -1059,7 +1085,7 @@ namespace ExpPt1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(877, 502);
+            this.ClientSize = new System.Drawing.Size(877, 510);
             this.Controls.Add(this.groupBox5);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.label3);
@@ -1185,5 +1211,7 @@ namespace ExpPt1
         private System.Windows.Forms.DataGridViewTextBoxColumn From;
         private System.Windows.Forms.DataGridViewTextBoxColumn To;
         private System.Windows.Forms.DataGridViewTextBoxColumn Direction;
+        private Label label4;
+        private ComboBox cmbAuthor;
     }
 }

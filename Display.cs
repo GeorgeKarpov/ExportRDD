@@ -104,8 +104,9 @@ namespace ExpPt1
 
             List<EmSG> emGs = GetEmGs().ToList();
             // ExportCigClosure = new List<string>();
-            GetDocIdVrs();
-            
+            docId = GetDocId(out bool docError);
+            docVrs = GetDocVers(out docError);
+
             ReadSigLayout(blocks, ref sigLayout, true);
             ReadPSAs(pSAs, ref areas);
             ReadSignals(blocks, ref signals);
@@ -116,7 +117,7 @@ namespace ExpPt1
                 pm.MeterProgress();
                 System.Windows.Forms.Application.DoEvents();
             }
-            Routes = GetRoutesList();
+            //Routes = GetRoutesList();
             SigLayout = sigLayout;
             Segments = trcksegments;
             Signals = signals;

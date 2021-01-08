@@ -27,7 +27,43 @@ namespace ExpPt1
         SignallingLayout,
         NextStation,
         CrStart,
-        CrDestination
+        CrDestination,
+        PassiveSignal,
+        Hht
+    }
+
+    public enum RddType
+    {
+        tdt,
+        afl,
+        at,
+        bg,
+        bi,
+        conn,
+        spst,
+        ovk,
+        mrk,
+        spsk,
+        hht,
+        va,
+        pr,
+        trk
+    }
+
+    public enum ExtType
+    {
+        derailer,
+        dynamicBufferStop,
+        endOfTrack,
+        nonDynamicBufferStop,
+        mb,
+        L2EntrySignal,
+        L2ExitSignal,
+        foreignSignal,
+        point,
+        trapPoint,
+        singleSlipPoint,
+        doubleSlipPoint
     }
 
     /// <summary>

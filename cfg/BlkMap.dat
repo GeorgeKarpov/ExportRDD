@@ -57,28 +57,28 @@ EOT_ETS_Left	EndOfTrack	spst	endOfTrack
 EOT_ETS_Right	EndOfTrack	spst	endOfTrack
 EOT_NDY_Left	EndOfTrack	spst	nonDynamicBufferStop
 EOT_NDY_Right	EndOfTrack	spst	nonDynamicBufferStop
-Fouling-Point	FoulingPoint		
-I-sign med hastighedstavle			
-LC_FB-SingleTrack_Left	LevelCrossing	ovk	
-LC_FB	LevelCrossing	ovk	
-LC_HB_SingleTrack	LevelCrossing	ovk	
-LC_FB-SingleTrack	LevelCrossing	ovk	
-LC_FB-SingleTrack_Right	LevelCrossing	ovk	
-LC_FB_DoubleTrack-Long_Left	LevelCrossing	ovk	
-LC_FB-SingleTrack	LevelCrossing	ovk	
-LC_FB_DoubleTrack-Long	LevelCrossing	ovk	
-LC_FB_DoubleTrack-Long_Right	LevelCrossing	ovk	
-LC_FB_DoubleTrack-Short	LevelCrossing	ovk	
-LC_FB_DoubleTrack-Short	LevelCrossing	ovk	
-LC_HB-SingleTrack	LevelCrossing	ovk	
-LC_HB-SingleTrack	LevelCrossing	ovk	
-LC_HB_DoubleTrack-Long	LevelCrossing	ovk	
-LC_HB_DoubleTrack-Long	LevelCrossing	ovk	
-LC_HB_DoubleTrack-Short	LevelCrossing	ovk	
-LC_NB-SingleTrack	LevelCrossing	ovk	
-LC_NB-SingleTrack	LevelCrossing	ovk	
-LC_NB_DoubleTrack-Long	LevelCrossing	ovk	
-LC_NB_DoubleTrack-Short	LevelCrossing	ovk	
+Fouling-Point	FoulingPoint	fp	
+#I-sign med hastighedstavle			
+LC_FB-SingleTrack_Left	LevelCrossing	ovk	SingleTrack
+LC_FB	LevelCrossing	ovk	SingleTrack
+LC_HB_SingleTrack	LevelCrossing	ovk	SingleTrack
+LC_FB-SingleTrack	LevelCrossing	ovk	SingleTrack
+LC_FB-SingleTrack_Right	LevelCrossing	ovk	SingleTrack
+LC_FB_DoubleTrack-Long_Left	LevelCrossing	ovk	DoubleTrack
+LC_FB-SingleTrack	LevelCrossing	ovk	SingleTrack
+LC_FB_DoubleTrack-Long	LevelCrossing	ovk	DoubleTrack
+LC_FB_DoubleTrack-Long_Right	LevelCrossing	ovk	DoubleTrack
+LC_FB_DoubleTrack-Short	LevelCrossing	ovk	DoubleTrack
+LC_FB_DoubleTrack-Short	LevelCrossing	ovk	DoubleTrack
+LC_HB-SingleTrack	LevelCrossing	ovk	SingleTrack
+LC_HB-SingleTrack	LevelCrossing	ovk	SingleTrack
+LC_HB_DoubleTrack-Long	LevelCrossing	ovk	DoubleTrack
+LC_HB_DoubleTrack-Long	LevelCrossing	ovk	DoubleTrack
+LC_HB_DoubleTrack-Short	LevelCrossing	ovk	DoubleTrack
+LC_NB-SingleTrack	LevelCrossing	ovk	SingleTrack
+LC_NB-SingleTrack	LevelCrossing	ovk	SingleTrack
+LC_NB_DoubleTrack-Long	LevelCrossing	ovk	DoubleTrack
+LC_NB_DoubleTrack-Short	LevelCrossing	ovk	DoubleTrack
 MB_DL	Signal	mrk	mb
 MB_DL	Signal	mrk	mb
 MB_DL_SE	Signal	mrk	mb
@@ -114,7 +114,7 @@ MB_Up_Left_new	Signal	mrk	mb
 MB_ned	Signal	mrk	mb
 MB_op	Signal	mrk	mb
 Foreign_Signal_dyn	Signal	mrk	foreignSignal
-Passive_MB_UL	Passive Signal	mrk	mb
+Passive_MB_UL	PassiveSignal	mrk	mb
 MarkerBoard_Attributes	Signal	mrk	mb
 Passive_MB_UL	Signal	mrk	mb
 PM_1N__LDL	Point	spsk	point
