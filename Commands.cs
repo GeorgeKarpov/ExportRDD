@@ -1,6 +1,7 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Runtime;
 using System.IO;
+using System.Threading;
 
 [assembly: CommandClass(typeof(ExpPt1.Commands))]
 
@@ -22,6 +23,26 @@ namespace ExpPt1
         {
             Refact.ExpRDD expRDD = new Refact.ExpRDD();
             expRDD.ExportRDD();
+        }
+
+        [CommandMethod("TESTPROG")]
+        public static void TestProgress()
+        {
+            //Refact.LongOperationManager lom = new Refact.LongOperationManager("Tests");
+
+            //using (lom)
+            //{
+            //    lom.SetTotalOperations(500);
+            //    int i = 0;
+            //    while (i++ < 1000)
+            //    {
+            //        Thread.Sleep(5);
+            //        if (!lom.Tick())
+            //        {
+            //            break;
+            //        }
+            //    }
+            //}
         }
 
         [CommandMethod("RDDERRORLOG")]

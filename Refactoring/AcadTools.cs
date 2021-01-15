@@ -543,9 +543,9 @@ namespace Refact
             return false;
         }
 
-        public static bool PointsAreEqual(Point3d point1, Point3d point2)
+        public static bool PointsAreEqual(Point3d point1, Point3d point2, double tolerance = Constants.pointsEqTol)
         {
-            if ((point1 - point2).Length <= Constants.pointsEqTol)
+            if ((point1 - point2).Length <= tolerance)
             {
                 return true;
             }

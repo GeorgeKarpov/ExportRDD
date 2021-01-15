@@ -78,7 +78,6 @@
     <Compile Include="Constants.cs" />
     <Compile Include="DangerPoint.cs" />
     <Compile Include="dataMapping\DataProcessor.cs" />
-    <Compile Include="dataMapping\Routes.cs" />
     <Compile Include="ElementsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -139,6 +138,8 @@
       <DependentUpon>FrmStation.cs</DependentUpon>
     </Compile>
     <Compile Include="Init.cs" />
+    <Compile Include="Refactoring\LongOperationManager.cs" />
+    <Compile Include="Refactoring\ProgressEventArgs.cs" />
     <Compile Include="Refactoring\WrongArgUsageException.cs" />
     <Compile Include="Refactoring\ExpRDD.cs" />
     <Compile Include="Refactoring\Extensions.cs" />
@@ -234,6 +235,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="cfg\Authors.dat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="cfg\BgTypesMap.dat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Include="packages.config" />

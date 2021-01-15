@@ -41,8 +41,9 @@ namespace Refact
         public List<Platform> Platforms { get; set; }
         public List<StationStop> StationsStops { get; set; }
         public List<FoulingPoint> FoulingPoints { get; set; }
+        public List<Psa> Psas { get; set; }
 
-        public bool Error { get; set; }
+        private bool error;
 
         private string assemblyDir;
         private string dwgPath;
@@ -62,11 +63,22 @@ namespace Refact
         /// </summary>
         
         private List<EnclosedArea> enclosedAreas;
-        private List<Psa> psas;
+        
         
         private List<SLElement> TsegVertexes;
 
         private List<Track> tracks;
+
+        public event EventHandler<ProgressEventArgs> ReportProgress;
+
+        protected virtual void OnReportProgress(ProgressEventArgs e)
+        {
+            ReportProgress?.Invoke(this, e);
+        }
+        ProgressEventArgs args = new ProgressEventArgs
+        {
+            Increment = 0
+        };
 
         // COMMENT: create methods documentation
         public AcLayout(string dwgPath, string dwgDir, string assDir)
@@ -92,14 +104,13 @@ namespace Refact
             bool blkError = false;
             blocks = AcadTools.GetNewBlocks(ref blkError, db, blkDat);
             bool error = blkError = InputData.Error;
-            Error = error;
             if (error)
             {
                 ShowBlockRDDDialog();
                 return;
             }
             GetSigLayout(ref error);
-            Error = error;
+            
             if (error)
             {
                 ShowBlockRDDDialog();
@@ -112,49 +123,18 @@ namespace Refact
                 ShowBlockRDDDialog();
                 return;
             }
-
-            //InitElements();
-            //SplitLinesOnVertexes(out error);
-            //Error = error;
-            //if (error)
-            //{
-            //    ShowBlockRDDDialog();
-            //    return;
-            //}
-            //SetNextExclude();          
-            //ProcessElements(ref error);
-            //tracks = GetTracks().ToList();
-            //Tsegs = GetTsegs(ref error);
-
-            //if (error)
-            //{
-            //    ShowBlockRDDDialog();
-            //    return;
-            //}
-
-
-            //AssignTrackToTsegs();
-            //SetTsegIdToElements( ref error);
-
-            //TrustedAreas = GetTrustedAreas();
-
-            //InitAcSections(ref error);
-
-            //psas = GetPsas().ToList();
-            //InitPsas();
-            //SetSigsEotmb();
-            //GetSignalsClosures();
-
-            //InitLxsPwss();
-
-            //Error = error;
+            if (error)
+            {
+                this.error = true;
+            }         
         }
 
         public void PreLoadData(out bool error)
-        {          
+        {           
             InitElements();
             SplitLinesOnVertexes(out error);
-            Error = error;
+            args.Increment = 100;
+            OnReportProgress(args);
             if (error)
             {
                 ShowBlockRDDDialog();
@@ -163,13 +143,21 @@ namespace Refact
             SetNextExclude();
             ProcessElements(ref error);
             tracks = GetTracks().ToList();
+            args.Increment = 100;
+            OnReportProgress(args);
+
             Tsegs = GetTsegs(ref error);
+            args.Increment = 50;
+            OnReportProgress(args);
+
             AssignTsegsToConns();
+            args.Increment = 50;
+            OnReportProgress(args);
             if (error)
             {
                 ShowBlockRDDDialog();
                 return;
-            }         
+            }        
         }
 
         private void AssignTsegsToConns()
@@ -185,7 +173,7 @@ namespace Refact
                 if (tsegs.Count < 2)
                 {
                     ErrLogger.Error("Unable to found Track segments for connector", conn.Designation, "");
-                    Error = true;
+                    error = true;
                 }
                 else
                 {
@@ -202,17 +190,40 @@ namespace Refact
             SetTsegIdToElements(ref error);
             SetSigsEotmb();
             SetSigsKind();
+            SetEotsDir();
+            args.Increment = 50;
+            OnReportProgress(args);
+
             TrustedAreas = GetTrustedAreas();
             InitAcSections(ref error);
+            args.Increment = 50;
+            OnReportProgress(args);
+
             CheckAcTrackSections();
-            psas = GetPsas().ToList();
+            Psas = GetPsas().ToList();
             InitPsas();
             CheckSignalsToPSA();
+            args.Increment = 200;
+            OnReportProgress(args);
+
             GetSignalsClosures();
             InitLxsPwss();
             ProcessPlatforms();
             StationsStops = GetStationsStops();
-            Error = error;
+            args.Increment = 200;
+            OnReportProgress(args);
+            if (error)
+            {
+                this.error = true;
+            }
+        }
+
+        private void SetEotsDir()
+        {
+            foreach ( EndOfTrack eot in EndOfTracks)
+            {
+                eot.Direction = GetEotDirection(eot);
+            }
         }
 
         private void CheckSignalsToPSA()
@@ -221,7 +232,7 @@ namespace Refact
             {
                 if (signal.ToPSA = IsSigToPsa(signal))
                 {
-                    signal.Remark = "Signal is towards PSA";
+                    signal.Remarks = "Signal is towards PSA";
                 }  
             }
         }
@@ -240,18 +251,20 @@ namespace Refact
                 if (text == null)
                 {
                     ErrLogger.Error("Station/Stop text not found", "Platform", platform.Designation);
-                    Error = true;
+                    error = true;
                 }
                 else
                 {
                     platform.StID = text.Contents
                                     .ToLower()            
                                     .Split(new string[] { "(", ")" }, StringSplitOptions.RemoveEmptyEntries)
-                                    .Last();
+                                    .Last()
+                                    .Trim();
                     platform.StName = text.Contents
                                     .ToLower()
                                     .Split(new string[] { "(", ")" }, StringSplitOptions.RemoveEmptyEntries)
-                                    .First();
+                                    .First()
+                                    .Trim();
                 }
                 var tsegs = Tsegs
                             .Where(x => x.TrackLines
@@ -260,10 +273,16 @@ namespace Refact
                 if (tsegs.Count == 0)
                 {
                     ErrLogger.Error("Tsegs not found", "Platform", platform.Designation);
-                    Error = true;
+                    error = true;
                     platform.Tsegs = new List<TSeg>();
                 }
-                else if (tsegs.Count > 1)
+                else if (tsegs.Count > 2)
+                {
+                    ErrLogger.Error("To many Tsegs found: " + string.Join(",", tsegs.Select(x => x.Id)) , "Platform", platform.Designation);
+                    error = true;
+                    platform.Tsegs = new List<TSeg>();
+                }
+                else if (tsegs.Count == 2)
                 {
 
                     platform.Tsegs = GetTsegsBetweenTwoTsegs(tsegs[0], tsegs[1])
@@ -313,6 +332,9 @@ namespace Refact
                     platformGrp.Designation = platformGrp.GetElemDesignation(PadZeros: false);
                 }    
             }
+            Platforms = Platforms
+                        .OrderBy(x => x.Track)
+                        .ToList();
         }
 
         private List<StationStop> GetStationsStops()
@@ -347,7 +369,7 @@ namespace Refact
                 decimal end = Signals
                                 .Where(x => x.Visible == true &&
                                             x.LineID == line.Designation)
-                                .Min(x => x.Location);
+                                .Max(x => x.Location);
 
                 stationLines.Add(new RailwayLine
                 {
@@ -396,7 +418,7 @@ namespace Refact
             if (Tsegs == null || Tsegs.Count == 0)
             {
                 ErrLogger.Error("Unable to get first TSeg for track", SigLayout.StID, "");
-                Error = true;
+                error = true;
                 return;
             }
             foreach (Track track in tracks)
@@ -408,7 +430,7 @@ namespace Refact
                 if (firstTseg == null)
                 {
                     ErrLogger.Error("Unable to get first TSeg for track", track.Id, "");
-                    Error = true;
+                    error = true;
                     continue;
                 }
                 firstTseg.Track = track;
@@ -420,7 +442,7 @@ namespace Refact
                     if (limit >= Constants.nextNodeMaxAttemps)
                     {
                         ErrLogger.Error("Iteration limit reached looking for track segments", track.Id,firstTseg.Id);
-                        Error = true;
+                        error = true;
                         break;
                     }
                     nextSeg = GetNextTsegNoBranch(nextSeg, ref direction);
@@ -438,7 +460,7 @@ namespace Refact
                     if (limit >= Constants.nextNodeMaxAttemps)
                     {
                         ErrLogger.Error("Iteration limit reached looking for track segments", track.Id, firstTseg.Id);
-                        Error = true;
+                        error = true;
                         break;
                     }
                     nextSeg = GetNextTsegNoBranch(nextSeg, ref direction);
@@ -464,31 +486,16 @@ namespace Refact
             bool error = false;
             foreach (LevelCrossing lx in LevelCrossings)
             {
-                char a1 = 'a';
-                int num1 = 1;
                 lx.Tracks = GetLxPwsTracks(lx);
-                foreach (LxTrack lxtrack in lx.Tracks)
-                {
-                    lxtrack.Id = lxtrack.GetId(num1, a1, lx.Tracks.Count, lx);
-                    lxtrack.SetLocations(lx, num1, out error);
-                    a1++;
-                    num1++;
-                }
             }
             foreach (Pws pws in Pws)
             {
-                char a1 = 'a';
-                int num1 = 1;
                 pws.Tracks = GetLxPwsTracks(pws);
-                foreach (LxTrack pwstrack in pws.Tracks)
-                {
-                    pwstrack.Id = pwstrack.GetId(num1, a1, pws.Tracks.Count, pws);
-                    pwstrack.SetLocations(pws, num1, out error);
-                    a1++;
-                    num1++;
-                }
             }
-            Error = error;
+            if (error)
+            {
+                this.error = true;
+            }
         }
 
         private List<LxTrack> GetLxPwsTracks(SLElement lxPws)
@@ -500,11 +507,12 @@ namespace Refact
             if (lxTrackLines.Count == 0)
             {
                 ErrLogger.Error("No tracks for Level Crossing found.", lxPws.Designation, "");
-                Error = true;
+                error = true;
                 return lxTracks;
             }
 
-            
+            char a1 = 'a';
+            int num1 = 1;
             foreach (TrackLine trLine in lxTrackLines)
             {
                 TSeg tsegTrack = Tsegs
@@ -513,19 +521,19 @@ namespace Refact
 
                 if (tsegTrack != null)
                 {
-
                     LxTrack lxTrack = new LxTrack
                     {
                         Track = tsegTrack.Track,
-                        TrackLine = trLine
+                        TrackLine = trLine,
+                        TSeg = tsegTrack
                     };
-                    lxTrack.DetectionPoints = GetDpsLxPwsTrack(lxPws, tsegTrack);
+                    
                     lxTracks.Add(lxTrack);
                 }
                 else
                 {
                     ErrLogger.Error("Track segment fol Level Crossing track not found.", lxPws.Designation, "");
-                    Error = true;
+                    error = true;
                 }
             }
             if (lxTracks.Any(x => x.Track.Main))
@@ -541,7 +549,47 @@ namespace Refact
                            .OrderBy(y => y.Track.Id)
                            .ToList();
             }
+            foreach (var lxTrack in lxTracks)
+            {
+                lxTrack.Id = lxTrack.GetId(num1, a1, lxTrackLines.Count, lxPws);
+                if (lxPws.ElType == XType.LevelCrossing)
+                {
+                    lxTrack.SetLocations((LevelCrossing)lxPws, num1, lxTrackLines.Count, out bool error);
+                }
+                else
+                {
+                    lxTrack.SetLocations((Pws)lxPws, num1, lxTrackLines.Count, out bool error);
+                }
+                a1++;
+                num1++;
+                //We set Lx/Pws location to get detection points only
+                //In Rdd for Lx/Pws locations level crossing tracks are used instead
+                lxPws.Location = lxTrack.Location;
+                lxTrack.DetectionPoints = GetDpsLxPwsTrack(lxPws, lxTrack.TSeg);
+                lxTrack.LxAcSection = GetLxAcSection(lxTrack.DetectionPoints, lxPws.Designation + ": " + lxTrack.TSeg.Id);
+            }
             return lxTracks;
+        }
+
+        private string GetLxAcSection(List<DetectionPoint> detectionPoints, string lxTrackId)
+        {
+            if (detectionPoints == null || detectionPoints.Count < 2)
+            {
+                ErrLogger.Error("LxAcSection not found", lxTrackId, "");
+                error = true;
+                return null;
+            }
+            var lxAcSection = AcSections
+                             .Where(dp => dp.DetectionPoints.Contains(detectionPoints[0]) &&
+                                          dp.DetectionPoints.Contains(detectionPoints[1]))
+                             .FirstOrDefault();
+            if (lxAcSection == null)
+            {
+                ErrLogger.Error("LxAcSection not found", lxTrackId, "");
+                error = true;
+                return null;
+            }
+            return lxAcSection.Designation;
         }
 
         private List<DetectionPoint> GetDpsLxPwsTrack(SLElement lxPws, TSeg tsegTrack)
@@ -559,7 +607,7 @@ namespace Refact
             else
             {
                 ErrLogger.Error("Not all axel counter found for Lx track", lxPws.Designation, tsegTrack.Id);
-                Error = true;
+                error = true;
             }
             return dps;
         }
@@ -569,7 +617,7 @@ namespace Refact
         /// </summary>
         private void ShowBlockRDDDialog()
         {
-            Refact.Utils.ShowErrList(dwgDir, "Errors Found",
+            Utils.ShowErrList(dwgDir, "Errors Found",
                     "Following errors are blocking RDD export. Please resolve them and try again.", SystemIcons.Error, true);
         }
 
@@ -1212,7 +1260,7 @@ namespace Refact
         /// </summary>
         private void InitPsas()
         {
-            foreach (var psa in psas)
+            foreach (var psa in Psas)
             {
                 var elementsPSA = Elements.Where(x => x.Block.BlockReference.Position.X >= psa.MinX + Constants.insidePsaToler &&
                                                       x.Block.BlockReference.Position.X <= psa.MaxX - Constants.insidePsaToler &&
@@ -1242,7 +1290,7 @@ namespace Refact
                         else 
                         {
                             ErrLogger.Error("Unable to get Begin and TSeg of PSA.", psa.Id, "");
-                            Error = true;
+                            error = true;
                         }
                     }                          
                 }
@@ -1338,7 +1386,7 @@ namespace Refact
             {
                 ErrLogger.Error("No Track segments found", SigLayout.StID, "");
                 error = true;
-                Error = true;
+                this.error = true;
             }
             return tsegs;
         }
@@ -1515,7 +1563,7 @@ namespace Refact
 #if DEBUG
             ErrLogger.Information("begin", "Ac sections");
 #endif
-            foreach (AcSection section in AcSections)
+            foreach (AcSection section in AcSections) 
             {
                 List<TrackLine> acTrlines = GetAcInitLines(section, out Point3d acMidPt, out error);
                 if (error)
@@ -1597,6 +1645,7 @@ namespace Refact
                     sectionElements.Add(section);
                 }
                 section.Elements = sectionElements;
+                section.StName = SigLayout.StName;
 
 #if DEBUG
                 ErrLogger.Information(section.Tseg + " " + string.Join(", ", dps.Select(x => x.Designation)) , section.Designation);
@@ -1614,7 +1663,7 @@ namespace Refact
             if (AcSections.Count != ac.Count() + tr.Count())
             {
                 ErrLogger.Error("Ac Sections TrackSections inconsistence found", "", "");
-                Error = true;
+                error = true;
             }
         }
 
@@ -1675,6 +1724,7 @@ namespace Refact
             List<TrackLine> closLines = trackLines
                             .Where(x => (x.line.GetClosestPointTo(acMidPtTmp, false) - acMidPtTmp).Length <= 5)
                             .OrderBy(x => (x.line.GetClosestPointTo(acMidPtTmp, false) - acMidPtTmp).Length)
+                            //.Take(2)
                             .ToList();
             acMidPt = acMidPtTmp;
             if (closLines.Count == 0)
@@ -1683,7 +1733,7 @@ namespace Refact
                 error = true;
                 return null;
             }
-            if (closLines.Count == 1)
+            else if (closLines.Count == 1)
             {
                 Point3d acStartPt = closLines[0].line.GetClosestPointTo(acMidPt, false);
                 List<Line> splitLines = AcadTools.SplitLineOnPoint(closLines[0].line, acStartPt);
@@ -1706,7 +1756,10 @@ namespace Refact
                 }
                 return splitTrLines;
             }
-
+            else if (closLines.Count > 2)
+            {
+                return closLines.Take(2).ToList();
+            }
             return closLines;
         }
 
@@ -1817,7 +1870,7 @@ namespace Refact
             if (tSeg == null)
             {
                 ErrLogger.Error("Initial Tseg for danger point calculation not found", signal.Designation, "");
-                Error = true;
+                error = true;
                 return dangerPoint;
             }
             DirectionType direction = signal.Direction;
@@ -1829,7 +1882,7 @@ namespace Refact
                 if (iter >= Constants.dpIterLimit)
                 {
                     ErrLogger.Error("No axle counter for danger point found. Limit exceeded", signal.Designation, "");
-                    Error = true;
+                    error = true;
                     return dangerPoint;
                 }
                 if (direction == DirectionType.up)
@@ -1856,12 +1909,13 @@ namespace Refact
                 if (tSeg == null)
                 {
                     ErrLogger.Error("Tseg for danger point calculation not found", signal.Designation, "");
-                    Error = true;
+                    error = true;
                     return dangerPoint;
                 }
                 tSegsToDp.Add(tSeg);
                 iter++;
             }
+            
             decimal distance = GetDistBetweenLocsByTsegs(tSegsToDp, signal, dp);
             dangerPoint = new DangerPoint
             {
@@ -1894,7 +1948,7 @@ namespace Refact
             if (tSeg == null)
             {
                 ErrLogger.Error("Initial Tseg for Oces Bg calculation not found", signal.Designation, "");
-                Error = true;
+                error = true;
                 return OcesBg;
             }
             DirectionType direction = ReverseDirection(signal.Direction);
@@ -1907,7 +1961,7 @@ namespace Refact
             if (bg == null)
             {
                 ErrLogger.Error("No BG for Oces found.", signal.Designation, "");
-                Error = true;
+                error = true;
                 return OcesBg;
             }
             
@@ -1998,7 +2052,7 @@ namespace Refact
                 if (!signal.SetKindOfSig())
                 {
                     ErrLogger.Error("Unable to parse KindOfSignal", signal.Designation, signal.ExtType.ToString());
-                    Error = true;
+                    error = true;
                 }
             }
         }
@@ -2022,7 +2076,7 @@ namespace Refact
             if (tSeg == null)
             {
                 ErrLogger.Error("Initial Tseg for danger point calculation not found", signal.Designation, "");
-                Error = true;
+                error = true;
                 return false;
             }
             DirectionType direction = signal.Direction;
@@ -2034,7 +2088,7 @@ namespace Refact
                 if (iter >= Constants.sigIterLimit)
                 {
                     ErrLogger.Error("No axle counter for danger point found. Limit exceeded", signal.Designation, "");
-                    Error = true;
+                    error = true;
                     return false;
                 }
                 if (direction == DirectionType.up)
@@ -2046,7 +2100,7 @@ namespace Refact
                                              x.Tseg == tSeg)
                                  .OrderBy(x => x.Location)
                                  .FirstOrDefault();
-                    psa = psas
+                    psa = Psas
                         .Where(x => x.Begin >= signal.Location &&
                                     x.Tseg == tSeg)
                         .FirstOrDefault();
@@ -2068,7 +2122,7 @@ namespace Refact
                                              x.Tseg == tSeg)
                                  .OrderByDescending(x => x.Location)
                                  .FirstOrDefault();
-                    psa = psas
+                    psa = Psas
                         .Where(x => x.Begin <= signal.Location &&
                                     x.Tseg == tSeg)
                         .FirstOrDefault();
@@ -2185,7 +2239,7 @@ namespace Refact
             foundTsegs.Add(start);
             foundTsegs.Add(end);
             ErrLogger.Error("No tsegs between two tsegs found", start.Id, end.Id);
-            Error = true;
+            error = true;
             return foundTsegs;
         }
 
@@ -2226,7 +2280,7 @@ namespace Refact
                 if (limit >= Constants.nextNodeMaxAttemps)
                 {
                     ErrLogger.Error("Unable to find Element.", startElem.Designation, "");
-                    Error = true;
+                    error = true;
                     tSegsStack = TsegsStackPop(tSegsStack, out int back);
                     if (tSegsStack.Count == 0 || back == 0)
                     {
@@ -2263,7 +2317,7 @@ namespace Refact
                     {
                         tSegsStack = TsegsStackPop(tSegsStack, out int back);
                         ErrLogger.Error("Unable to find Element.", startElem.Designation, "");
-                        Error = true;
+                        error = true;
                     }
                     else
                     {
@@ -2312,7 +2366,7 @@ namespace Refact
                     if (reportError)
                     {
                         ErrLogger.Error("Unable to find Element.", startElem.Designation, "");
-                        Error = true;
+                        error = true;
                     }
                     tSegsStack = TsegsStackPop(tSegsStack, out int back);
                     if (tSegsStack.Count == 0 || back == 0)
@@ -2352,7 +2406,7 @@ namespace Refact
                         if (reportError)
                         {
                             ErrLogger.Error("Unable to find Element.", startElem.Designation, "");
-                            Error = true;
+                            error = true;
                         }               
                     }
                     else
@@ -2436,7 +2490,7 @@ namespace Refact
                 return tsegFrom.Vertex2;
             }
             ErrLogger.Error("Unable to get common Vertex between Tsegs.", tsegFrom.Id, nextTseg.Id);
-            Error = true;
+            error = true;
             return null;
         }
 
@@ -2487,7 +2541,7 @@ namespace Refact
                 }
             }
             ErrLogger.Error("Unable to get common Vertex between Tsegs.", tsegFrom.Id, nextTseg.Id);
-            Error = true;
+            error = true;
             return null;
         }
 
@@ -2510,46 +2564,89 @@ namespace Refact
         private decimal GetDistBetweenLocsByTsegs(List<TSeg> tSegs, SLElement start, SLElement end)
         {
             decimal distance = 0;
+            decimal kmGap = 0;
+            if (tSegs == null || tSegs.Count == 0)
+            {
+                ErrLogger.Error("Unable to get distance between locations - Tsegs not found", start, end);
+                error = true;
+            }
+
             if (tSegs.Count == 1)
             {
-                distance = Math.Abs(start.Location - end.Location);
+                return Math.Abs(start.Location - end.Location);
             }
-            else if (tSegs.Count > 0)
+            for (int i = 0; i < tSegs.Count; i++)
             {
-                for (int i = 0; i < tSegs.Count; i++)
+                elements.Vertex commVertex;
+                if (i == 0)
                 {
-                    elements.Vertex commVertex;
-                    if (i == 0)
+                    commVertex = GetCommVertex(tSegs[i], tSegs[i + 1], start);
+                    if (commVertex != null)
                     {
-                        commVertex = GetCommVertex(tSegs[i], tSegs[i + 1], start);
-                        if (commVertex != null)
-                        {
-                            distance =
-                            Math.Abs(start.Location - commVertex.Km) +
-                            GetKmGapBetweenSegments(tSegs[i], tSegs[i + 1]);
-                        }
+                        kmGap += GetKmGapBetweenSegments(tSegs[i], tSegs[i + 1]);
+                        distance =
+                        Math.Abs(start.Location - commVertex.Km) + kmGap;
+                        
                     }
-                    else if (i < tSegs.Count - 1)
+                }
+                else if (i < tSegs.Count - 1)
+                {
+                    distance += tSegs[i].Length(); // +
+                    kmGap += GetKmGapBetweenSegments(tSegs[i], tSegs[i + 1]);
+                }
+                else
+                {
+                    commVertex = GetCommVertex(tSegs[i - 1], tSegs[i], end);
+                    if (commVertex != null)
                     {
-                        distance += tSegs[i].Length() +
-                            GetKmGapBetweenSegments(tSegs[i], tSegs[i + 1]);
-                    }
-                    else
-                    {
-                        commVertex = GetCommVertex(tSegs[i - 1], tSegs[i], end);
-                        if (commVertex != null)
-                        {
-                            distance +=
-                            Math.Abs(end.Location - commVertex.Km);
-                        }
+                        distance +=
+                        Math.Abs(end.Location - commVertex.Km);
                     }
                 }
             }
-            else
-            {
-                ErrLogger.Error("Unable to get distance between locations - Tsegs not found", start, end);
-                Error = true;
-            }
+            distance += kmGap;
+
+
+            //if (tSegs.Count == 1)
+            //{
+            //    distance = Math.Abs(start.Location - end.Location);
+            //}
+            //else if (tSegs.Count > 0)
+            //{
+            //    for (int i = 0; i < tSegs.Count; i++)
+            //    {
+            //        elements.Vertex commVertex;
+            //        if (i == 0)
+            //        {
+            //            commVertex = GetCommVertex(tSegs[i], tSegs[i + 1], start);
+            //            if (commVertex != null)
+            //            {
+            //                distance =
+            //                Math.Abs(start.Location - commVertex.Km) +
+            //                GetKmGapBetweenSegments(tSegs[i], tSegs[i + 1]);
+            //            }
+            //        }
+            //        else if (i < tSegs.Count - 1)
+            //        {
+            //            distance += tSegs[i].Length(); // +
+            //                GetKmGapBetweenSegments(tSegs[i], tSegs[i + 1]);
+            //        }
+            //        else
+            //        {
+            //            commVertex = GetCommVertex(tSegs[i - 1], tSegs[i], end);
+            //            if (commVertex != null)
+            //            {
+            //                distance +=
+            //                Math.Abs(end.Location - commVertex.Km); 
+            //            }
+            //        }
+            //    }
+            //}
+            //else
+            //{
+            //    ErrLogger.Error("Unable to get distance between locations - Tsegs not found", start, end);
+            //    error = true;
+            //}
             return distance;
         }
 
@@ -2624,7 +2721,7 @@ namespace Refact
                 if (foundEdge == null)
                 {
                     ErrLogger.Error("Unable to find Tsegs between tsta edges", edges[0].Designation, edges[1].Designation);
-                    Error = true;
+                    error = true;
                     return null;
                 }
                 else
@@ -2638,10 +2735,58 @@ namespace Refact
             else
             {
                 ErrLogger.Error("Edges Elements not found", "Trusted Area", "");
-                Error = true;
+                error = true;
                 return null;
             }
             return area;
+        }
+
+        private DirectionType GetEotDirection(EndOfTrack eot)
+        {
+
+            var tseg = Tsegs
+                       .Where(x => x.Vertex1.Element == eot || 
+                                   x.Vertex2.Element == eot)
+                       .FirstOrDefault();
+            if (tseg != null)
+            {
+                if (tseg.Vertex1.Element == eot)
+                {
+                    if (tseg.Vertex1.Km > tseg.Vertex2.Km)
+                    {
+                        return DirectionType.up;
+                    }
+                    else
+                    {
+                        return DirectionType.down;
+                    }
+                }
+                else if (tseg.Vertex2.Element == eot)
+                {
+                    if (tseg.Vertex2.Km > tseg.Vertex1.Km)
+                    {
+                        return DirectionType.up;
+                    }
+                    else
+                    {
+                        return DirectionType.down;
+                    }
+                }
+            }
+            
+            ErrLogger.Error("Unable to calculate eot direction", eot.Designation, "");
+            error = true;
+            return DirectionType.up;
+        }
+
+        public bool HasErrors()
+        {
+            bool elem = Elements.Any(x => x.Error);
+            if (elem || this.error)
+            {
+                return true;
+            }
+            else return false;
         }
 
         public void Dispose()

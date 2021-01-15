@@ -49,7 +49,7 @@ namespace Refact.elements
         public string InsidePSA { get; set; }
         public bool Exclude { get; set; }
         public bool NextStation { get; set; }
-        public string Remark { get; set; }
+        public string Remarks { get; set; }
 
         public SLElement(Block block, string stattionId)
         {
@@ -175,7 +175,11 @@ namespace Refact.elements
                 //ErrLogger.Warning("Attribute 'NAME' does not exist: " + Block.BlkRef.Name);
                 return Block.BlockReference.Name;
             }
-            string Name = this.Attributes["NAME"].value.Split('_')[0];
+            //if (this.ElType == XType.LevelCrossing || this.ElType == XType.Platform || this.ElType == XType.StaffPassengerCrossing)
+            //{
+            //    PadZeros = false;
+            //}
+            string Name = this.Attributes["NAME"].value.Trim().Split('_')[0];
             Regex re = new Regex(@"(\d+)([a-zA-Z]+)");
             Match result;
             int NameLength;
@@ -201,7 +205,7 @@ namespace Refact.elements
                 }
                 else
                 {
-                    names[2] = NamelowCase ? names[2].ToLower() : names[2].ToUpper();
+                    names[2] = NamelowCase ? names[2].ToLower().TrimStart(new char[] { '0' }) : names[2].ToUpper().TrimStart(new char[] { '0' });
                 }
                 return string.Join("-", names).Trim();
             }
@@ -228,8 +232,7 @@ namespace Refact.elements
                 else
                 {
                     names[1] = NamelowCase ?
-                        names[1].ToLower() :
-                        names[1].ToUpper();
+                        names[1].ToLower().TrimStart(new char[] { '0' }) : names[1].ToUpper().TrimStart(new char[] { '0' });
                 }
 
                 return string.Join("-", names).Trim();
@@ -251,7 +254,7 @@ namespace Refact.elements
                 }
                 else
                 {
-                    Name = NamelowCase ? Name.ToLower() : Name.ToUpper();
+                    Name = NamelowCase ? Name.ToLower().TrimStart(new char[] { '0' }) : Name.ToUpper().TrimStart(new char[] { '0' });
                 }
                 return this.RddType.ToString().ToLower() + "-" + this.StID.ToLower() + "-" +
                       Name.Trim();
@@ -268,6 +271,15 @@ namespace Refact.elements
             {
                 return this.Tseg.Id;
             }
+        }
+
+        public string GetShortName()
+        {
+            if (string.IsNullOrEmpty(Designation))
+            {
+                return "";
+            }
+            return Designation.Split('-').Last();
         }
     }
 

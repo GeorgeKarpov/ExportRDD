@@ -143,7 +143,7 @@ namespace ExpPt1
                     AcadApp.ShowAlertDialog("Track Segments errors. See Errors Log");
                     ErrLogger.ErrorsFound = true;
                 }
-                ExcelLib.WriteExcel.ExpRoutes(GetRoutesList(), saveFileDialog.Filename);
+                //ExcelLib.WriteExcel.ExpRoutes(GetRoutesList(), saveFileDialog.Filename);
             }
             catch (IOException e)
             {
@@ -171,7 +171,7 @@ namespace ExpPt1
                 List<ExcelLib.elements.ExpTseg> expTsegs = this.TrackSegmentsTmp
                                                            .Select(x => new ExcelLib.elements.ExpTseg { Designation = x.Designation })
                                                            .ToList();
-                ExcelLib.WriteExcel.ExpSegments(expTsegs, saveFileDialog.Filename);
+                //ExcelLib.WriteExcel.ExpSegments(expTsegs, saveFileDialog.Filename);
             }
             catch (IOException e)
             {
@@ -227,7 +227,7 @@ namespace ExpPt1
                         OwnTdt = ownsect.Designation.Split('-').Last() 
                     });
                 }
-                ExcelLib.WriteExcel.ExpTdls(Tdls, saveFileDialog.Filename);
+                //ExcelLib.WriteExcel.ExpTdls(Tdls, saveFileDialog.Filename);
             }
             catch (IOException e)
             {

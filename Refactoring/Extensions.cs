@@ -16,5 +16,25 @@ namespace Refact
                 }
             }
         }
+
+        public static decimal ToDecimal(this string str, string logPar1, string logPar2, ref bool error)
+        {
+            if (!decimal.TryParse(str, out decimal result))
+            {
+                ErrLogger.Error("Unable to parse text to decimal", logPar1, logPar2);
+                error = true;
+            }
+            return result;
+        }
+
+        public static int ToInt(this string str, string logPar1, string logPar2, ref bool error)
+        {
+            if (!int.TryParse(str, out int result))
+            {
+                ErrLogger.Error("Unable to parse text to integer", logPar1, logPar2);
+                error = true;
+            }
+            return result;
+        }
     }
 }

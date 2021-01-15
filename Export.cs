@@ -8541,7 +8541,7 @@ namespace ExpPt1
                 if (string.IsNullOrWhiteSpace(arg) || arg[0] == '#')
                     return false;
                 return Station.ToLower() == arg.Split('\t')[1].Trim().ToLower();
-            })).Select((Func<string, Platform>)(x => new Platform()
+            })).Select((x => new Platform()
             {
                 Station = x.Split('\t')[1].Trim(),
                 Number = Convert.ToInt32(x.Split('\t')[2].Trim()),

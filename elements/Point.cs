@@ -538,7 +538,7 @@ namespace Refact.elements
 
         public void SetHht(List<Hht> hhts)
         {
-            if (hhts.Any(x => AcadTools.PointsAreEqual(x.Position, Position)))
+            if (hhts.Any(x => AcadTools.PointsAreEqual(x.Position, Position, 1)))
             {
                 hht = true;
             }

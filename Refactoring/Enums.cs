@@ -78,27 +78,4 @@ namespace Refact
         start,
         end
     }
-
-    public enum LcTracks
-    {
-        @Single,
-        Double
-    }
-
-    public enum SpeedType
-    {
-        AlC2,
-        Fp,
-        Fg,
-        Cd100,
-        Cd130,
-        Cd150,
-        Cd165,
-        Cd180,
-        Cd210,
-        Cd225,
-        Cd245,
-        Cd275,
-        Cd300,
-    }
 }

@@ -13,7 +13,6 @@ namespace Refact.elements
         public decimal Km2 { get; set; }
         public LeftRightType PositionOfPlatform { get; set; }
         public UpDownBothType TrainDirection { get; set; }
-        public PlatformHeightType Height { get; set; }
         public string Track { get; set; }
         public Platform(Block block, string stattionId) : base(block, stattionId)
         {
@@ -57,6 +56,48 @@ namespace Refact.elements
             }
             TrainDirection = direction;
             return !error;
+        }
+
+        public PlatformHeightType Height(int number)
+        {
+            List<int> list = new List<int>
+            { 200, 300, 380, 550, 580, 680, 685,
+                730, 760, 840, 900, 915, 920, 960, 1100
+            };
+
+            switch (list.Aggregate((x, y) => Math.Abs(x - number) < Math.Abs(y - number) ? x : y))
+            {
+                case 200:
+                    return PlatformHeightType.Item200;
+                case int n when (n <= 380 && n >= 300):
+                    return PlatformHeightType.Item300380;
+                case 550:
+                    return PlatformHeightType.Item550;
+                case 580:
+                    return PlatformHeightType.Item580;
+                case 680:
+                    return PlatformHeightType.Item680;
+                case 685:
+                    return PlatformHeightType.Item685;
+                case 730:
+                    return PlatformHeightType.Item730;
+                case 760:
+                    return PlatformHeightType.Item760;
+                case 840:
+                    return PlatformHeightType.Item840;
+                case 900:
+                    return PlatformHeightType.Item900;
+                case 915:
+                    return PlatformHeightType.Item915;
+                case 920:
+                    return PlatformHeightType.Item920;
+                case 960:
+                    return PlatformHeightType.Item960;
+                case 1100:
+                    return PlatformHeightType.Item1100;
+                default:
+                    return PlatformHeightType.Item200;
+            }
         }
     }
 }

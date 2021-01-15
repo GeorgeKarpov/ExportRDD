@@ -43,13 +43,13 @@ namespace Refact
 
         public Dictionary<string, string> GetStations()
         {
+            Dictionary<string, string> dictionary = new Dictionary<string, string>();
             if (!File.Exists(AssemblyDir + Constants.cfgFolder + "//Stations.dat"))
             {
                 ErrLogger.Error("Input file not found", AssemblyDir + Constants.cfgFolder + "//Stations.dat", "");
                 Error = true;
-                return null;
-            }
-            Dictionary<string, string> dictionary = new Dictionary<string, string>();
+                return dictionary;
+            }         
             foreach (string str in ((IEnumerable<string>)File.ReadAllLines(AssemblyDir + Constants.cfgFolder + "//Stations.dat"))
                                     .Where(arg => !string.IsNullOrWhiteSpace(arg) && arg[0] != '#'))
             {
@@ -59,16 +59,52 @@ namespace Refact
             return dictionary;
         }
 
+        public List<string> GetSPlatforms()
+        {
+            List<string> list = new List<string>();
+            if (!File.Exists(AssemblyDir + Constants.cfgFolder + "//Platforms.dat"))
+            {
+                ErrLogger.Error("Input file not found", AssemblyDir + Constants.cfgFolder + "//Platforms.dat", "");
+                Error = true;
+                return list;
+            }
+            list = ((IEnumerable<string>)File.ReadAllLines(AssemblyDir + Constants.cfgFolder + "//Platforms.dat"))
+                   .Where(arg => !string.IsNullOrWhiteSpace(arg) && arg[0] != '#')
+                   .Select(s => s)
+                   .ToList();
+            return list;
+        }
+
+        public Dictionary<string, string> GetBGTypes()
+        {
+            Dictionary<string, string> dictionary = new Dictionary<string, string>();
+            if (!File.Exists(AssemblyDir + Constants.cfgFolder + "//BgTypesMap.dat"))
+            {
+                ErrLogger.Error("Input file not found", AssemblyDir + Constants.cfgFolder + "//BgTypesMap.dat", "");
+                Error = true;
+                return dictionary;
+            }
+            
+            foreach (string str in ((IEnumerable<string>)File.ReadAllLines(AssemblyDir + Constants.cfgFolder + "//BgTypesMap.dat"))
+                                    .Where(arg => !string.IsNullOrWhiteSpace(arg) && arg[0] != '#'))
+            {
+                if (!dictionary.ContainsKey(str.Split('\t')[0]))
+                    dictionary.Add(str.Split('\t')[0], str.Split('\t')[1]);
+            }
+            return dictionary;
+        }
+
         public Dictionary<string, string> GetMnTracks()
         {
+            Dictionary<string, string> dictionary = new Dictionary<string, string>();
             string file = AssemblyDir + Constants.cfgFolder + "//MainTracks.dat";
             if (!File.Exists(file))
             {
                 ErrLogger.Error("Input file not found", file, "");
                 Error = true;
-                return null;
+                return dictionary;
             }
-            Dictionary<string, string> dictionary = new Dictionary<string, string>();
+           
             int linenumber = 1;
             foreach (string str in ((IEnumerable<string>)File.ReadAllLines(file))
                                     .Where(arg => !string.IsNullOrWhiteSpace(arg) && arg[0] != '#'))
@@ -92,6 +128,7 @@ namespace Refact
 
         public Dictionary<string, string> GetLines()
         {
+            Dictionary<string, string> LinesDefinitions = new Dictionary<string, string>();
             string path;
             if (File.Exists(DwgDir + "//LinesDef.dat"))
             {
@@ -103,11 +140,11 @@ namespace Refact
                 {
                     ErrLogger.Error("Input file not found", AssemblyDir + Constants.cfgFolder + "//LinesDef.dat", "");
                     Error = true;
-                    return null;
+                    return LinesDefinitions;
                 }
                 path = AssemblyDir + Constants.cfgFolder + "//LinesDef.dat";
             }
-            Dictionary<string, string> LinesDefinitions = new Dictionary<string, string>();
+            
             foreach (string line in File.ReadAllLines(path)
                                         .Where(arg => !string.IsNullOrWhiteSpace(arg)))
             {
@@ -121,13 +158,14 @@ namespace Refact
 
         public Dictionary<string, string> GetBlocks()
         {
+            Dictionary<string, string> tmpBlocks = new Dictionary<string, string>();
             if (!File.Exists(AssemblyDir + Constants.cfgFolder + "//BlkMap.dat"))
             {
                 ErrLogger.Error("Input file not found", AssemblyDir + Constants.cfgFolder + "//BlkMap.dat", "");
                 Error = true;
-                return null;
+                return tmpBlocks;
             }
-            Dictionary<string, string> tmpBlocks = new Dictionary<string, string>();
+            
             foreach (string line in File.ReadAllLines(AssemblyDir + Constants.cfgFolder + "//BlkMap.dat")
                                         .Where(arg => !string.IsNullOrWhiteSpace(arg) &&
                                           arg[0] != '#'))
@@ -146,7 +184,7 @@ namespace Refact
             {
                 ErrLogger.Error("Input file not found", AssemblyDir + Constants.cfgFolder + "//Authors.dat", "");
                 Error = true;
-                return null;
+                return new List<string>();
             }
             return File.ReadAllLines(AssemblyDir + Constants.cfgFolder + "//Authors.dat")
                                         .Where(arg => !string.IsNullOrWhiteSpace(arg) &&
