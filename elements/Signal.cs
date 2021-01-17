@@ -3,10 +3,8 @@ using Autodesk.AutoCAD.Geometry;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Refact.elements
+namespace ExpRddApp.elements
 {
     public class Signal : SLElement
     {
@@ -27,13 +25,13 @@ namespace Refact.elements
         public override bool Init()
         {
             bool error = false;
-            
+
             if (!decimal.TryParse(Attributes["KMP"].value, out decimal km))
             {
                 ErrLogger.Error("Unable to parse KMP value from attribute", this.ElType.ToString(), this.Designation);
                 error = true;
             }
-            this.Location = km;            
+            this.Location = km;
             TrackPosition = GetSignalTrackPosition(ref error);
             return !error;
         }

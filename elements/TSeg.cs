@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Refact.elements
+namespace ExpRddApp.elements
 {
     public class TSeg
     {

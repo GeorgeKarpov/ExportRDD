@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Refact.elements
+namespace ExpRddApp.elements
 {
-    public class FoulingPoint: SLElement
+    public class FoulingPoint : SLElement
     {
         public bool LineChanges { get; set; }
         public decimal SecondLocation { get; set; }

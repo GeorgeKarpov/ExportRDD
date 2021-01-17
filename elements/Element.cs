@@ -1,13 +1,11 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.Geometry;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace Refact.elements
+namespace ExpRddApp.elements
 {
     /// <summary>
     /// Class to store Acad attributes of blocks
@@ -90,7 +88,7 @@ namespace Refact.elements
                     return false;
                 }
             }
-            
+
 
             if (this.BlkMap.Split('\t').Length > 3 && !string.IsNullOrEmpty(this.BlkMap.Split('\t')[3]))
             {
@@ -112,8 +110,8 @@ namespace Refact.elements
             Visible = !(Attributes.Any(x => x.Value.name == "NAME" &&
                                             x.Value.visible == false)) ||
                       this.Block.Visible;
-            
-            
+
+
             Designation = GetElemDesignation();
 
             return true;

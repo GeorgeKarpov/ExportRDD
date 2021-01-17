@@ -1,7 +1,6 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
-using System;
+﻿using System;
 
-namespace Refact.elements
+namespace ExpRddApp.elements
 {
     public class SigLayout : SLElement
     {

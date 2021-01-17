@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Refact.elements
+﻿namespace ExpRddApp.elements
 {
-    public class EndOfTrack: SLElement 
+    public class EndOfTrack : SLElement
     {
-        public DirectionType Direction{ get; set; }
+        public DirectionType Direction { get; set; }
         public KindOfEOTType KindOfEOT { get; set; }
         public EndOfTrack(Block block, string stattionId) : base(block, stattionId)
         {

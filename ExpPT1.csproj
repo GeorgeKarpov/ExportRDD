@@ -78,22 +78,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AcadTools.cs" />
-    <Compile Include="AcSection.cs" />
-    <Compile Include="Blocks.cs" />
-    <Compile Include="Calc.cs" />
-    <Compile Include="Constants.cs" />
-    <Compile Include="DangerPoint.cs" />
     <Compile Include="dataMapping\DataProcessor.cs" />
-    <Compile Include="ElementsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="ElementsControl.designer.cs">
-      <DependentUpon>ElementsControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="CRs.cs" />
-    <Compile Include="Data.cs" />
-    <Compile Include="Display.cs" />
     <Compile Include="elements\DangerPoint.cs" />
     <Compile Include="elements\FoulingPoint.cs" />
     <Compile Include="elements\Hht.cs" />
@@ -107,27 +92,27 @@
     <Compile Include="elements\StationStop.cs" />
     <Compile Include="elements\Track.cs" />
     <Compile Include="elements\TrustedArea.cs" />
-    <Compile Include="Refactoring\AcadTools.cs" />
-    <Compile Include="Refactoring\AcLayout.cs" />
+    <Compile Include="app\AcadTools.cs" />
+    <Compile Include="app\AcLayout.cs" />
     <Compile Include="elements\AcSection.cs" />
     <Compile Include="elements\BaliseGroup.cs" />
     <Compile Include="elements\BgType.cs" />
-    <Compile Include="Refactoring\Block.cs" />
+    <Compile Include="elements\Block.cs" />
     <Compile Include="elements\BlockInterface.cs" />
     <Compile Include="elements\Connector.cs" />
     <Compile Include="elements\DetectionPoint.cs" />
     <Compile Include="elements\Element.cs" />
     <Compile Include="elements\EndOfTrack.cs" />
-    <Compile Include="Refactoring\Calc.cs" />
-    <Compile Include="Refactoring\Constants.cs" />
-    <Compile Include="Refactoring\Data.cs" />
-    <Compile Include="Refactoring\ElementsControl.cs">
+    <Compile Include="app\Calc.cs" />
+    <Compile Include="app\Constants.cs" />
+    <Compile Include="app\Data.cs" />
+    <Compile Include="userControls\ElementsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Refactoring\ElementsControl.designer.cs">
+    <Compile Include="userControls\ElementsControl.designer.cs">
       <DependentUpon>ElementsControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="Refactoring\Enums.cs" />
+    <Compile Include="app\Enums.cs" />
     <Compile Include="elements\EnclosedArea.cs" />
     <Compile Include="elements\Point.cs" />
     <Compile Include="elements\PointMachine.cs" />
@@ -137,61 +122,39 @@
     <Compile Include="elements\TrackLine.cs" />
     <Compile Include="elements\TSeg.cs" />
     <Compile Include="elements\Vertex.cs" />
-    <Compile Include="ErrorsControl.cs">
+    <Compile Include="app\Init.cs" />
+    <Compile Include="userControls\ErrorsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="ErrorsControl.Designer.cs">
+    <Compile Include="userControls\ErrorsControl.Designer.cs">
       <DependentUpon>ErrorsControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="Excel.cs" />
-    <Compile Include="Export.cs" />
-    <Compile Include="Extensions.cs" />
-    <Compile Include="FrmStation.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FrmStation.Designer.cs">
-      <DependentUpon>FrmStation.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Refactoring\Init.cs" />
-    <Compile Include="Refactoring\ErrorsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Refactoring\ErrorsControl.Designer.cs">
-      <DependentUpon>ErrorsControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Refactoring\LongOperationManager.cs" />
-    <Compile Include="Refactoring\Palette.cs" />
-    <Compile Include="Refactoring\ProgressEventArgs.cs" />
-    <Compile Include="Refactoring\SuperToolTipDisplay.xaml.cs">
+    <Compile Include="app\LongOperationManager.cs" />
+    <Compile Include="userControls\Palette.cs" />
+    <Compile Include="app\ProgressEventArgs.cs" />
+    <Compile Include="app\SuperToolTipDisplay.xaml.cs">
       <DependentUpon>SuperToolTipDisplay.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Refactoring\WrongArgUsageException.cs" />
-    <Compile Include="Refactoring\ExpRDD.cs" />
-    <Compile Include="Refactoring\Extensions.cs" />
-    <Compile Include="Refactoring\FrmStation.cs">
+    <Compile Include="app\Utils.cs" />
+    <Compile Include="app\WrongArgUsageException.cs" />
+    <Compile Include="app\ExpRDD.cs" />
+    <Compile Include="app\Extensions.cs" />
+    <Compile Include="userControls\FrmStation.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Refactoring\FrmStation.Designer.cs">
+    <Compile Include="userControls\FrmStation.Designer.cs">
       <DependentUpon>FrmStation.cs</DependentUpon>
     </Compile>
-    <Compile Include="Refactoring\InputData.cs" />
-    <Compile Include="Refactoring\Commands.cs" />
-    <Compile Include="Palette.cs" />
+    <Compile Include="app\InputData.cs" />
+    <Compile Include="app\Commands.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Refactoring\RailwayLine.cs" />
-    <Compile Include="Refactoring\Register.cs" />
-    <Compile Include="SearchDP.cs" />
-    <Compile Include="SearchBG.cs" />
-    <Compile Include="SearchSegment.cs" />
-    <Compile Include="ShiftCesBG.cs" />
-    <Compile Include="SspSimp.cs" />
-    <Compile Include="Utils.cs" />
-    <Compile Include="Verify.cs" />
+    <Compile Include="elements\RailwayLine.cs" />
+    <Compile Include="app\Register.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="cfg\BlkMap.dat">
@@ -211,26 +174,17 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="ElementsControl.resx">
-      <DependentUpon>ElementsControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ErrorsControl.resx">
-      <DependentUpon>ErrorsControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FrmStation.resx">
-      <DependentUpon>FrmStation.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Refactoring\ElementsControl.resx">
+    <EmbeddedResource Include="userControls\ElementsControl.resx">
       <DependentUpon>ElementsControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Refactoring\ErrorsControl.resx">
+    <EmbeddedResource Include="userControls\ErrorsControl.resx">
       <DependentUpon>ErrorsControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Refactoring\FrmStation.resx">
+    <EmbeddedResource Include="userControls\FrmStation.resx">
       <DependentUpon>FrmStation.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
@@ -271,10 +225,9 @@
     <Content Include="cfg\BgTypesMap.dat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="Refactoring\SuperToolTipDisplay.xaml">
+    <Page Include="app\SuperToolTipDisplay.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

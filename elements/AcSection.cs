@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 
-namespace Refact.elements
+namespace ExpRddApp.elements
 {
 
     /// <summary>Represents Railway Ac Section</summary>
-    public class AcSection: SLElement
+    public class AcSection : SLElement
     {
         /// <summary>
         /// Detection Points of Ac section.

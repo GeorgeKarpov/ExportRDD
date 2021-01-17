@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Refact.elements
+﻿namespace ExpRddApp.elements
 {
-    public class DetectionPoint: SLElement 
+    public class DetectionPoint : SLElement
     {
         public KindOfDPType KindOfDP { get; set; } = KindOfDPType.axleCounter;
         public DetectionPoint(Block block, string stattionId) : base(block, stattionId)

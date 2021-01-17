@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Refact.elements
+namespace ExpRddApp.elements
 {
-    public class Platform: SLElement
+    public class Platform : SLElement
     {
         public List<TSeg> Tsegs { get; set; }
         public decimal Km1 { get; set; }

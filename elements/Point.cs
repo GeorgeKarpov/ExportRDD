@@ -3,11 +3,10 @@ using Autodesk.AutoCAD.Geometry;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
-namespace Refact.elements
+namespace ExpRddApp.elements
 {
-    public class Point: SLElement
+    public class Point : SLElement
     {
         public LeftRightType Orient { get; set; }
         public LeftRightType BranchSide { get; set; }
@@ -49,7 +48,7 @@ namespace Refact.elements
             {
                 if (!decimal.TryParse(Attributes["KMP_CONTACT_2"].value, out decimal kmR))
                 {
-                    ErrLogger.Error("Unable to parse " + Attributes["KMP_CONTACT_2"].name + 
+                    ErrLogger.Error("Unable to parse " + Attributes["KMP_CONTACT_2"].name +
                                         " value from attribute", this.ElType.ToString(), this.Designation);
                     error = true;
                 }
@@ -339,7 +338,7 @@ namespace Refact.elements
             if (ExtType == ExtType.derailer)
             {
                 // SW agreement: derailer derails always in right
-                branchSide =  LeftRightType.left;
+                branchSide = LeftRightType.left;
             }
             else if (Calc.Between(angle, 3 / 2 * Math.PI, 2 * Math.PI, true))
             {
@@ -379,7 +378,7 @@ namespace Refact.elements
             Point3d branchPt = AcadTools.GetPointAtDist(branchLine, branchLine.StartPoint, branchLine.Length / 2);
 
             TrackLine baseTrLine = trackLines
-                                   .Where(x => AcadTools.PointsAreEqual(x.line.GetClosestPointTo(basePt, false),basePt))
+                                   .Where(x => AcadTools.PointsAreEqual(x.line.GetClosestPointTo(basePt, false), basePt))
                                    .FirstOrDefault();
 
             TrackLine tipTrLine = trackLines
@@ -423,7 +422,7 @@ namespace Refact.elements
                 RightTrLine = branchTrLine;
                 TipTrLine = tipTrLine;
             }
-            else 
+            else
             {
                 RightTrLine = baseTrLine;
                 LeftTrLine = branchTrLine;
@@ -440,7 +439,7 @@ namespace Refact.elements
             if (tipTrLine != null)
             {
                 Branches.Add(tipTrLine);
-            }       
+            }
             return true;
         }
 

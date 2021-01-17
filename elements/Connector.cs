@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 
-namespace Refact.elements
+namespace ExpRddApp.elements
 {
-    public class Connector: SLElement
+    public class Connector : SLElement
     {
         public decimal Kmp1 { get; set; }
         public decimal Kmp2 { get; set; }

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Refact.elements
+namespace ExpRddApp.elements
 {
     /// <summary>
     /// Represents Balise Group railway element.
     /// </summary>
-    public class BaliseGroup: SLElement
+    public class BaliseGroup : SLElement
     {
         /// <summary>Balise Group Types</summary>
         /// <remarks>
@@ -65,7 +65,7 @@ namespace Refact.elements
                     ErrLogger.Error("Unable to parse ORIENT attribute value", Designation,
                     Attributes["ORIENT"].value.ToString());
                     error = true;
-                }             
+                }
             }
             Orientation = orient;
             return !error;

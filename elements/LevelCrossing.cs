@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Autodesk.AutoCAD.DatabaseServices;
+﻿using System.Collections.Generic;
 
-namespace Refact.elements
-{  
+namespace ExpRddApp.elements
+{
     public class LevelCrossing : SLElement
     {
         public List<LxTrack> Tracks { get; set; }

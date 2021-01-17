@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
-namespace Refact.elements
+namespace ExpRddApp.elements
 {
     public class LxTrack
     {
@@ -22,7 +19,7 @@ namespace Refact.elements
 
         public string GetId(int i, char a, int trackCount, SLElement lxPws)
         {
-            string replace = "ovk-";         
+            string replace = "ovk-";
             if (lxPws.ElType == XType.StaffPassengerCrossing)
             {
                 replace = "va-";
@@ -50,7 +47,7 @@ namespace Refact.elements
                 suffix = num.ToString();
             }
             Regex regexLoc = new Regex(@"^\s*KMP(_*TSEG" + suffix + @"){0,1}$\s*");
-            Regex regexBegin = new Regex(@"^\s*(BEGIN|START)_*(LCA|KMP){0,1}(_*TSEG" + suffix + @"){0,1}$\s*"); 
+            Regex regexBegin = new Regex(@"^\s*(BEGIN|START)_*(LCA|KMP){0,1}(_*TSEG" + suffix + @"){0,1}$\s*");
             Regex regexEnd = new Regex(@"^\s*END_*(LCA|KMP){0,1}(_*TSEG" + suffix + @"){0,1}$\s*");
             Regex regexLength = new Regex(@"^\s*LENG(HT|TH)_*(LCA|" + suffix + @"){0,1}(_*TSEG" + suffix + @"){0,1}$\s*");
             Attribute lxTrLocation = null;
@@ -75,63 +72,63 @@ namespace Refact.elements
             }
             //if (tracksCount == 1)
             //{             
-                lxTrLocation = lx
-                               .Attributes.Where(x => regexBegin.IsMatch(x.Key))
-                               .FirstOrDefault()
-                               .Value;
-                if (lxTrLocation == null)
+            lxTrLocation = lx
+                           .Attributes.Where(x => regexBegin.IsMatch(x.Key))
+                           .FirstOrDefault()
+                           .Value;
+            if (lxTrLocation == null)
+            {
+                ErrLogger.Error("Unable to get Lx track Begin Kmp attribute", lx.Designation, Id);
+                BeginLca = 0;
+                error = true;
+            }
+            else
+            {
+                if (!decimal.TryParse(lxTrLocation.value, out decimal begin))
                 {
-                    ErrLogger.Error("Unable to get Lx track Begin Kmp attribute", lx.Designation, Id);
-                    BeginLca = 0;
+                    ErrLogger.Error("Unable to parse Lx track Begin Kmp from attribute", lx.Designation, lxTrLocation.name);
                     error = true;
                 }
-                else
+                BeginLca = begin;
+            }
+            lxTrLocation = lx
+                           .Attributes.Where(x => regexEnd.IsMatch(x.Key))
+                           .FirstOrDefault()
+                           .Value;
+            if (lxTrLocation == null)
+            {
+                ErrLogger.Error("Unable to get Lx track End Kmp attribute", lx.Designation, Id);
+                EndLca = 0;
+                error = true;
+            }
+            else
+            {
+                if (!decimal.TryParse(lxTrLocation.value, out decimal end))
                 {
-                    if (!decimal.TryParse(lxTrLocation.value, out decimal begin))
-                    {
-                        ErrLogger.Error("Unable to parse Lx track Begin Kmp from attribute", lx.Designation, lxTrLocation.name);
-                        error = true;
-                    }
-                    BeginLca = begin;
-                }
-                lxTrLocation = lx
-                               .Attributes.Where(x => regexEnd.IsMatch(x.Key))
-                               .FirstOrDefault()
-                               .Value;
-                if (lxTrLocation == null)
-                {
-                    ErrLogger.Error("Unable to get Lx track End Kmp attribute", lx.Designation, Id);
-                    EndLca = 0;
+                    ErrLogger.Error("Unable to parse Lx track End Kmp from attribute", lx.Designation, lxTrLocation.name);
                     error = true;
                 }
-                else
+                EndLca = end;
+            }
+            lxTrLocation = lx
+                           .Attributes.Where(x => regexLength.IsMatch(x.Key))
+                           .FirstOrDefault()
+                           .Value;
+            if (lxTrLocation == null)
+            {
+                ErrLogger.Error("Unable to get Lx track Length attribute", lx.Designation, Id);
+                LengthLca = 0;
+                error = true;
+            }
+            else
+            {
+                if (!int.TryParse(lxTrLocation.value, out int length))
                 {
-                    if (!decimal.TryParse(lxTrLocation.value, out decimal end))
-                    {
-                        ErrLogger.Error("Unable to parse Lx track End Kmp from attribute", lx.Designation, lxTrLocation.name);
-                        error = true;
-                    }
-                    EndLca = end;
-                }
-                lxTrLocation = lx
-                               .Attributes.Where(x => regexLength.IsMatch(x.Key))
-                               .FirstOrDefault()
-                               .Value;
-                if (lxTrLocation == null)
-                {
-                    ErrLogger.Error("Unable to get Lx track Length attribute", lx.Designation, Id);
-                    LengthLca = 0;
+                    ErrLogger.Error("Unable to parse Lx track Length from attribute", lx.Designation, lxTrLocation.name);
                     error = true;
                 }
-                else
-                {
-                    if (!int.TryParse(lxTrLocation.value, out int length))
-                    {
-                        ErrLogger.Error("Unable to parse Lx track Length from attribute", lx.Designation, lxTrLocation.name);
-                        error = true;
-                    }
-                    LengthLca = length;
-                }
+                LengthLca = length;
+            }
             //}
             //else if (tracksCount > 1)
             //{
@@ -376,5 +373,5 @@ namespace Refact.elements
         }
     }
 
-   
+
 }

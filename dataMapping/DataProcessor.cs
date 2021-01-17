@@ -2,19 +2,17 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using LxAct = LevelCrossingsLevelCrossingLevelCrossingTracksLevelCrossingTrackActivationSectionsActivationSection;
 using LxActRtChain = LevelCrossingsLevelCrossingLevelCrossingTracksLevelCrossingTrackActivationSectionsActivationSectionRouteChain;
-using PwsTrack = StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracksStaffPassengerCrossingTrack;
-using PwsActSections = StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracksStaffPassengerCrossingTrackActivationSections;
-using PwsActSection = StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracksStaffPassengerCrossingTrackActivationSectionsActivationSection;
-using PwsActSectionDelays = StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracksStaffPassengerCrossingTrackActivationSectionsActivationSectionActivationDelays;
-using PwsActSectionDelay = StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracksStaffPassengerCrossingTrackActivationSectionsActivationSectionActivationDelaysActivationDelay;
 using PwsActRtChain = StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracksStaffPassengerCrossingTrackActivationSectionsActivationSectionRouteChain;
-using System.Threading.Tasks;
+using PwsActSection = StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracksStaffPassengerCrossingTrackActivationSectionsActivationSection;
+using PwsActSectionDelay = StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracksStaffPassengerCrossingTrackActivationSectionsActivationSectionActivationDelaysActivationDelay;
+using PwsActSectionDelays = StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracksStaffPassengerCrossingTrackActivationSectionsActivationSectionActivationDelays;
+using PwsActSections = StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracksStaffPassengerCrossingTrackActivationSections;
+using PwsTrack = StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracksStaffPassengerCrossingTrack;
 
-namespace Refact.dataMapping
+namespace ExpRddApp.dataMapping
 {
     public class DataProcessor
     {
@@ -37,7 +35,7 @@ namespace Refact.dataMapping
         List<ExcelLib.Bg> bgs;
         ExcelLib.EmgsData emgsData;
 
-        Dictionary<string ,ExcelLib.Lx> lxes;
+        Dictionary<string, ExcelLib.Lx> lxes;
         Dictionary<string, ExcelLib.Pws> pwses;
 
         private bool error;
@@ -80,7 +78,7 @@ namespace Refact.dataMapping
             DocsDescrs = new List<TFileDescr>();
             status = new TStatus { status = StatusType.@new };
             //LoadData();
-        }        
+        }
 
         public void LoadData()
         {
@@ -150,13 +148,13 @@ namespace Refact.dataMapping
                 emgsData = readExcel.GetEs(loadFiles["lblxlsEmSg"], acLayout.SigLayout.StName);
             }
             DocsDescrs.AddRange(readExcel.FileDescrs
-                                .Select(x => new TFileDescr 
+                                .Select(x => new TFileDescr
                                 {
-                                    docID = x.DocID, 
-                                    creator = x.Creator, 
-                                    date = x.Date, 
-                                    title = x.Title, 
-                                    version = x.Version  
+                                    docID = x.DocID,
+                                    creator = x.Creator,
+                                    date = x.Date,
+                                    title = x.Title,
+                                    version = x.Version
                                 }));
             error = readExcel.ErrFound || readWord.ErrFound;
             args.Increment = 100;
@@ -186,13 +184,13 @@ namespace Refact.dataMapping
             };
             writeExcel = new ExcelLib.WriteExcel();
             docs.AddRange(DocsDescrs
-                   .Select(x => new ExcelLib.DocumentMetaData 
+                   .Select(x => new ExcelLib.DocumentMetaData
                    {
-                       docID = x.docID, 
-                       creator = x.creator, 
-                       date = x.date, 
-                       title = x.title, 
-                       version = x.version 
+                       docID = x.docID,
+                       creator = x.creator,
+                       date = x.date,
+                       title = x.title,
+                       version = x.version
                    })
                    .ToList());
             writeExcel.ReportExcel(docs, fileName);
@@ -239,14 +237,14 @@ namespace Refact.dataMapping
                 StaffPassengerCrossings = GetPwss(),
                 SpeedProfiles = SpeedProfiles,
                 Platforms = GetPlatforms(),
-                TrustedAreas =GetTrustedAreas(),
+                TrustedAreas = GetTrustedAreas(),
                 EmergencyStopGroups = GetEmergencyStopGroups(),
                 PermanentShuntingAreas = GetShuntingAreas(),
                 Bridges = GetBridges(),
                 Catenaries = GetCatenaries(),
                 Radii = GetRadii(),
                 CompoundRoutes = GetCompoundRoutes()
-            };         
+            };
         }
 
         private CompoundRoutes GetCompoundRoutes()
@@ -304,7 +302,7 @@ namespace Refact.dataMapping
             };
             return metaData;
         }
-        
+
         private Lines GetRddLines()
         {
             if (acLayout.RailwayLines == null || acLayout.RailwayLines.Count == 0)
@@ -325,7 +323,7 @@ namespace Refact.dataMapping
                        .ToArray()
             };
         }
-        
+
         private StationsAndStops GetStationsStops()
         {
             if (acLayout.StationsStops == null || acLayout.StationsStops.Count == 0)
@@ -355,7 +353,7 @@ namespace Refact.dataMapping
                 .ToArray()
             };
         }
-        
+
         private TrackSegments GetTrackSegments()
         {
             if (acLayout.Tsegs == null || acLayout.Tsegs.Count == 0)
@@ -387,7 +385,7 @@ namespace Refact.dataMapping
                                .ToArray()
             };
         }
-        
+
         private Connectors GetConnectors()
         {
             if (acLayout.Connectors == null || acLayout.Connectors.Count == 0)
@@ -396,7 +394,7 @@ namespace Refact.dataMapping
             }
             return new Connectors
             {
-                 Connector = acLayout.Connectors
+                Connector = acLayout.Connectors
                              .Where(c => !c.Exclude && !c.NextStation)
                              .Select(c => new ConnectorsConnector
                              {
@@ -410,7 +408,7 @@ namespace Refact.dataMapping
                              .ToArray()
             };
         }
-       
+
         private Points GetPoints()
         {
             if (acLayout.Points == null || acLayout.Points.Count == 0)
@@ -421,10 +419,10 @@ namespace Refact.dataMapping
             var tdls = GetTdls();
             foreach (elements.Point point in acLayout.Points.Where(p => !p.Exclude && !p.NextStation))
             {
-               
+
                 var flankProtection = fpsData.GetFpByElId(point.GetShortName());
-                                      //.Where(x => GetElemDesignation(point.RddType, x.Pt) == point.Designation)
-                                      //.FirstOrDefault();
+                //.Where(x => GetElemDesignation(point.RddType, x.Pt) == point.Designation)
+                //.FirstOrDefault();
                 PointsPoint rddPoint = new PointsPoint
                 {
                     Status = status,
@@ -438,17 +436,17 @@ namespace Refact.dataMapping
                     TracksForDetectorLocking =
                         tdls.ContainsKey(point.Designation) ? tdls[point.Designation] : null,
                     EmergencyStopGroup = emgsData.GetEmgsByElId(point.Designation)
-                                         //.Where(x => x.ElemId == point.Designation)
-                                         //.Select(f => f.Id).FirstOrDefault()
+                    //.Where(x => x.ElemId == point.Designation)
+                    //.Select(f => f.Id).FirstOrDefault()
                 };
                 rddPoint.FlankProtectionAbandonmentLeftSpecified = true;
                 rddPoint.FlankProtectionAbandonmentRightSpecified = true;
                 if (flankProtection != null)
                 {
-                    rddPoint.FlankProtectionAbandonmentLeft = 
+                    rddPoint.FlankProtectionAbandonmentLeft =
                         flankProtection.RightNo == "x" ? YesNoType.yes : YesNoType.no;
                     rddPoint.FlankProtectionAbandonmentRight =
-                        flankProtection.LeftNo == "x" ? YesNoType.yes : YesNoType.no;                   
+                        flankProtection.LeftNo == "x" ? YesNoType.yes : YesNoType.no;
                     var addTdtLeft = SplitTdts(flankProtection.RightTdt, "FP table");
                     var addTdtRight = SplitTdts(flankProtection.LeftTdt, "FP table");
                     if (addTdtLeft != null && addTdtLeft.Length > 0)
@@ -464,11 +462,11 @@ namespace Refact.dataMapping
                         {
                             AxleCounterSectionID = SplitTdts(flankProtection.LeftTdt, "FP table")
                         };
-                    }             
+                    }
                 }
                 rddPoints.Add(rddPoint);
             }
-            return new Points { Point = rddPoints.ToArray()};
+            return new Points { Point = rddPoints.ToArray() };
         }
 
         private PointsPointLinesLine[] GetPointLines(elements.Point point)
@@ -545,14 +543,14 @@ namespace Refact.dataMapping
             return new EndOfTracks
             {
                 EndOfTrack = acLayout.EndOfTracks
-                            .Select(x => new EndOfTracksEndOfTrack 
+                            .Select(x => new EndOfTracksEndOfTrack
                             {
                                 Status = status,
                                 Designation = x.Designation,
                                 KindOfEOT = x.KindOfEOT,
                                 LineID = x.LineID,
                                 Location = x.Location.ToString(),
-                                Direction = x.Direction 
+                                Direction = x.Direction
                             })
                             .ToArray()
             };
@@ -616,7 +614,7 @@ namespace Refact.dataMapping
                 newDesigSplit[0] = "spst";
                 newDesigSplit[newDesigSplit.Length - 1] = "S" + newDesigSplit[newDesigSplit.Length - 1];
                 string newDesig = string.Join("-", newDesigSplit);
-                vSignals.Add(new SignalsSignal 
+                vSignals.Add(new SignalsSignal
                 {
                     Status = status,
                     Designation = newDesig,
@@ -632,7 +630,7 @@ namespace Refact.dataMapping
                     ShiftCESLocation = vSigTmp.GetShiftOces(),
                     ShiftCESLocationSpecified = true,
                     Remarks = "Virtual signal"
-                });             
+                });
             }
             return vSignals;
         }
@@ -648,15 +646,15 @@ namespace Refact.dataMapping
             {
                 DetectionPoint = acLayout.DetectionPoints
                                  .Where(x => !x.Exclude && !x.NextStation)
-                                 .Select(d => new DetectionPointsDetectionPoint 
-                                 { 
-                                    Status = status,
-                                    Designation = d.Designation,
-                                    KindOfDP = d.KindOfDP,
-                                    InsidePSA = d.InsidePSA,
-                                    TrackSegmentID = d.GetTsegId(),
-                                    LineID = d.LineID,
-                                    Location = d.Location.ToString()
+                                 .Select(d => new DetectionPointsDetectionPoint
+                                 {
+                                     Status = status,
+                                     Designation = d.Designation,
+                                     KindOfDP = d.KindOfDP,
+                                     InsidePSA = d.InsidePSA,
+                                     TrackSegmentID = d.GetTsegId(),
+                                     LineID = d.LineID,
+                                     Location = d.Location.ToString()
                                  }).ToArray()
             };
         }
@@ -674,22 +672,22 @@ namespace Refact.dataMapping
                                      {
                                          Status = status,
                                          Designation = acs.Designation,
-                                         DetectionPoints = new AxleCounterSectionsAxleCounterSectionDetectionPoints 
-                                         { 
+                                         DetectionPoints = new AxleCounterSectionsAxleCounterSectionDetectionPoints
+                                         {
                                              DetectionPoint = acs.DetectionPoints
                                                               .Where(x => x.ElType == XType.DetectionPoint)
-                                                              .Select(dp => new AxleCounterSectionsAxleCounterSectionDetectionPointsDetectionPoint 
-                                                              { 
-                                                                  Value = dp.Designation 
+                                                              .Select(dp => new AxleCounterSectionsAxleCounterSectionDetectionPointsDetectionPoint
+                                                              {
+                                                                  Value = dp.Designation
                                                               })
                                                               .ToArray()
                                          },
-                                         Elements = new AxleCounterSectionsAxleCounterSectionElements 
-                                         { 
-                                             Element =  acs.Elements
+                                         Elements = new AxleCounterSectionsAxleCounterSectionElements
+                                         {
+                                             Element = acs.Elements
                                                        .Select(e => new AxleCounterSectionsAxleCounterSectionElementsElement
-                                                       { 
-                                                           Value = e.Designation 
+                                                       {
+                                                           Value = e.Designation
                                                        })
                                                        .ToArray()
                                          }
@@ -711,15 +709,15 @@ namespace Refact.dataMapping
             return new TrackSections
             {
                 TrackSection = trackSections
-                               .Select(ts => new TrackSectionsTrackSection 
-                               { 
-                                    Status = status,
-                                    Designation = ts.Designation,
-                                    Limitation1 = ts.DetectionPoints[0].Designation,
-                                    Limitation2 = ts.DetectionPoints[1].Designation,
-                                    StationName = ts.StName,
-                                    EmergencyStopGroup = emgsData.GetEmgsByElId(ts.Designation),
-                                    TrackCausingLackOfClearance = fpsData.GetLocByElId(ts.Designation)
+                               .Select(ts => new TrackSectionsTrackSection
+                               {
+                                   Status = status,
+                                   Designation = ts.Designation,
+                                   Limitation1 = ts.DetectionPoints[0].Designation,
+                                   Limitation2 = ts.DetectionPoints[1].Designation,
+                                   StationName = ts.StName,
+                                   EmergencyStopGroup = emgsData.GetEmgsByElId(ts.Designation),
+                                   TrackCausingLackOfClearance = fpsData.GetLocByElId(ts.Designation)
                                })
                                .ToArray()
             };
@@ -775,7 +773,7 @@ namespace Refact.dataMapping
                         StartAreaGroup = null
                     };
                     routesRoutes.Add(routeActShunt);
-                }   
+                }
             }
             return SetUnigueRtIds(new Routes { Route = routesRoutes.ToArray() });
         }
@@ -823,7 +821,7 @@ namespace Refact.dataMapping
             {
                 return null;
             }
-            return new LevelCrossings 
+            return new LevelCrossings
             {
                 LevelCrossing = acLayout.LevelCrossings
                                 .Select(lc => GetLevelCrossing(lc))
@@ -867,8 +865,8 @@ namespace Refact.dataMapping
                 List<TrackSegmentType> trackSegments = new List<TrackSegmentType>();
                 if (platform.Tsegs.Count == 1)
                 {
-                    trackSegments.Add(new TrackSegmentType 
-                    { 
+                    trackSegments.Add(new TrackSegmentType
+                    {
                         Value = platform.Tsegs[0].Id,
                         OperationalKM1 = platform.Km1.ToString(),
                         OperationalKM2 = platform.Km2.ToString()
@@ -917,7 +915,7 @@ namespace Refact.dataMapping
             if (error)
             {
                 this.error = true;
-            }         
+            }
             return platforms;
         }
 
@@ -978,16 +976,16 @@ namespace Refact.dataMapping
                         }
                     }
                 }
-                  
-                trustedArea.TrackSegments = new TrustedAreasTrustedAreaTrackSegments 
-                { 
+
+                trustedArea.TrackSegments = new TrustedAreasTrustedAreaTrackSegments
+                {
                     TrackSegment = trackSegments.ToArray()
                 };
                 trustedAreas.Add(trustedArea);
             }
-            return new TrustedAreas 
-            { 
-                TrustedArea = trustedAreas.ToArray() 
+            return new TrustedAreas
+            {
+                TrustedArea = trustedAreas.ToArray()
             };
         }
 
@@ -1000,19 +998,19 @@ namespace Refact.dataMapping
             var tst = emgsData.EmergencyStops
                       .Where(s => acLayout.Signals.Any(a => a.Designation == s.ElemId))
                       .GroupBy(grp => grp.Id);
-            return new EmergencyStopGroups 
-            { 
+            return new EmergencyStopGroups
+            {
                 EmergencyStopGroup = tst
                                      .Select(em => new EmergencyStopGroupsEmergencyStopGroup
                                      {
-                                        Status = status,
-                                        Designation = em.Key,
-                                        EmergencyStop = new EmergencyStopGroupsEmergencyStopGroupEmergencyStop 
-                                        { 
-                                            Value = em.Select(v => v.ElemId).ToArray()
-                                        }
+                                         Status = status,
+                                         Designation = em.Key,
+                                         EmergencyStop = new EmergencyStopGroupsEmergencyStopGroupEmergencyStop
+                                         {
+                                             Value = em.Select(v => v.ElemId).ToArray()
+                                         }
                                      })
-                                     .ToArray() 
+                                     .ToArray()
             };
         }
 
@@ -1022,10 +1020,10 @@ namespace Refact.dataMapping
             {
                 return null;
             }
-            return new PermanentShuntingAreas 
+            return new PermanentShuntingAreas
             {
                 PermanentShuntingArea = acLayout.Psas
-                                        .Select(p => new PermanentShuntingAreasPermanentShuntingArea 
+                                        .Select(p => new PermanentShuntingAreasPermanentShuntingArea
                                         {
                                             Status = status,
                                             Designation = p.Id,
@@ -1039,7 +1037,7 @@ namespace Refact.dataMapping
         private PlatformHeightType GetPlatformHeight(elements.Platform platform, ref bool error)
         {
             var bdkPlat = acLayout.InputData.GetSPlatforms()
-                          .Where(p => p.Split('\t').Count() == 6 && 
+                          .Where(p => p.Split('\t').Count() == 6 &&
                                       p.Split('\t')[1].ToLower().Trim() == platform.StName.ToLower() &&
                                       p.Split('\t')[3] == platform.Track)
                           .FirstOrDefault();
@@ -1083,7 +1081,7 @@ namespace Refact.dataMapping
             if (!string.IsNullOrEmpty(remarks))
             {
                 lc.Remarks = remarks;
-            }           
+            }
             return ParseLxParams(lc, excelLx);
         }
 
@@ -1112,13 +1110,13 @@ namespace Refact.dataMapping
             {
                 return null;
             }
-            List<LevelCrossingsLevelCrossingLevelCrossingTracksLevelCrossingTrack> foundTracks = 
+            List<LevelCrossingsLevelCrossingLevelCrossingTracksLevelCrossingTrack> foundTracks =
                 new List<LevelCrossingsLevelCrossingLevelCrossingTracksLevelCrossingTrack>();
             foreach (var lxTrack in levelCrossing.Tracks)
             {
                 var actTrack = excelLx.Acts
                                .Where(x => x.LxAxleCounterSectionID == lxTrack.LxAcSection);
-                               //.FirstOrDefault();
+                //.FirstOrDefault();
                 if (actTrack.Count() == 0)
                 {
                     ErrLogger.Error("Activation for LX track not found", levelCrossing.Designation, lxTrack.Id);
@@ -1140,11 +1138,11 @@ namespace Refact.dataMapping
                         ActivationSection = actTrack
                                             .Select(act => new LxAct
                                             {
-                                                RouteChain = new LxActRtChain 
-                                                { 
-                                                    RouteID = act.RouteChain.ToArray() 
+                                                RouteChain = new LxActRtChain
+                                                {
+                                                    RouteID = act.RouteChain.ToArray()
                                                 },
-                                                ActivationDelayTime = act.ActivationDelayTime.ToDecimal("Lx delay", 
+                                                ActivationDelayTime = act.ActivationDelayTime.ToDecimal("Lx delay",
                                                                                         lxTrack.Id, ref error),
                                                 ActivationDelayTimeSpecified = true,
                                                 ActivationAxleCounterSectionID = act.ActivationAxleCounterSectionID,
@@ -1158,9 +1156,9 @@ namespace Refact.dataMapping
                     this.error = true;
                 }
             }
-            return new LevelCrossingsLevelCrossingLevelCrossingTracks 
-            { 
-                LevelCrossingTrack = foundTracks.ToArray() 
+            return new LevelCrossingsLevelCrossingLevelCrossingTracks
+            {
+                LevelCrossingTrack = foundTracks.ToArray()
             };
         }
 
@@ -1236,7 +1234,7 @@ namespace Refact.dataMapping
             }
             return new StaffPassengerCrossingsStaffPassengerCrossingStaffPassengerCrossingTracks
             {
-                 StaffPassengerCrossingTrack = foundTracks.ToArray()
+                StaffPassengerCrossingTrack = foundTracks.ToArray()
             };
         }
 
@@ -1277,7 +1275,7 @@ namespace Refact.dataMapping
                 else
                 {
                     maxWaitSpec = false;
-                }              
+                }
             }
             lc.MaxWaitTime = decParam;
             lc.MaxWaitTimeSpecified = maxWaitSpec;
@@ -1298,7 +1296,7 @@ namespace Refact.dataMapping
             }
 
             lc.DelayTimeRTLS = excelLx.Params[ExcelLib.LxParam.DelayTimeRTLS];
-            lc.CheckTimerRTLS = excelLx.Params[ExcelLib.LxParam.CheckTimerRTLS];           
+            lc.CheckTimerRTLS = excelLx.Params[ExcelLib.LxParam.CheckTimerRTLS];
             lc.DelayTimeActivationBarriers = excelLx.Params[ExcelLib.LxParam.DelayTimeActivationBarriers];
             lc.DelayTimeExitBarriers = excelLx.Params[ExcelLib.LxParam.DelayTimeExitBarriers];
             lc.DelayTimeShortBarriers = excelLx.Params[ExcelLib.LxParam.DelayTimeShortBarriers];
@@ -1366,8 +1364,8 @@ namespace Refact.dataMapping
 
         private BaliseGroupsBaliseGroup GetBaliseGroupTypes(elements.BaliseGroup balise)
         {
-            BaliseGroupsBaliseGroup baliseGroup = new BaliseGroupsBaliseGroup 
-            { 
+            BaliseGroupsBaliseGroup baliseGroup = new BaliseGroupsBaliseGroup
+            {
                 Status = status,
                 Designation = balise.Designation,
                 InsidePSA = balise.InsidePSA,
@@ -1379,7 +1377,7 @@ namespace Refact.dataMapping
             };
             List<BaliseGroupsBaliseGroupBaliseGroupTypesKindOfBG> kindOfBG =
                     new List<BaliseGroupsBaliseGroupBaliseGroupTypesKindOfBG>();
-           
+
             ExcelLib.Bg check = bgs
                                 .Where(x => x.Design == balise.Designation)
                                 .FirstOrDefault();
@@ -1420,7 +1418,7 @@ namespace Refact.dataMapping
                     {
                         dupSpec = false;
                     }
-                    
+
                     kindOfBG.Add(new BaliseGroupsBaliseGroupBaliseGroupTypesKindOfBG
                     {
                         duplicatedSpecified = dupSpec,
@@ -1429,8 +1427,8 @@ namespace Refact.dataMapping
                         Value = kind
                     });
                 }
-                baliseGroup.BaliseGroupTypes = new BaliseGroupsBaliseGroupBaliseGroupTypes 
-                { 
+                baliseGroup.BaliseGroupTypes = new BaliseGroupsBaliseGroupBaliseGroupTypes
+                {
                     KindOfBG = kindOfBG.ToArray()
                 };
                 baliseGroup.Orientation = orient;
@@ -1535,7 +1533,7 @@ namespace Refact.dataMapping
             if (r.SdLast.ToLower().Trim() != "n" &&
                 r.SdLast.ToLower().Trim() != "-")
             {
-                sdLast = CheckElementExists(GetElemDesignation(RddType.spsk, r.SdLast.Trim()), 
+                sdLast = CheckElementExists(GetElemDesignation(RddType.spsk, r.SdLast.Trim()),
                             "RT table - " + r.Id + ". Sd last element", out bool exists, false);
                 if (!exists)
                 {
@@ -1553,7 +1551,7 @@ namespace Refact.dataMapping
                 r.SafeDist.ToLower().Trim() != "-" &&
                 r.SafeDist.ToLower().Trim() != "integrated")
             {
-                safeDist = CheckElementExists(GetElemDesignation(RddType.spsk, r.SafeDist.Trim()), 
+                safeDist = CheckElementExists(GetElemDesignation(RddType.spsk, r.SafeDist.Trim()),
                             "RT table - " + r.Id + ". Ext destination area", out bool exists, false);
                 if (!exists)
                 {
@@ -1574,8 +1572,8 @@ namespace Refact.dataMapping
                        .Split(Constants.splitSepar, StringSplitOptions.RemoveEmptyEntries)
                        .Where(x => x.ToLower().Trim() != "n" &&
                                    x.Trim() != "-")
-                       .Select(s => new RoutesRouteStartAreaGroupStartArea 
-                       { 
+                       .Select(s => new RoutesRouteStartAreaGroupStartArea
+                       {
                            ElementID = GetStartAreaValue(s, route)
                        })
                        .ToArray();
@@ -1605,7 +1603,7 @@ namespace Refact.dataMapping
                                 "RT table - " + r.Id + ". Start Area Group", out _, true);
                     }
                 }
-            }                             
+            }
             return startArea;
         }
 
@@ -1632,7 +1630,7 @@ namespace Refact.dataMapping
             return actCross;
         }
 
-        private RoutesRouteActivateCrossingElementGroup GetActivateCrossingElementGroup (ExcelLib.Route route)
+        private RoutesRouteActivateCrossingElementGroup GetActivateCrossingElementGroup(ExcelLib.Route route)
         {
             if (string.IsNullOrEmpty(route.ActCross))
             {
@@ -1644,7 +1642,7 @@ namespace Refact.dataMapping
                                    x.Trim() != "-")
                        .Select(s => new RoutesRouteActivateCrossingElementGroupActivateCrossingElement
                        {
-                             Value  = GetActivateCrossingElement(s, route)
+                           Value = GetActivateCrossingElement(s, route)
                        })
                        .ToArray();
             if (actCrossGrp == null || actCrossGrp.Count() == 0)
@@ -1720,10 +1718,10 @@ namespace Refact.dataMapping
                     ErrLogger.Error("Unable to parse point position from points group", item.point, log);
                     error = true;
                 }
-                groupPoints.Add(new RoutesRoutePointGroupPoint 
-                { 
-                    Value = item.point, 
-                    RequiredPosition = leftRightType 
+                groupPoints.Add(new RoutesRoutePointGroupPoint
+                {
+                    Value = item.point,
+                    RequiredPosition = leftRightType
                 });
             }
             if (groupPoints == null || groupPoints.Count() == 0)
@@ -1777,9 +1775,9 @@ namespace Refact.dataMapping
 
         private Dictionary<string, PointsPointTracksForDetectorLocking> GetTdls()
         {
-            Dictionary<string, PointsPointTracksForDetectorLocking> rddTdls = 
+            Dictionary<string, PointsPointTracksForDetectorLocking> rddTdls =
                 new Dictionary<string, PointsPointTracksForDetectorLocking>();
-            
+
             foreach (var tdl in tdls)
             {
                 var check = CheckElementExists(GetElemDesignation(RddType.spsk, tdl.Pt), "TDL Table", out _);
@@ -1804,7 +1802,7 @@ namespace Refact.dataMapping
                     rddTdls.Add(check, new PointsPointTracksForDetectorLocking
                     {
                         TrackforDetectorLocking = foundTdls
-                            .Select(x => new PointsPointTracksForDetectorLockingTrackforDetectorLocking 
+                            .Select(x => new PointsPointTracksForDetectorLockingTrackforDetectorLocking
                             {
                                 Value = x
                             }).ToArray()
@@ -1913,21 +1911,21 @@ namespace Refact.dataMapping
                       name.Trim();
             }
         }
-        
+
         private PointsPointPointMachines GetPointMachines(elements.Point point)
         {
             var tsegs = acLayout.Tsegs
                        .Where(x => x.Vertex1.Element == point || x.Vertex2.Element == point)
                        .ToList();
             var sspsPt = SpeedProfiles.SpeedProfile
-                         .Where(x => x.TrainTypes != null && 
+                         .Where(x => x.TrainTypes != null &&
                                      tsegs.Any(a => x.TrackSegments.TrackSegment.Any(t => t.Value == a.Id)))
                          .ToList();
             decimal maxSpeed = 0;
             if (sspsPt.Count > 0)
             {
                 maxSpeed = sspsPt.Max(m => m.TrainTypes.TrainTyp.Select(x => x.SpeedLimit).Max());
-            }         
+            }
 
             KindOfPMType kindOfPM = KindOfPMType.L710H;
             if (maxSpeed > 160 ||
@@ -1962,9 +1960,9 @@ namespace Refact.dataMapping
                 error = true;
                 return null;
             }
-            
+
         }
-        
+
         private SpeedProfiles GetSpeedProfiles()
         {
             if (ssps == null || ssps.Count == 0)
@@ -2009,12 +2007,12 @@ namespace Refact.dataMapping
                     trackSegments.Add(new TrackSegmentType
                     {
                         Value = tseg,
-                        OperationalKM1 = ssp.Km1.Contains(".") ? 
-                                          ssp.Km1 : 
-                                          string.Format("{0:0.000}", ssp.Km1.ToDecimal("SSP Table", ssp.Km1, ref error)/1000),
+                        OperationalKM1 = ssp.Km1.Contains(".") ?
+                                          ssp.Km1 :
+                                          string.Format("{0:0.000}", ssp.Km1.ToDecimal("SSP Table", ssp.Km1, ref error) / 1000),
                         OperationalKM2 = ssp.Km2.Contains(".") ?
                                           ssp.Km2 :
-                                          string.Format("{0:0.000}", ssp.Km2.ToDecimal("SSP Table", ssp.Km2, ref error)/1000),
+                                          string.Format("{0:0.000}", ssp.Km2.ToDecimal("SSP Table", ssp.Km2, ref error) / 1000),
                     });
                 }
                 if (sspGrp.First().Remarks != null && sspGrp.First().Remarks.Trim() == "-")
@@ -2159,7 +2157,7 @@ namespace Refact.dataMapping
                 }
                 speedProfiles.Add(speedProfile);
             }
-            return new SpeedProfiles {SpeedProfile = speedProfiles.ToArray() };
+            return new SpeedProfiles { SpeedProfile = speedProfiles.ToArray() };
         }
 
         private void CheckEmgs()
@@ -2184,7 +2182,7 @@ namespace Refact.dataMapping
 
         public bool HasErrors()
         {
-           return error;
+            return error;
         }
     }
 }

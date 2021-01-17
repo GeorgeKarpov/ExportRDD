@@ -1,11 +1,9 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 
-namespace Refact.elements
+namespace ExpRddApp.elements
 {
-    
-    public class Pws: SLElement
+
+    public class Pws : SLElement
     {
         public List<LxTrack> Tracks { get; set; }
         public Pws(Block block, string stattionId) : base(block, stattionId)

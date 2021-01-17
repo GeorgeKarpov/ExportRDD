@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Refact.elements
+namespace ExpRddApp.elements
 {
-    public class BlockInterface: SLElement 
+    public class BlockInterface : SLElement
     {
         public string KindOfBI { get; set; }
         public YesNoType PermissionHandling { get; set; }
