@@ -56,13 +56,20 @@
       <HintPath>..\..\..\..\Program Files\Autodesk\AutoCAD 2019\acmgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="AdWindows">
+      <HintPath>..\..\..\..\Program Files\Autodesk\AutoCAD 2019\AdWindows.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Costura, Version=4.1.0.0, Culture=neutral, PublicKeyToken=9919ef960d84173d, processorArchitecture=MSIL">
       <HintPath>..\packages\Costura.Fody.4.1.0\lib\net40\Costura.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -93,6 +100,7 @@
     <Compile Include="elements\LevelCrossing.cs" />
     <Compile Include="elements\LxTrack.cs" />
     <Compile Include="elements\OcesBg.cs" />
+    <Compile Include="elements\OldPlatform.cs" />
     <Compile Include="elements\Platform.cs" />
     <Compile Include="elements\Pws.cs" />
     <Compile Include="elements\SearchElement.cs" />
@@ -112,6 +120,13 @@
     <Compile Include="elements\EndOfTrack.cs" />
     <Compile Include="Refactoring\Calc.cs" />
     <Compile Include="Refactoring\Constants.cs" />
+    <Compile Include="Refactoring\Data.cs" />
+    <Compile Include="Refactoring\ElementsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Refactoring\ElementsControl.designer.cs">
+      <DependentUpon>ElementsControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Refactoring\Enums.cs" />
     <Compile Include="elements\EnclosedArea.cs" />
     <Compile Include="elements\Point.cs" />
@@ -137,9 +152,19 @@
     <Compile Include="FrmStation.Designer.cs">
       <DependentUpon>FrmStation.cs</DependentUpon>
     </Compile>
-    <Compile Include="Init.cs" />
+    <Compile Include="Refactoring\Init.cs" />
+    <Compile Include="Refactoring\ErrorsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Refactoring\ErrorsControl.Designer.cs">
+      <DependentUpon>ErrorsControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Refactoring\LongOperationManager.cs" />
+    <Compile Include="Refactoring\Palette.cs" />
     <Compile Include="Refactoring\ProgressEventArgs.cs" />
+    <Compile Include="Refactoring\SuperToolTipDisplay.xaml.cs">
+      <DependentUpon>SuperToolTipDisplay.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Refactoring\WrongArgUsageException.cs" />
     <Compile Include="Refactoring\ExpRDD.cs" />
     <Compile Include="Refactoring\Extensions.cs" />
@@ -150,7 +175,7 @@
       <DependentUpon>FrmStation.cs</DependentUpon>
     </Compile>
     <Compile Include="Refactoring\InputData.cs" />
-    <Compile Include="Commands.cs" />
+    <Compile Include="Refactoring\Commands.cs" />
     <Compile Include="Palette.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -159,7 +184,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Refactoring\RailwayLine.cs" />
-    <Compile Include="Register.cs" />
+    <Compile Include="Refactoring\Register.cs" />
     <Compile Include="SearchDP.cs" />
     <Compile Include="SearchBG.cs" />
     <Compile Include="SearchSegment.cs" />
@@ -198,6 +223,12 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Refactoring\ElementsControl.resx">
+      <DependentUpon>ElementsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Refactoring\ErrorsControl.resx">
+      <DependentUpon>ErrorsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Refactoring\FrmStation.resx">
       <DependentUpon>FrmStation.cs</DependentUpon>
@@ -241,6 +272,12 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="Refactoring\SuperToolTipDisplay.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

@@ -1,4 +1,5 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Windows;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -21,9 +22,14 @@ namespace Refact
         {
             lom = new LongOperationManager("Creating RDD Data");
             lom.SetTotalOperations(1000);
-            acLayout = new AcLayout(ExpPt1.Commands.DwgPath, ExpPt1.Commands.DwgDir, ExpPt1.Commands.AssemblyDir);
+            acLayout = new AcLayout(Commands.DwgPath, Commands.DwgDir, Commands.AssemblyDir);
+            
+            if (acLayout.HasErrors())
+            {
+                lom.Dispose();
+                return;
+            }
             acLayout.ReportProgress += AcLayout_ReportProgress;
-
             acLayout.PreLoadData(out bool error);
             if (error)
             {
@@ -35,7 +41,7 @@ namespace Refact
                 StationId = acLayout.SigLayout.StID,
                 StationName = acLayout.SigLayout.StName,
                 LoadFiles = acLayout.InputData.LoadIni(),
-                DwgDir = ExpPt1.Commands.DwgDir
+                DwgDir = Commands.DwgDir
             };
             frmStation.SetAuthors(acLayout.InputData.GetAuthors());
 
@@ -54,7 +60,7 @@ namespace Refact
                           .Select(x => x.Designation)
                           .ToList();
             dataProcessor =
-                new dataMapping.DataProcessor(ExpPt1.Commands.DwgDir, ExpPt1.Commands.AssemblyDir,
+                new dataMapping.DataProcessor(Commands.DwgDir, Commands.AssemblyDir,
                                               frmStation.LoadFiles, frmStation.CheckData, lxList, pwsList, acLayout,
                                               frmStation.GetDocId(), frmStation.GetVersion(), frmStation.GetAuthor());
             dataProcessor.ReportProgress += AcLayout_ReportProgress;
@@ -71,14 +77,14 @@ namespace Refact
                                                         { "Created with ExpPt1 v" + Assembly.GetExecutingAssembly().GetName().Version.ToString(3)
                                                            + " (Georgijs Karpovs) - " + DateTime.Now });
             dataProcessor.ExportReport(Path.GetDirectoryName(frmStation.RddSaveTo) + "//" +
-                              Path.GetFileNameWithoutExtension(frmStation.RddSaveTo) + "_Report.xlsx");
+                              Path.GetFileNameWithoutExtension(frmStation.RddSaveTo) + "_" + acLayout.SigLayout.StID + "_report.xlsx");
             error = acLayout.HasErrors() || dataProcessor.HasErrors();
             acLayout.Dispose();
             lom.Dispose();
             if (error)
             {
-                Utils.ShowErrList(ExpPt1.Commands.DwgDir, "Errors Found",
-                    "Export completed with errors. See errors log.", SystemIcons.Exclamation, true);
+                Utils.ShowErrList(Commands.DwgDir, "Errors Found",
+                    "Export completed with errors. See errors log.", SystemIcons.Exclamation, false);
             }
             else
             {
@@ -97,9 +103,103 @@ namespace Refact
             }
         }
 
-        private void CreateRDD()
+        public void ExportRoutes()
         {
-            //throw new NotImplementedException();
+            acLayout = new AcLayout(Commands.DwgPath, Commands.DwgDir, Commands.AssemblyDir);
+            SaveFileDialog saveFileDialog = new SaveFileDialog("Export routes", 
+                                                                Commands.DwgDir + "/" + acLayout.SigLayout.StID + "_routes.xlsx", 
+                                                                "xlsx", "Export routes",
+                                                                SaveFileDialog.SaveFileDialogFlags.NoUrls);
+            if (saveFileDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+            {
+                return;
+            }
+                      
+            var expRts = acLayout.ExportRoutes(out bool error);
+            if (error)
+            {
+                Utils.ShowErrList(Commands.DwgDir, "Export Routes", "Routes export is blocked by following errors", SystemIcons.Error, true);
+                return;
+            }
+            ExcelLib.WriteExcel writeExcel = new ExcelLib.WriteExcel();
+            writeExcel.ExpRoutes(expRts, saveFileDialog.Filename, acLayout.SigLayout.StID);
+            if (writeExcel.Error)
+            {
+                Utils.ShowErrList(Commands.DwgDir, "Export Routes",
+                    "Unable to export routes. See errors log.", SystemIcons.Error, false);
+            }
+            else
+            {
+                System.Windows.Forms.MessageBox.Show("Export successful",
+                   "Routes Export", System.Windows.Forms.MessageBoxButtons.OK,
+                   System.Windows.Forms.MessageBoxIcon.Information);
+            }
+        }
+
+        public void ExportSspTsegs()
+        {
+            acLayout = new AcLayout(Commands.DwgPath, Commands.DwgDir, Commands.AssemblyDir);
+            SaveFileDialog saveFileDialog = new SaveFileDialog("Export SSP Tsegs",
+                                                                Commands.DwgDir + "/" + acLayout.SigLayout.StID + "_sspTsegs.xlsx",
+                                                                "xlsx", "Export SSP Tsegs",
+                                                                SaveFileDialog.SaveFileDialogFlags.NoUrls);
+            if (saveFileDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+            {
+                return;
+            }
+
+            var expSspTsegs = acLayout.ExportTsegs(out bool error);
+            if (error)
+            {
+                Utils.ShowErrList(Commands.DwgDir, "Export SSP Tsegs", "SSP Tsegs export is blocked by following errors", SystemIcons.Error, true);
+                return;
+            }
+            ExcelLib.WriteExcel writeExcel = new ExcelLib.WriteExcel();
+            writeExcel.ExpSegments(expSspTsegs, saveFileDialog.Filename);
+            if (writeExcel.Error)
+            {
+                Utils.ShowErrList(Commands.DwgDir, "Export SSP Tsegs",
+                    "Unable to export SSP Tsegs. See errors log.", SystemIcons.Error, false);
+            }
+            else
+            {
+                System.Windows.Forms.MessageBox.Show("Export successful",
+                   "SSP Tsegs Export", System.Windows.Forms.MessageBoxButtons.OK,
+                   System.Windows.Forms.MessageBoxIcon.Information);
+            }
+        }
+
+        public void ExportTdls()
+        {
+            acLayout = new AcLayout(Commands.DwgPath, Commands.DwgDir, Commands.AssemblyDir);
+            SaveFileDialog saveFileDialog = new SaveFileDialog("Export TDL",
+                                                                Commands.DwgDir + "/" + acLayout.SigLayout.StID + "_tdl.xlsx",
+                                                                "xlsx", "Export TDL",
+                                                                SaveFileDialog.SaveFileDialogFlags.NoUrls);
+            if (saveFileDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+            {
+                return;
+            }
+
+            var expTdls = acLayout.ExportTdlPts(out bool error);
+            if (error)
+            {
+                Utils.ShowErrList(Commands.DwgDir, "Export TDL", "TDL export is blocked by following errors", SystemIcons.Error, true);
+                return;
+            }
+            ExcelLib.WriteExcel writeExcel = new ExcelLib.WriteExcel();
+            writeExcel.ExpTdls(expTdls, saveFileDialog.Filename);
+            if (writeExcel.Error)
+            {
+                Utils.ShowErrList(Commands.DwgDir, "Export TDL",
+                    "Unable to export TDL. See errors log.", SystemIcons.Error, false);
+            }
+            else
+            {
+                System.Windows.Forms.MessageBox.Show("Export successful",
+                   "TDL Export", System.Windows.Forms.MessageBoxButtons.OK,
+                   System.Windows.Forms.MessageBoxIcon.Information);
+            }
         }
     }
 }

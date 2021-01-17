@@ -809,6 +809,7 @@ namespace Refact.dataMapping
             return new BaliseGroups
             {
                 BaliseGroup = acLayout.BaliseGroups
+                              .Where(x => !x.Exclude && !x.NextStation)
                               .Select(b => GetBaliseGroupTypes(b))
                               .OrderBy(b => b.Location)
                               .ThenBy(b => b.Designation)

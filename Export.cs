@@ -114,12 +114,12 @@ namespace ExpPt1
 
                 using (Transaction tr = db.TransactionManager.StartTransaction())
                 {
-                    string blockFileName = @"C:\3.TRDD\DynamicBlocks\Blks_Dynamic.dwg";
-                    if (!File.Exists(blockFileName))
-                    {
-                        AcadApp.ShowAlertDialog("File '" + blockFileName + "' doesn't exist");
-                        return;
-                    }
+                    //string blockFileName = @"C:\3.TRDD\DynamicBlocks\Blks_Dynamic.dwg";
+                    //if (!File.Exists(blockFileName))
+                    //{
+                    //    AcadApp.ShowAlertDialog("File '" + blockFileName + "' doesn't exist");
+                    //    return;
+                    //}
                     CopyBlockFromFile(this.assemblyPath + Constants.cfgFolder + @"\Blks_Dynamic.dwg", "Platform_Dynamic");
 
                     BlockReference blkRefInserted =
@@ -4443,10 +4443,10 @@ namespace ExpPt1
             List<ExcelLib.ExpRoute> routes = new List<ExcelLib.ExpRoute>();
             foreach (Block signalBlk in this.blocks.Where(x => x.XsdName == "Signal" && !x.Virtual && x.TrackSegId != null))
             {
-                var signal = this.signals
-                             .Where(x => x.Designation == signalBlk.Designation &&
-                                         x.KindOfSignal != TKindOfSignal.eotmb)
-                             .FirstOrDefault();
+                //var signal = this.signals
+                //             .Where(x => x.Designation == signalBlk.Designation &&
+                //                         x.KindOfSignal != TKindOfSignal.eotmb)
+                //             .FirstOrDefault();
                 routes.AddRange(GetDestSignals(signalBlk)
                                 .Select(r => new ExcelLib.ExpRoute
                                 {

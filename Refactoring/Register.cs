@@ -4,7 +4,7 @@ using Win = Microsoft.Win32;
 
 //[assembly: CommandClass(typeof(ExpPt1.Register))]
 
-namespace ExpPt1
+namespace Refact
 {
     /// <summary>
     /// Register .Net app in Win registry.

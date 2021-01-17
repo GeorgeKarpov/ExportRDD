@@ -14,7 +14,7 @@ namespace Refact
     public static class AcadTools
     {
         
-        public static List<Block> GetNewBlocks(ref bool error, Database db, Dictionary<string, string> blocksToGet)
+        public static List<Block> GetBlocks(ref bool error, Database db, Dictionary<string, string> blocksToGet)
         {
             List<Block> Blocks = new List<Block>();
 
@@ -798,6 +798,56 @@ namespace Refact
                 trans.Commit();
                 return layer;
             }          
+        }
+
+        public static void CopyAtributtes(BlockReference fromBlkRef, BlockReference toBlkRef, Transaction acTrans)
+        {
+            AttributeCollection attsOld = fromBlkRef.AttributeCollection;
+            AttributeCollection attsNew = toBlkRef.AttributeCollection;
+            Dictionary<string, AttributeReference> dicAttNew =
+            new Dictionary<string, AttributeReference>();
+            foreach (ObjectId arId in attsNew)
+            {
+                AttributeReference attRef =
+                    (AttributeReference)acTrans.GetObject(arId, OpenMode.ForWrite);
+                dicAttNew.Add(attRef.Tag.ToUpper(), attRef);
+
+            }
+            foreach (ObjectId arId in attsOld)
+            {
+                AttributeReference attRef =
+                    (AttributeReference)acTrans.GetObject(arId, OpenMode.ForRead);
+                string tag = attRef.Tag;
+                if (attRef.Tag == "PLATFORM_1")
+                {
+                    tag = "NAME";
+                }
+                if (dicAttNew.ContainsKey(tag.ToUpper()))
+                {
+                    dicAttNew[tag.ToUpper()].TextString = attRef.TextString;
+                }
+            }
+        }
+
+        public static bool LayerExists(string name, Database db)
+        {
+            using (Transaction acTrans = db.TransactionManager.StartTransaction())
+            {
+                LayerTable acLayTbl;
+                acLayTbl = acTrans.GetObject(db.LayerTableId,
+                                             OpenMode.ForRead) as LayerTable;
+                foreach (ObjectId acObjId in acLayTbl)
+                {
+                    LayerTableRecord acLyrTblRec;
+                    acLyrTblRec = acTrans.GetObject(acObjId,
+                                                    OpenMode.ForRead) as LayerTableRecord;
+                    if (acLyrTblRec.Name == name)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         public static void Message(string msg)

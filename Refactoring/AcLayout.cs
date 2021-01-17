@@ -42,6 +42,7 @@ namespace Refact
         public List<StationStop> StationsStops { get; set; }
         public List<FoulingPoint> FoulingPoints { get; set; }
         public List<Psa> Psas { get; set; }
+        public List<ExcelLib.ExpRoute> Routes { get; set; }
 
         private bool error;
 
@@ -68,6 +69,8 @@ namespace Refact
         private List<SLElement> TsegVertexes;
 
         private List<Track> tracks;
+
+        private List<OldPlatform> oldPlatforms;
 
         public event EventHandler<ProgressEventArgs> ReportProgress;
 
@@ -102,11 +105,12 @@ namespace Refact
             tracks = new List<Track>();
 
             bool blkError = false;
-            blocks = AcadTools.GetNewBlocks(ref blkError, db, blkDat);
+            blocks = AcadTools.GetBlocks(ref blkError, db, blkDat);
             bool error = blkError = InputData.Error;
             if (error)
             {
                 ShowBlockRDDDialog();
+                this.error = true;
                 return;
             }
             GetSigLayout(ref error);
@@ -114,6 +118,7 @@ namespace Refact
             if (error)
             {
                 ShowBlockRDDDialog();
+                this.error = true;
                 return;
             }
             trackLines = GetTracksLines();
@@ -121,6 +126,7 @@ namespace Refact
             if (error)
             {
                 ShowBlockRDDDialog();
+                this.error = true;
                 return;
             }
             if (error)
@@ -160,29 +166,6 @@ namespace Refact
             }        
         }
 
-        private void AssignTsegsToConns()
-        {
-            foreach (var conn in Connectors.Where(c => !c.Exclude && !c.NextStation))
-            {
-                var tsegs = Tsegs
-                          .Where(x => x.TrackLines
-                                      .Any(b => conn.Branches.Contains(b)))
-                          .DistinctBy(x => x.Id)
-                          .OrderBy(o => o.Vertex1.Km)
-                          .ToList();
-                if (tsegs.Count < 2)
-                {
-                    ErrLogger.Error("Unable to found Track segments for connector", conn.Designation, "");
-                    error = true;
-                }
-                else
-                {
-                    conn.Tseg1 = tsegs[0];
-                    conn.Tseg2 = tsegs[1];
-                }
-            }
-        }
-
         public void PostLoad()
         {
             bool error = false;
@@ -215,6 +198,64 @@ namespace Refact
             if (error)
             {
                 this.error = true;
+            }
+        }
+
+        public void LoadDisplayData()
+        {
+            args.Increment = 100;
+            OnReportProgress(args);
+            bool error;
+            InitElements();
+            SplitLinesOnVertexes(out error);
+            if (error)
+            {
+                this.error = true;
+            }
+            SetNextExclude();
+            ProcessElements(ref error);
+
+            args.Increment = 200;
+            OnReportProgress(args);
+            Tsegs = GetTsegs(ref error);
+            tracks = GetTracks().ToList();
+
+            args.Increment = 200;
+            OnReportProgress(args);
+            AssignTsegsToConns();
+            AssignTrackToTsegs();
+            SetTsegIdToElements(ref error);
+            SetSigsEotmb();
+            SetSigsKind();
+            SetEotsDir();
+
+            args.Increment = 200;
+            OnReportProgress(args);
+            GetSignalsClosures();
+
+            Routes = GetExpRoutes();
+        }
+
+        private void AssignTsegsToConns()
+        {
+            foreach (var conn in Connectors.Where(c => !c.Exclude && !c.NextStation))
+            {
+                var tsegs = Tsegs
+                          .Where(x => x.TrackLines
+                                      .Any(b => conn.Branches.Contains(b)))
+                          .DistinctBy(x => x.Id)
+                          .OrderBy(o => o.Vertex1.Km)
+                          .ToList();
+                if (tsegs.Count < 2)
+                {
+                    ErrLogger.Error("Unable to found Track segments for connector", conn.Designation, "");
+                    error = true;
+                }
+                else
+                {
+                    conn.Tseg1 = tsegs[0];
+                    conn.Tseg2 = tsegs[1];
+                }
             }
         }
 
@@ -725,6 +766,7 @@ namespace Refact
             Pws = new List<Pws>();
             TrustedAreas = new List<TrustedArea>();
             Platforms = new List<Platform>();
+            oldPlatforms = new List<OldPlatform>();
             FoulingPoints = new List<FoulingPoint>();
 
             foreach (var element in this.blocks)
@@ -807,6 +849,10 @@ namespace Refact
                         Platforms.Add(platform);
                         Elements.Add(platform);
                         break;
+                    case XType.Platform:
+                        OldPlatform Oldplatform = new OldPlatform(element, SigLayout.StID);
+                        oldPlatforms.Add(Oldplatform);
+                        break;
                     case XType.FoulingPoint:
                         FoulingPoint foulingPoint = new FoulingPoint(element, SigLayout.StID);
                         FoulingPoints.Add(foulingPoint);
@@ -828,6 +874,7 @@ namespace Refact
         {
             foreach (SLElement sLElement in Elements.Where(x => x.ElType != XType.AxleCounterSection &&
                                                                 x.ElType != XType.TrackSection &&
+                                                                x.ElType != XType.BlockInterface &&
                                                                 x.ElType != XType.FoulingPoint))
             {
                 SetTrackLineAndId(sLElement, ref error);
@@ -1540,7 +1587,8 @@ namespace Refact
                                                             x.ElType != XType.TrackSection &&
                                                             x.ElType != XType.Platform &&
                                                             x.ElType != XType.PlatformDyn &&
-                                                            x.ElType != XType.FoulingPoint)  &&
+                                                            x.ElType != XType.FoulingPoint &&
+                                                            x.ElType != XType.BlockInterface)  &&
                                                             x.Tseg == null)
                                                .ToList();
             foreach (SLElement element in elemsNotFoundTsegId)
@@ -1988,6 +2036,8 @@ namespace Refact
             {
                 if (signal.Exclude || signal.NextStation)
                 {
+                    signal.DangerPoint = new DangerPoint();
+                    signal.ShiftCesBG = new ShiftCesBG();
                     continue;
                 }
                 signal.DangerPoint = GetDangerPoint(signal);
@@ -2267,6 +2317,57 @@ namespace Refact
             return nextTsegs;
         }
 
+        private List<TSeg> GetNextTsegsAllBranchesFacingPoints(TSeg initTseg, DirectionType direction, List<TSeg> excludeTsegs)
+        {
+            List<TSeg> nextTsegs = null;
+            Func<TSeg, bool> vertexCriteria;
+            if (direction == DirectionType.up)
+            {
+                if (initTseg.Vertex2.Element.ElType == XType.Point && 
+                    initTseg.Vertex2.Conn != ConnectionBranchType.tip)
+                {
+                    vertexCriteria = new Func<TSeg, bool>(
+                        x => ((x.Vertex1.Element == initTseg.Vertex2.Element && x.Vertex1.Conn == ConnectionBranchType.tip) ||
+                              (x.Vertex2.Element == initTseg.Vertex2.Element && x.Vertex2.Conn == ConnectionBranchType.tip)) &&
+                             x != initTseg &&
+                             !excludeTsegs.Contains(x));
+                }
+                else
+                {
+                    vertexCriteria = new Func<TSeg, bool>(x => (x.Vertex1.Element == initTseg.Vertex2.Element ||
+                                                                x.Vertex2.Element == initTseg.Vertex2.Element) &&
+                                                               x != initTseg &&
+                                                               !excludeTsegs.Contains(x));
+                }
+                nextTsegs = Tsegs
+                            .Where(vertexCriteria)
+                            .ToList();
+            }
+            else if (direction == DirectionType.down)
+            {
+                if (initTseg.Vertex1.Element.ElType == XType.Point &&
+                    initTseg.Vertex1.Conn != ConnectionBranchType.tip)
+                {
+                    vertexCriteria = new Func<TSeg, bool>(
+                        x => ((x.Vertex1.Element == initTseg.Vertex1.Element && x.Vertex1.Conn == ConnectionBranchType.tip) ||
+                              (x.Vertex2.Element == initTseg.Vertex1.Element && x.Vertex2.Conn == ConnectionBranchType.tip)) &&
+                             x != initTseg &&
+                             !excludeTsegs.Contains(x));
+                }
+                else
+                {
+                    vertexCriteria = new Func<TSeg, bool>(x => (x.Vertex1.Element == initTseg.Vertex1.Element ||
+                                                                x.Vertex2.Element == initTseg.Vertex1.Element) &&
+                                                               x != initTseg &&
+                                                               !excludeTsegs.Contains(x));
+                }
+                nextTsegs = Tsegs
+                            .Where(vertexCriteria)
+                            .ToList();
+            }
+            return nextTsegs;
+        }
+
         private List<SearchElement> GetElementsOnNodes(TSeg startTseg, SLElement startElem,Type type, DirectionType direction)
         {
             List<SearchElement> elements = new List<SearchElement>();
@@ -2290,6 +2391,8 @@ namespace Refact
                 }
                 limit++;
                 SLElement element = null;
+                direction = GetStackChangeDir(tSegsStack, direction);
+                GetSearchLocation(tSegsStack, direction, ref searchLocation);
                 if (direction == DirectionType.up)
                 {
                     element = Elements
@@ -2321,20 +2424,7 @@ namespace Refact
                     }
                     else
                     {
-                        Stack<TSeg> tmp = new Stack<TSeg>(nextTsegs);
-                        if (tmp.Peek().LineDirection != tSegsStack.Peek().Peek().LineDirection)
-                        {
-                            direction = ReverseDirection(direction);
-                        }
-                        if (direction == DirectionType.up)
-                        {
-                            searchLocation = tmp.Peek().Vertex1.Km;
-                        }
-                        else
-                        {
-                            searchLocation = tmp.Peek().Vertex2.Km;
-                        }
-                        tSegsStack.Push(tmp);
+                        tSegsStack.Push(new Stack<TSeg>(nextTsegs));
                     }
                 }
                 else
@@ -2377,6 +2467,8 @@ namespace Refact
                 }
                 limit++;
                 SLElement element = null;
+                direction = GetStackChangeDir(tSegsStack, direction);
+                GetSearchLocation(tSegsStack, direction, ref searchLocation);
                 if (direction == DirectionType.up)
                 {
                     element = Elements
@@ -2411,20 +2503,7 @@ namespace Refact
                     }
                     else
                     {
-                        Stack<TSeg> tmp = new Stack<TSeg>(nextTsegs);
-                        if (tmp.Peek().LineDirection != tSegsStack.Peek().Peek().LineDirection)
-                        {
-                            direction = ReverseDirection(direction);
-                        }
-                        if (direction == DirectionType.up)
-                        {
-                            searchLocation = tmp.Peek().Vertex1.Km;
-                        }
-                        else
-                        {
-                            searchLocation = tmp.Peek().Vertex2.Km;
-                        }
-                        tSegsStack.Push(tmp);
+                        tSegsStack.Push(new Stack<TSeg>(nextTsegs));
                     }
                 }
                 else
@@ -2439,6 +2518,116 @@ namespace Refact
             return elements;
         }
 
+        private List<SearchElement> GetDestSigsOnNodes(TSeg startTseg, Signal startSignal,
+                                                       DirectionType direction,
+                                                       bool reportError = true)
+        {
+            List<SearchElement> elements = new List<SearchElement>();
+            List<TSeg> nextTsegs = new List<TSeg> { startTseg };
+            Stack<Stack<TSeg>> tSegsStack = new Stack<Stack<TSeg>>();
+            tSegsStack.Push(new Stack<TSeg>(nextTsegs));
+            decimal searchLocation = startSignal.Location;
+            int limit = 0;
+            while (tSegsStack.Count > 0)
+            {
+                if (limit >= Constants.nextNodeMaxAttemps)
+                {
+                    if (reportError)
+                    {
+                        ErrLogger.Error("Unable to find Element.", startSignal.Designation, "");
+                        error = true;
+                    }
+                    tSegsStack = TsegsStackPop(tSegsStack, out int back);
+                    if (tSegsStack.Count == 0 || back == 0)
+                    {
+                        break;
+                    }
+                    limit -= back;
+                }
+                limit++;
+                Signal element = null;
+                direction = GetStackChangeDir(tSegsStack, direction);
+                GetSearchLocation(tSegsStack, direction, ref searchLocation);
+                if (direction == DirectionType.up)
+                {
+                    element = Signals
+                              .Where(x => x.Location >= searchLocation &&
+                                          x.Tseg == tSegsStack.Peek().Peek() &&
+                                          x.Direction == direction && 
+                                          x != startSignal)
+                              .OrderBy(x => x.Location)
+                              .FirstOrDefault();
+                }
+                else if (direction == DirectionType.down)
+                {
+                    element = Signals
+                              .Where(x => x.Location <= searchLocation &&
+                                          x.Tseg == tSegsStack.Peek().Peek() &&
+                                          x.Direction == direction &&
+                                          x != startSignal)
+                              .OrderByDescending(x => x.Location)
+                              .FirstOrDefault();
+                }
+
+                if (element == null)
+                {
+                    nextTsegs = GetNextTsegsAllBranchesFacingPoints(tSegsStack.Peek().Peek(), direction,
+                                                         tSegsStack.Select(x => x.Peek()).ToList());
+                    if (nextTsegs.Count == 0)
+                    {
+                        tSegsStack = TsegsStackPop(tSegsStack, out int back);
+                        if (reportError)
+                        {
+                            ErrLogger.Error("Unable to find Element.", startSignal.Designation, "");
+                            error = true;
+                        }
+                    }
+                    else
+                    {
+                        tSegsStack.Push(new Stack<TSeg>(nextTsegs));
+                    }
+                }
+                else
+                {
+                    var searchTsegs = tSegsStack.Select(x => x.Peek()).ToList();
+                    searchTsegs.Reverse();
+                    elements.Add(new SearchElement { Element = element, Tsegs = searchTsegs });
+                    tSegsStack = TsegsStackPop(tSegsStack, out int back);
+                    limit -= back;
+                }
+            };
+            return elements;
+        }
+
+        private DirectionType GetStackChangeDir(Stack<Stack<TSeg>> segs, DirectionType direction)
+        {
+            if (segs != null && segs.Count > 1)
+            {
+                var tmp = segs.Pop();
+                if (segs.Peek().Peek().LineDirection != tmp.Peek().LineDirection)
+                {
+                    direction = ReverseDirection(direction);
+                }
+                segs.Push(tmp);
+            }
+            return direction;
+        }
+
+        private void GetSearchLocation(Stack<Stack<TSeg>> segs, DirectionType direction, ref decimal searchLocation)
+        {
+            if (segs != null && segs.Count > 1 && segs.Peek() != null && segs.Peek().Count > 0)
+            {
+                if (direction == DirectionType.up)
+                {
+                    searchLocation = segs.Peek().Peek().Vertex1.Km;
+                }
+                else
+                {
+                    searchLocation = segs.Peek().Peek().Vertex2.Km;
+                }
+            }          
+        }
+
         private decimal GetKmGapBetweenSegments(TSeg tSeg1, TSeg tSeg2)
         {
             if (tSeg1.LineID != tSeg2.LineID)
@@ -2447,7 +2636,7 @@ namespace Refact
             }
             ConnectionBranchType branchType1 = ConnectionBranchType.none;
             ConnectionBranchType branchType2 = ConnectionBranchType.none;
-            elements.Vertex changeVertex = GetCommVertex(tSeg1, tSeg2);
+            elements.Vertex changeVertex = GetCommVertex(tSeg1, tSeg2, GetCommVertOptions.byFirstSeg);
             if (changeVertex == null)
             {
                 return 0;
@@ -2471,23 +2660,51 @@ namespace Refact
             }
         }
 
-        private elements.Vertex GetCommVertex(TSeg tsegFrom, TSeg nextTseg)
+        private elements.Vertex GetCommVertex(TSeg tsegFrom, TSeg nextTseg, GetCommVertOptions vertOptions)
         {
             if (tsegFrom.Vertex1.Element == nextTseg.Vertex1.Element)
             {
-                return tsegFrom.Vertex1;
+                if (vertOptions == GetCommVertOptions.byFirstSeg)
+                {
+                    return tsegFrom.Vertex1;
+                }
+                else
+                {
+                    return nextTseg.Vertex1;
+                }               
             }
             else if (tsegFrom.Vertex1.Element == nextTseg.Vertex2.Element)
             {
-                return tsegFrom.Vertex1;
+                if (vertOptions == GetCommVertOptions.byFirstSeg)
+                {
+                    return tsegFrom.Vertex1;
+                }
+                else
+                {
+                    return nextTseg.Vertex2;
+                }          
             }
             else if (tsegFrom.Vertex2.Element == nextTseg.Vertex1.Element)
             {
-                return tsegFrom.Vertex2;
+                if (vertOptions == GetCommVertOptions.byFirstSeg)
+                {
+                    return tsegFrom.Vertex2;
+                }
+                else
+                {
+                    return nextTseg.Vertex1;
+                }              
             }
             else if (tsegFrom.Vertex2.Element == nextTseg.Vertex2.Element)
             {
-                return tsegFrom.Vertex2;
+                if (vertOptions == GetCommVertOptions.byFirstSeg)
+                {
+                    return tsegFrom.Vertex2;
+                }
+                else
+                {
+                    return nextTseg.Vertex2;
+                }            
             }
             ErrLogger.Error("Unable to get common Vertex between Tsegs.", tsegFrom.Id, nextTseg.Id);
             error = true;
@@ -2779,9 +2996,179 @@ namespace Refact
             return DirectionType.up;
         }
 
+        public List<ExcelLib.ExpRoute> ExportRoutes(out bool error)
+        {
+            InitElements();
+            SplitLinesOnVertexes(out error);
+            if (error)
+            {
+                return null;
+            }
+            SetNextExclude();
+            ProcessElements(ref error);
+            Tsegs = GetTsegs(ref error);
+            AssignTsegsToConns();
+            bool elemTsegError = false;
+            SetTsegIdToElements(ref elemTsegError);
+            if (error)
+            {
+                return null;
+            }
+            return GetExpRoutes();
+        }
+
+        private List<ExcelLib.ExpRoute> GetExpRoutes()
+        {
+            List<ExcelLib.ExpRoute> routes = new List<ExcelLib.ExpRoute>();
+            foreach (var signal in Signals.Where(x => x.Tseg != null))
+            {
+                var tmp = GetDestSigsOnNodes(signal.Tseg, signal, signal.Direction);
+                foreach (var item in tmp)
+                {
+                    routes.Add(new ExcelLib.ExpRoute
+                    {
+                        Start = signal.Designation,
+                        Destination = item.Element.Designation,
+                        Points = GetPointsPathBySegs(item.Tsegs)
+                    });
+                }
+            }
+            return routes;
+        }
+
+        public List<ExcelLib.elements.ExpTseg> ExportTsegs(out bool error)
+        {
+            InitElements();
+            SplitLinesOnVertexes(out error);
+            if (error)
+            {
+                return null;
+            }
+            SetNextExclude();
+            ProcessElements(ref error);
+            Tsegs = GetTsegs(ref error);
+            return GetExpTsegs();
+        }
+
+        private List<ExcelLib.elements.ExpTseg> GetExpTsegs()
+        {
+            List<ExcelLib.elements.ExpTseg> tsegs = new List<ExcelLib.elements.ExpTseg>();
+            foreach (var tseg in Tsegs)
+            {
+                tsegs.Add(new ExcelLib.elements.ExpTseg 
+                {
+                    Designation = tseg.Id 
+                });
+            }
+            return tsegs;
+        }
+        
+        public List<ExcelLib.ExpTdlPt> ExportTdlPts(out bool error)
+        {
+            InitElements();
+            SplitLinesOnVertexes(out error);
+            if (error)
+            {
+                return null;
+            }
+            SetNextExclude();
+            ProcessElements(ref error);
+            Tsegs = GetTsegs(ref error);
+            InitAcSections(ref error);
+            return GetExpTdlPts();
+        }
+
+        private List<ExcelLib.ExpTdlPt> GetExpTdlPts()
+        {
+            List<ExcelLib.ExpTdlPt> tdlPts = new List<ExcelLib.ExpTdlPt>();
+            foreach (var point in Points.Where(x => !x.Exclude && !x.NextStation))
+            {
+                var ownTdt = AcSections
+                             .Where(x => x.Elements.Contains(point))
+                             .FirstOrDefault();
+                var expTdl = new ExcelLib.ExpTdlPt
+                {
+                    Designation = point.GetShortName() 
+                };
+                if (ownTdt != null)
+                {
+                    expTdl.OwnTdt = ownTdt.GetShortName();
+                }
+                tdlPts.Add(expTdl);
+            }
+            return tdlPts;
+        }
+
+        private List<string> GetPointsPathBySegs(List<TSeg> segs )
+        {
+            List<string> vs = new List<string>();
+            for (int i = 0; i < segs.Count - 1; i++)
+            {
+                var vv = GetCommVertex(segs[i], segs[i + 1], GetCommVertOptions.bySecondSeg);
+                if (vv != null && vv.Element.ElType == XType.Point && vv.Conn != ConnectionBranchType.tip)
+                {
+                    vs.Add(vv.Element.GetShortName() + "-" + vv.Conn.ToString().ToUpper().First());
+                }
+            }
+            return vs;
+        }
+
+        public void ReplacePlatforms()
+        {
+            InitElements();//TODO test replace platforms
+
+            foreach (var oldPltfrm in oldPlatforms)
+            {
+
+                try
+                {
+                    var test = oldPltfrm.Block.BlockReference.GeometricExtents.MaxPoint.X;
+                }
+                catch
+                {
+                    continue;
+                }
+                using (Transaction tr = db.TransactionManager.StartTransaction())
+                {
+                    AcadTools.CopyBlockFromFile(this.assemblyDir + Constants.cfgFolder + @"\Blks_Dynamic.dwg", "Platform_Dynamic", db);
+
+                    BlockReference blkRefInserted =
+                        (BlockReference)tr.GetObject(AcadTools.InsertBlock("Platform_Dynamic",
+                                                                  oldPltfrm.Block.BlockReference.Position.X,
+                                                                  oldPltfrm.Block.BlockReference.Position.Y, db),
+                                                     OpenMode.ForWrite);
+                    AcadTools.CopyAtributtes(oldPltfrm.Block.BlockReference, blkRefInserted, tr);
+                    BlockReference Erase = (BlockReference)tr.GetObject(oldPltfrm.Block.BlockReference.Id,
+                                                                OpenMode.ForWrite);
+                    DynamicBlockReferencePropertyCollection properties =
+                        blkRefInserted.DynamicBlockReferencePropertyCollection;
+                    foreach (DynamicBlockReferenceProperty prt in properties)
+                    {
+                        if (prt.PropertyName == "Width")
+                        {
+                            prt.Value =
+                                Math.Abs(oldPltfrm.Block.BlockReference.GeometricExtents.MaxPoint.X -
+                                         oldPltfrm.Block.BlockReference.GeometricExtents.MinPoint.X);
+                        }
+                    }
+                    if (AcadTools.LayerExists("KMP", db))
+                    {
+                        oldPltfrm.Block.BlockReference.Layer = "KMP";
+                    }
+
+                    Erase.Erase();
+                    tr.Commit();
+                }
+            }
+        }
+
         public bool HasErrors()
         {
-            bool elem = Elements.Any(x => x.Error);
+            bool elem = false;
+            if (Elements != null)
+            {
+                elem = Elements.Any(x => x.Error);
+            }
             if (elem || this.error)
             {
                 return true;

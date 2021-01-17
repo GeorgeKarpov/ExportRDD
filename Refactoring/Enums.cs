@@ -78,4 +78,10 @@ namespace Refact
         start,
         end
     }
+
+    public enum GetCommVertOptions
+    {
+        byFirstSeg,
+        bySecondSeg
+    }
 }
