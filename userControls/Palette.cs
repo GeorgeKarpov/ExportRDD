@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using AcadApp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
@@ -31,6 +32,7 @@ namespace ExpRddApp
 
         public Palette(string dwgPath, string dwgDir, string assDir, DocumentCollection docs)
         {
+            //_ps.MinimumSize = new Size(350, 290);
             DwgPath = dwgPath;
             DwgDir = dwgDir;
             AssemblyDir = assDir;
@@ -46,17 +48,17 @@ namespace ExpRddApp
             }
             else
             {
-                palCntrlSigLay.DataGridView.DataSource = "";
-                palCntrlSeg.DataGridView.DataSource = "";
-                palCntrlMb.DataGridView.DataSource = "";
-                palCntrlPt.DataGridView.DataSource = "";
-                palCntrlRt.DataGridView.DataSource = "";
+                palCntrlSigLay.BindingSource.DataSource = null;
+                palCntrlSeg.BindingSource.DataSource = null;
+                palCntrlMb.BindingSource.DataSource = null;
+                palCntrlPt.BindingSource.DataSource = null;
+                palCntrlRt.BindingSource.DataSource = null;
                 errCntrl.ListView.Items.Clear();
 
-                palCntrlSeg.LblInfo.Text = "";
-                palCntrlMb.LblInfo.Text = "";
-                palCntrlPt.LblInfo.Text = "";
-                palCntrlRt.LblInfo.Text = "";
+                //palCntrlSeg.LblInfo.Text = "";
+                //palCntrlMb.LblInfo.Text = "";
+                //palCntrlPt.LblInfo.Text = "";
+                //palCntrlRt.LblInfo.Text = "";
             }
         }
 
@@ -70,6 +72,7 @@ namespace ExpRddApp
                 palCntrlRt = new ElCntrl();
                 palCntrlSigLay = new ElCntrl();
                 errCntrl = new ErrCntrl();
+
                 palCntrlSeg.BtnLoad.Click += BtnLoad_Click;
                 palCntrlSeg.DataGridView.CellDoubleClick += DgwSegs_CellDoubleClick;
                 palCntrlSeg.DataGridView.DataSourceChanged += Dgw_DataSourceChanged;
@@ -105,7 +108,7 @@ namespace ExpRddApp
                 _ps.Add("Points", palCntrlPt);
                 _ps.Add("Routes", palCntrlRt);
                 _ps.Add("Errors", errCntrl);
-                _ps.MinimumSize = new Size(200, 40);
+                _ps.MinimumSize = new Size(350, 140);
                 _ps.DockEnabled = (DockSides.Left | DockSides.Right);
                 _ps.Visible = true;
             }
@@ -250,7 +253,9 @@ namespace ExpRddApp
             }
             AcLayout acLayout = new AcLayout(this.DwgPath, this.DwgDir, this.AssemblyDir);
             lom = new LongOperationManager("Loading Data");
-            lom.SetTotalOperations(700);
+            lom.SetTotalOperations(701);
+            lom.Tick(1);
+            Thread.Sleep(100);
             if (acLayout.HasErrors())
             {
                 AcadApp.ShowAlertDialog("Data Initialization error. See Errors Tab");
@@ -265,25 +270,20 @@ namespace ExpRddApp
 
             if (acLayout.Tsegs != null && acLayout.Tsegs.Count > 0)
             {
-                System.Data.DataTable sigLayout = Data.ToDataTable(acLayout.SigLayout);
-                palCntrlSigLay.DataGridView.DataSource = sigLayout;
+                DataView sigLayout = Data.ToDataTable(acLayout.SigLayout);
+                palCntrlSigLay.BindingSource.DataSource = sigLayout;
 
-                System.Data.DataTable segments = Data.ToDataTable(acLayout.Tsegs);
-                palCntrlSeg.DataGridView.DataSource = segments;
-                palCntrlSeg.LblInfo.Text = "Segments count: " + segments.Rows.Count;
+                DataView segments = Data.ToDataTable(acLayout.Tsegs);
+                palCntrlSeg.BindingSource.DataSource = segments;
 
-                System.Data.DataTable signals = Data.ToDataTable(acLayout.Signals);
-                palCntrlMb.DataGridView.DataSource = signals;
-                palCntrlMb.LblInfo.Text = "Signals count: " + signals.Rows.Count;
+                DataView signals = Data.ToDataTable(acLayout.Signals);
+                palCntrlMb.BindingSource.DataSource = signals;
 
-                System.Data.DataTable points = Data.ToDataTable(acLayout.Points);
-                palCntrlPt.DataGridView.DataSource = points;
-                palCntrlPt.LblInfo.Text = "Points count: " + points.Rows.Count;
+                DataView points = Data.ToDataTable(acLayout.Points);
+                palCntrlPt.BindingSource.DataSource = points;
 
-
-                System.Data.DataTable routes = Data.ToDataTable(acLayout.Routes);
-                palCntrlRt.DataGridView.DataSource = routes;
-                palCntrlRt.LblInfo.Text = "Routes count: " + routes.Rows.Count;
+                DataView routes = Data.ToDataTable(acLayout.Routes);
+                palCntrlRt.BindingSource.DataSource = routes;
             }
             errCntrl.LoadList();
             if (acLayout.HasErrors())

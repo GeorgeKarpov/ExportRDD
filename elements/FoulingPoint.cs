@@ -18,7 +18,6 @@ namespace ExpRddApp.elements
         {
             bool error = false;
 
-            //TODO implement locations for line change
             string[] kms = Attributes["KMP"].value.Split(new string[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
             if (kms == null || kms.Length == 0 || kms.Length > 2)
             {

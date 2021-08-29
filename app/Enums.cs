@@ -78,4 +78,10 @@
         byFirstSeg,
         bySecondSeg
     }
+
+    public enum TsegCalcDir
+    {
+        Right,
+        Left
+    }
 }

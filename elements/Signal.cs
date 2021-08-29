@@ -140,12 +140,10 @@ namespace ExpRddApp.elements
             {
                 return 0;
             }
-            //if (DangerPoint == null || ShiftCesBG == null)
-            //{
-            //    ErrLogger.Error("Unable to calculate ShiftOces.", Designation, "");
-            //    Error = true;
-            //    return 0;
-            //}
+            if (DangerPoint.Distance == 0 && ShiftCesBG.Distance == 0)
+            {
+                return 0;
+            }
             double shift = (DangerPoint.Distance + ShiftCesBG.Distance) * 0.05 - DangerPoint.Distance + 16;
             decimal value = 0;
             if (shift > 0)

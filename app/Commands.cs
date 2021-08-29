@@ -18,26 +18,18 @@ namespace ExpRddApp
         public static Palette Pl { get; set; }
 
         [CommandMethod("RDD_EXPORT")]
-        public static void TestRefact()
+        public static void ExportRDD()
         {
-            ExpRddApp.ExpRDD expRDD = new ExpRddApp.ExpRDD();
+            ExpRDD expRDD = new ExpRDD();
             expRDD.ExportRDD();
         }
 
         [CommandMethod("RDD_ERRORLOG")]
-        public static void Test()
+        public static void ErrorLogs()
         {
-            ExpRddApp.Utils.ShowErrList(Path.GetDirectoryName(DwgPath),
+            Utils.ShowErrList(Path.GetDirectoryName(DwgPath),
                "RDD errors List", "Following errors were found.",
                System.Drawing.SystemIcons.Information, false);
-        }
-
-        [CommandMethod("ExportRDD")]
-        public static void ExportRdd()
-        {
-            //Export export = new Export(DwgPath);
-            //export.ExportRdd();
-            //export.Dispose();
         }
 
         [CommandMethod("RDD_PALETTE")]
@@ -56,7 +48,7 @@ namespace ExpRddApp
         [CommandMethod("RDD_EXPROUTES")]
         public static void ExportRoutes()
         {
-            ExpRddApp.ExpRDD expRDD = new ExpRddApp.ExpRDD();
+            ExpRDD expRDD = new ExpRDD();
             expRDD.ExportRoutes();
             //Display display = new Display(DwgPath);
             //display.ExportRoutes();
@@ -66,7 +58,7 @@ namespace ExpRddApp
         [CommandMethod("RDD_EXPTSEGSSP")]
         public static void ExportTSegs()
         {
-            ExpRddApp.ExpRDD expRDD = new ExpRddApp.ExpRDD();
+            ExpRDD expRDD = new ExpRDD();
             expRDD.ExportSspTsegs();
             //    Display display = new Display(DwgPath);
             //    display.ExportTsegs();
@@ -76,7 +68,7 @@ namespace ExpRddApp
         [CommandMethod("RDD_EXPTDLPTS")]
         public static void ExportPoints()
         {
-            ExpRddApp.ExpRDD expRDD = new ExpRddApp.ExpRDD();
+            ExpRDD expRDD = new ExpRDD();
             expRDD.ExportTdls();
             //Display display = new Display(DwgPath);
             //display.ExportPoints();

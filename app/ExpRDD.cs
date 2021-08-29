@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 
 namespace ExpRddApp
 {
@@ -19,7 +20,9 @@ namespace ExpRddApp
         public void ExportRDD()
         {
             lom = new LongOperationManager("Creating RDD Data");
-            lom.SetTotalOperations(1000);
+            lom.SetTotalOperations(1001);
+            lom.Tick(1);
+            Thread.Sleep(100);
             acLayout = new AcLayout(Commands.DwgPath, Commands.DwgDir, Commands.AssemblyDir);
 
             if (acLayout.HasErrors())

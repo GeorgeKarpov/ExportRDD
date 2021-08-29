@@ -33,7 +33,7 @@ namespace ExpRddApp
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.txtBoxStationId = new System.Windows.Forms.TextBox();
             this.lblStationId = new System.Windows.Forms.Label();
             this.btnOK = new System.Windows.Forms.Button();
@@ -397,14 +397,14 @@ namespace ExpRddApp
             this.dgwLines.AllowUserToDeleteRows = false;
             this.dgwLines.AllowUserToResizeRows = false;
             this.dgwLines.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dgwLines.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(186)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dgwLines.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             this.dgwLines.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgwLines.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Line,
@@ -480,7 +480,7 @@ namespace ExpRddApp
             this.groupBox1.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox1.Size = new System.Drawing.Size(402, 428);
+            this.groupBox1.Size = new System.Drawing.Size(402, 437);
             this.groupBox1.TabIndex = 35;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Input Data";
@@ -984,6 +984,7 @@ namespace ExpRddApp
             this.groupBox4.TabIndex = 57;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Options";
+            this.groupBox4.Visible = false;
             // 
             // lblAcSections
             // 
@@ -1026,7 +1027,7 @@ namespace ExpRddApp
             // checkBoxLevel
             // 
             this.checkBoxLevel.AutoSize = true;
-            this.checkBoxLevel.Location = new System.Drawing.Point(303, 54);
+            this.checkBoxLevel.Location = new System.Drawing.Point(305, 52);
             this.checkBoxLevel.Name = "checkBoxLevel";
             this.checkBoxLevel.Size = new System.Drawing.Size(115, 17);
             this.checkBoxLevel.TabIndex = 54;

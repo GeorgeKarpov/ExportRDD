@@ -5,27 +5,29 @@ namespace ExpRddApp
 {
     public static class Data
     {
-        public static DataTable ToDataTable(List<elements.TSeg> tsegs)
+        public static DataView ToDataTable(List<elements.TSeg> tsegs)
         {
             DataTable dataTable = new DataTable("Segments");
             dataTable.Columns.Add("Designation", typeof(string));
             dataTable.Columns.Add("Line", typeof(string));
             dataTable.Columns.Add("Vertex 1", typeof(string));
             dataTable.Columns.Add("Vertex 2", typeof(string));
+            dataTable.Columns.Add("Export to RDD", typeof(bool));
             foreach (var item in tsegs)
             {
-                var values = new object[4];
+                var values = new object[5];
                 values[0] = item.Id;
                 values[1] = item.LineID;
                 values[2] = item.Vertex1.Id;
-                values[3] = item.Vertex2.Id; ;
+                values[3] = item.Vertex2.Id;
+                values[4] = !(item.Vertex1.Element.NextStation || item.Vertex2.Element.NextStation);
                 dataTable.Rows.Add(values);
             }
 
-            return dataTable;
+            return dataTable.DefaultView;
         }
 
-        public static DataTable ToDataTable(List<elements.Signal> items)
+        public static DataView ToDataTable(List<elements.Signal> items)
         {
             DataTable dataTable = new DataTable("Signals");
             dataTable.Columns.Add("Designation", typeof(string));
@@ -36,10 +38,10 @@ namespace ExpRddApp
             dataTable.Columns.Add("Danger Point Id", typeof(string));
             dataTable.Columns.Add("Danger Point Distance", typeof(decimal));
             dataTable.Columns.Add("Shift Oces", typeof(decimal));
+            dataTable.Columns.Add("Export to RDD", typeof(bool));
             foreach (var item in items)
             {
-                var values = new object[8];
-                var dangPoint = item.DangerPoint;
+                var values = new object[9];
                 values[0] = item.Designation;
                 values[1] = item.KindOfSignal;
                 values[2] = item.Location;
@@ -48,33 +50,37 @@ namespace ExpRddApp
                 values[5] = item.DangerPoint.Id;
                 values[6] = item.DangerPoint.Distance;
                 values[7] = item.GetShiftOces();
+                values[8] = !(item.NextStation || item.Exclude);
                 dataTable.Rows.Add(values);
             }
-            return dataTable;
+            dataTable.DefaultView.Sort = "Export to RDD DESC, Location ASC";
+            return dataTable.DefaultView;
         }
 
-        public static DataTable ToDataTable(List<elements.Point> items)
+        public static DataView ToDataTable(List<elements.Point> items)
         {
             DataTable dataTable = new DataTable("Points");
             dataTable.Columns.Add("Designation", typeof(string));
             dataTable.Columns.Add("Kind", typeof(string));
             dataTable.Columns.Add("Location", typeof(string));
+            dataTable.Columns.Add("Export to RDD", typeof(bool));
             //dataTable.Columns.Add("Track Segment", typeof(string));
             //dataTable.Columns.Add("Line", typeof(string));
             foreach (var item in items)
             {
-                var values = new object[3];
+                var values = new object[4];
                 values[0] = item.Designation;
                 values[1] = item.Kind();
                 values[2] = item.KmpTip;
+                values[3] = !(item.NextStation || item.Exclude);
                 //values[3] = item.TrackSegmentID;
                 //values[4] = item.LineID;
                 dataTable.Rows.Add(values);
             }
-            return dataTable;
+            return dataTable.DefaultView;
         }
 
-        public static DataTable ToDataTable(List<ExcelLib.ExpRoute> items)
+        public static DataView ToDataTable(List<ExcelLib.ExpRoute> items)
         {
             DataTable dataTable = new DataTable("Routes");
             dataTable.Columns.Add("Start", typeof(string));
@@ -92,10 +98,10 @@ namespace ExpRddApp
                 //values[4] = item.LineID;
                 dataTable.Rows.Add(values);
             }
-            return dataTable;
+            return dataTable.DefaultView;
         }
 
-        public static DataTable ToDataTable(elements.SigLayout siglayout)
+        public static DataView ToDataTable(elements.SigLayout siglayout)
         {
             DataTable dataTable = new DataTable("Sig Layout");
             dataTable.Columns.Add("Title", typeof(string));
@@ -110,7 +116,7 @@ namespace ExpRddApp
             values[3] = siglayout.Date.ToString("dd.MM.yyyy");
             values[4] = siglayout.Creator;
             dataTable.Rows.Add(values);
-            return dataTable;
+            return dataTable.DefaultView;
         }
     }
 }

@@ -893,14 +893,40 @@ namespace ExpRddApp
                 }
                 point.SetHht(Hhts);
             }
-            //foreach (LevelCrossing lx in LevelCrossings)
-            //{
-            //    lx.TrType = lx.GetTrType(trackLines);
-            //}
-            //foreach (Pws pws in Pws)
-            //{
-            //    pws.TrType = pws.GetTrType(trackLines);
-            //}
+            SetTsegCalcDirection();
+        }
+
+        private void SetTsegCalcDirection()
+        {
+            var grpLines = TsegVertexes.GroupBy(x => x.LineID);
+            foreach (var grpLine in grpLines)
+            {
+                var elmin = grpLine
+                            .Where(x => x.Location == grpLine.Min(l => l.Location))
+                            .FirstOrDefault();
+                var elmax = grpLine
+                            .Where(x => x.Location == grpLine.Max(l => l.Location))
+                            .FirstOrDefault();
+                TsegCalcDir calcDir = TsegCalcDir.Right;
+                if (elmin.Position.X > elmax.Position.X)
+                {
+                    calcDir = TsegCalcDir.Right;
+                }
+                else if (elmin.Position.X < elmax.Position.X)
+                {
+                    calcDir = TsegCalcDir.Left;
+                }
+                else
+                {
+                    ErrLogger.Error("Unable to get Tsegs calculation direction", grpLine.Key, "");
+                    error = true;
+                }
+                var trackLines = this.trackLines.Where(x => x.LineID == grpLine.Key);
+                foreach (var trackLine in trackLines)
+                {
+                    trackLine.calcDir = calcDir;
+                }
+            }
         }
 
         /// <summary>
@@ -1391,12 +1417,12 @@ namespace ExpRddApp
                     }
                     NodesCheck.Add(vertUnigueId);
 
-                    if (vertex1.Element.ElType == XType.Point && branch.direction == DirectionType.up &&
+                    if (vertex1.Element.ElType == XType.Point && branch.calcDir == TsegCalcDir.Left &&
                         ((elements.Point)vertex1.Element).Orient == LeftRightType.left && vertex1.Conn != ConnectionBranchType.tip)
                     {
                         continue;
                     }
-                    if (vertex1.Element.ElType == XType.Point && branch.direction == DirectionType.down &&
+                    if (vertex1.Element.ElType == XType.Point && branch.calcDir == TsegCalcDir.Right &&
                         ((elements.Point)vertex1.Element).Orient == LeftRightType.right && vertex1.Conn != ConnectionBranchType.tip)
                     {
                         continue;
@@ -3113,7 +3139,7 @@ namespace ExpRddApp
 
         public void ReplacePlatforms()
         {
-            InitElements();//TODO test replace platforms
+            InitElements();
 
             foreach (var oldPltfrm in oldPlatforms)
             {
